@@ -1,0 +1,82 @@
+[
+  {
+    "id": "sp1",
+    "name": "NutriAgro",
+    "tier": "diamante",
+    "description": "Soluciones integrales de nutrición animal y aditivos para la producción avícola de alto rendimiento.",
+    "booth": "D-01",
+    "web": "https://ovum2026.com",
+    "email": "contacto@nutriagro.example",
+    "phone": "+502 2200-0001"
+  },
+  {
+    "id": "sp2",
+    "name": "BioVet Latinoamérica",
+    "tier": "diamante",
+    "description": "Laboratorio de productos veterinarios y vacunas para la salud aviar.",
+    "booth": "D-02",
+    "web": "https://ovum2026.com",
+    "email": "info@biovet.example",
+    "phone": "+502 2200-0002"
+  },
+  {
+    "id": "sp3",
+    "name": "GenAvis",
+    "tier": "oro",
+    "description": "Genética aviar de precisión para líneas de postura y engorde.",
+    "booth": "O-11",
+    "web": "https://ovum2026.com",
+    "email": "ventas@genavis.example"
+  },
+  {
+    "id": "sp4",
+    "name": "AviTech Systems",
+    "tier": "oro",
+    "description": "Equipamiento y automatización para granjas modernas.",
+    "booth": "O-12",
+    "web": "https://ovum2026.com"
+  },
+  {
+    "id": "sp5",
+    "name": "Granja del Valle",
+    "tier": "oro",
+    "description": "Productora integrada de huevo y pollo con presencia regional.",
+    "booth": "O-13"
+  },
+  {
+    "id": "sp6",
+    "name": "HuevoFresco",
+    "tier": "plata",
+    "description": "Comercializadora de huevo de mesa y ovoproductos.",
+    "booth": "P-21",
+    "web": "https://ovum2026.com"
+  },
+  {
+    "id": "sp7",
+    "name": "AvesMax",
+    "tier": "plata",
+    "description": "Insumos y suplementos para producción avícola.",
+    "booth": "P-22"
+  },
+  {
+    "id": "sp8",
+    "name": "NutriMix",
+    "tier": "plata",
+    "description": "Premezclas y núcleos vitamínicos a medida.",
+    "booth": "P-23"
+  },
+  {
+    "id": "sp9",
+    "name": "Pollo Dorado",
+    "tier": "bronce",
+    "description": "Marca de pollo fresco con distribución nacional.",
+    "booth": "B-31"
+  },
+  {
+    "id": "sp10",
+    "name": "VacunAve",
+    "tier": "bronce",
+    "description": "Servicios de vacunación y asistencia técnica.",
+    "booth": "B-32"
+  }
+]

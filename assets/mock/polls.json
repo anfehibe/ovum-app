@@ -1,0 +1,43 @@
+[
+  {
+    "id": "poll1",
+    "session_id": "d1-2",
+    "question": "¿Cuál es el mayor reto en nutrición avícola hoy?",
+    "options": [
+      { "id": "p1a", "text": "Costo de materias primas", "seed_votes": 42 },
+      { "id": "p1b", "text": "Reducción de antibióticos", "seed_votes": 28 },
+      { "id": "p1c", "text": "Sostenibilidad ambiental", "seed_votes": 19 },
+      { "id": "p1d", "text": "Calidad del producto final", "seed_votes": 11 }
+    ]
+  },
+  {
+    "id": "poll2",
+    "session_id": "d2-1",
+    "question": "¿Tu granja cuenta con un plan formal ante brotes de influenza aviar?",
+    "options": [
+      { "id": "p2a", "text": "Sí, actualizado", "seed_votes": 34 },
+      { "id": "p2b", "text": "Sí, pero desactualizado", "seed_votes": 25 },
+      { "id": "p2c", "text": "No", "seed_votes": 17 }
+    ]
+  },
+  {
+    "id": "poll3",
+    "session_id": "d2-4",
+    "question": "¿Qué acción de sostenibilidad priorizarías?",
+    "options": [
+      { "id": "p3a", "text": "Gestión de residuos", "seed_votes": 30 },
+      { "id": "p3b", "text": "Energías renovables", "seed_votes": 26 },
+      { "id": "p3c", "text": "Uso eficiente del agua", "seed_votes": 22 }
+    ]
+  },
+  {
+    "id": "poll4",
+    "session_id": "d3-2",
+    "question": "¿Qué tan avanzada está la automatización en tu operación?",
+    "options": [
+      { "id": "p4a", "text": "Totalmente automatizada", "seed_votes": 12 },
+      { "id": "p4b", "text": "Parcialmente", "seed_votes": 40 },
+      { "id": "p4c", "text": "Manual en su mayoría", "seed_votes": 21 }
+    ]
+  }
+]

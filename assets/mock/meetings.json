@@ -1,0 +1,38 @@
+[
+  {
+    "id": "m1",
+    "attendee_id": "a2",
+    "subject": "Alianza de distribución de insumos",
+    "message": "Me gustaría conversar sobre oportunidades de distribución en la región.",
+    "place": "Sala de networking",
+    "date": "2026-11-12T00:00:00",
+    "start_time": "11:30",
+    "end_time": "12:00",
+    "status": "confirmed",
+    "incoming": false
+  },
+  {
+    "id": "m2",
+    "attendee_id": "a5",
+    "subject": "Demostración de software de gestión",
+    "message": "¿Podemos vernos para ver una demo de la plataforma de trazabilidad?",
+    "place": "Stand T-15",
+    "date": "2026-11-12T00:00:00",
+    "start_time": "15:00",
+    "end_time": "15:30",
+    "status": "pending",
+    "incoming": true
+  },
+  {
+    "id": "m3",
+    "attendee_id": "a8",
+    "subject": "Datos de mercado del huevo",
+    "message": "Quisiera intercambiar información sobre tendencias de consumo.",
+    "place": "Café del recinto",
+    "date": "2026-11-13T00:00:00",
+    "start_time": "10:00",
+    "end_time": "10:30",
+    "status": "pending",
+    "incoming": true
+  }
+]

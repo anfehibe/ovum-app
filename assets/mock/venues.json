@@ -1,0 +1,27 @@
+[
+  {
+    "id": "v1",
+    "name": "Parque de la Industria (COPEREX)",
+    "description": "Sede principal del congreso: conferencias, recinto ferial y área de exposición comercial.",
+    "address": "Calzada Atanasio Tzul, zona 12, Ciudad de Guatemala",
+    "is_primary": true,
+    "lat": 14.5934,
+    "lng": -90.5486
+  },
+  {
+    "id": "v2",
+    "name": "Irtra Mundo Petapa",
+    "description": "Sede de la noche cultural guatemalteca, con gastronomía y espectáculo artístico.",
+    "address": "Zona 12, Ciudad de Guatemala",
+    "lat": 14.5637,
+    "lng": -90.5525
+  },
+  {
+    "id": "v3",
+    "name": "Centro Cultural Santo Domingo",
+    "description": "Sede de la fiesta de clausura del congreso.",
+    "address": "Antigua Guatemala, Sacatepéquez",
+    "lat": 14.5586,
+    "lng": -90.7295
+  }
+]

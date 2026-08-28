@@ -1,0 +1,66 @@
+[
+  {
+    "id": "i1",
+    "category": "Viaje",
+    "title": "Aerolínea oficial: Copa Airlines",
+    "body": "Copa Airlines es la aerolínea oficial de OVUM 2026. Usa el código de descuento B9781 al reservar tus vuelos hacia Ciudad de Guatemala.",
+    "icon": "airplane",
+    "action_label": "Reservar con Copa",
+    "action_value": "https://www.copaair.com",
+    "action_type": "url"
+  },
+  {
+    "id": "i2",
+    "category": "Viaje",
+    "title": "Visas y aduanas",
+    "body": "La mayoría de los países latinoamericanos no requieren visa para ingresar a Guatemala por estancias cortas. Verifica los requisitos según tu nacionalidad antes de viajar.",
+    "icon": "passport"
+  },
+  {
+    "id": "i3",
+    "category": "Guatemala",
+    "title": "Sobre Guatemala",
+    "body": "Guatemala, el corazón del mundo maya, ofrece cultura viva, ciudades coloniales como Antigua, volcanes y una gastronomía única. Aprovecha tu visita para conocer el país.",
+    "icon": "map"
+  },
+  {
+    "id": "i4",
+    "category": "Guatemala",
+    "title": "Tours recomendados",
+    "body": "Antigua Guatemala, Lago de Atitlán y las ruinas de Tikal son destinos imperdibles. Consulta los tours patrocinados disponibles para delegados del congreso.",
+    "icon": "compass",
+    "action_label": "Ver tours",
+    "action_value": "https://ovum2026.com",
+    "action_type": "url"
+  },
+  {
+    "id": "i5",
+    "category": "Contacto",
+    "title": "Correo del congreso",
+    "body": "Para consultas generales escríbenos a la organización.",
+    "icon": "mail",
+    "action_label": "ovum2026@anaviguatemala.org",
+    "action_value": "ovum2026@anaviguatemala.org",
+    "action_type": "email"
+  },
+  {
+    "id": "i6",
+    "category": "Contacto",
+    "title": "Teléfono",
+    "body": "Comunícate con la organización de ANAVI Guatemala.",
+    "icon": "phone",
+    "action_label": "+502 2360-3084",
+    "action_value": "+50223603084",
+    "action_type": "phone"
+  },
+  {
+    "id": "i7",
+    "category": "Contacto",
+    "title": "Sitio web oficial",
+    "body": "Toda la información actualizada del congreso está en el sitio oficial.",
+    "icon": "globe",
+    "action_label": "ovum2026.com",
+    "action_value": "https://ovum2026.com",
+    "action_type": "url"
+  }
+]

@@ -1,0 +1,84 @@
+[
+  {
+    "id": "s1",
+    "name": "Dra. Mariana Villalobos",
+    "role": "Investigadora en Nutrición Avícola",
+    "company": "Universidad de São Paulo",
+    "bio": "Doctora en Ciencias Animales con más de 20 años de experiencia en nutrición de aves de postura. Ha liderado proyectos de investigación sobre eficiencia alimentaria y aditivos naturales en Latinoamérica.",
+    "is_keynote": true,
+    "socials": { "linkedin": "https://linkedin.com", "twitter": "https://twitter.com" }
+  },
+  {
+    "id": "s2",
+    "name": "Dr. Carlos Méndez",
+    "role": "Director de Sanidad Animal",
+    "company": "Instituto Avícola Regional",
+    "bio": "Médico veterinario especializado en enfermedades aviares emergentes. Coordina programas de vigilancia de influenza aviar en Centroamérica.",
+    "is_keynote": true,
+    "socials": { "linkedin": "https://linkedin.com" }
+  },
+  {
+    "id": "s3",
+    "name": "Ing. Rodrigo Paredes",
+    "role": "Especialista en Bioseguridad",
+    "company": "AviTech Consulting",
+    "bio": "Ingeniero agrónomo consultor en diseño de protocolos de bioseguridad y automatización para granjas comerciales de gran escala.",
+    "socials": { "linkedin": "https://linkedin.com", "web": "https://ovum2026.com" }
+  },
+  {
+    "id": "s4",
+    "name": "Dra. Lucía Fernández",
+    "role": "Genetista Aviar",
+    "company": "Centro de Mejoramiento Genético",
+    "bio": "Investigadora en genómica aplicada al mejoramiento de líneas de postura y engorde, con foco en resistencia a enfermedades.",
+    "socials": { "linkedin": "https://linkedin.com", "instagram": "https://instagram.com" }
+  },
+  {
+    "id": "s5",
+    "name": "MSc. Andrés Cifuentes",
+    "role": "Economista Agropecuario",
+    "company": "Cámara Latinoamericana de Avicultura",
+    "bio": "Analista de mercados avícolas y cadenas de valor. Asesor de políticas públicas para el sector agroindustrial.",
+    "socials": { "twitter": "https://twitter.com", "linkedin": "https://linkedin.com" }
+  },
+  {
+    "id": "s6",
+    "name": "Dra. Patricia Solano",
+    "role": "Especialista en Bienestar Animal",
+    "company": "Facultad de Veterinaria, USAC",
+    "bio": "Veterinaria dedicada al estudio del bienestar en sistemas de producción avícola y su relación con la productividad.",
+    "socials": { "linkedin": "https://linkedin.com" }
+  },
+  {
+    "id": "s7",
+    "name": "Dr. Fernando Rojas",
+    "role": "Microbiólogo",
+    "company": "Laboratorio Aviar Centroamericano",
+    "bio": "Experto en microbiota intestinal y estrategias de reducción de antibióticos en la producción avícola.",
+    "socials": { "web": "https://ovum2026.com" }
+  },
+  {
+    "id": "s8",
+    "name": "Ing. Gabriela Ortiz",
+    "role": "Directora de Sostenibilidad",
+    "company": "Grupo Avícola del Pacífico",
+    "bio": "Lidera iniciativas de economía circular, gestión de residuos y reducción de huella de carbono en la industria avícola.",
+    "socials": { "linkedin": "https://linkedin.com", "instagram": "https://instagram.com" }
+  },
+  {
+    "id": "s9",
+    "name": "Dr. Hugo Ramírez",
+    "role": "Consultor Internacional en Producción de Huevo",
+    "company": "Consultoría Independiente",
+    "bio": "Asesor de empresas productoras de huevo en más de 12 países. Autor de publicaciones sobre eficiencia productiva.",
+    "socials": { "linkedin": "https://linkedin.com" }
+  },
+  {
+    "id": "s10",
+    "name": "Dra. Sofía Marroquín",
+    "role": "Epidemióloga Veterinaria",
+    "company": "OIRSA",
+    "bio": "Especialista en vigilancia epidemiológica y sanidad transfronteriza en Centroamérica y el Caribe.",
+    "socials": { "twitter": "https://twitter.com", "linkedin": "https://linkedin.com" }
+  }
+]

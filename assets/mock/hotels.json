@@ -1,0 +1,41 @@
+[
+  {
+    "id": "h1",
+    "name": "Hotel Real InterContinental",
+    "description": "Hotel oficial del congreso, sede del cóctel de bienvenida. Tarifas preferenciales para delegados.",
+    "address": "14 Calle 2-51, zona 10, Ciudad de Guatemala",
+    "distance": "Sede del cóctel de bienvenida",
+    "price_from": "USD 140 / noche",
+    "web": "https://ovum2026.com",
+    "phone": "+502 2413-4444",
+    "is_official": true
+  },
+  {
+    "id": "h2",
+    "name": "Hotel Barceló Guatemala City",
+    "description": "Hotel de negocios en zona 10, a corta distancia de la sede principal.",
+    "address": "7 Avenida 15-45, zona 9, Ciudad de Guatemala",
+    "distance": "10 min de la sede",
+    "price_from": "USD 110 / noche",
+    "web": "https://ovum2026.com",
+    "phone": "+502 2378-4000"
+  },
+  {
+    "id": "h3",
+    "name": "Hotel Clarion Suites",
+    "description": "Suites cómodas con desayuno incluido, ideal para estancias largas.",
+    "address": "14 Calle 3-08, zona 10, Ciudad de Guatemala",
+    "distance": "12 min de la sede",
+    "price_from": "USD 95 / noche",
+    "phone": "+502 2379-4646"
+  },
+  {
+    "id": "h4",
+    "name": "Holiday Inn Guatemala",
+    "description": "Opción económica y funcional cerca del centro de convenciones.",
+    "address": "1 Avenida 13-22, zona 10, Ciudad de Guatemala",
+    "distance": "15 min de la sede",
+    "price_from": "USD 85 / noche",
+    "phone": "+502 2421-0000"
+  }
+]

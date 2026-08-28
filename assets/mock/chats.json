@@ -1,0 +1,37 @@
+[
+  {
+    "id": "c1",
+    "attendee_id": "a2",
+    "text": "Hola, vi tu perfil. Me interesa mucho lo que hacen en NutriAgro.",
+    "sent_by_me": true,
+    "time": "2026-11-11T10:15:00"
+  },
+  {
+    "id": "c2",
+    "attendee_id": "a2",
+    "text": "¡Hola! Con gusto conversamos. ¿Te parece coordinar una reunión?",
+    "sent_by_me": false,
+    "time": "2026-11-11T10:18:00"
+  },
+  {
+    "id": "c3",
+    "attendee_id": "a2",
+    "text": "Perfecto, te envío una solicitud para mañana.",
+    "sent_by_me": true,
+    "time": "2026-11-11T10:20:00"
+  },
+  {
+    "id": "c4",
+    "attendee_id": "a5",
+    "text": "Hola Diego, me gustaría ver la demo de SoftFarm.",
+    "sent_by_me": true,
+    "time": "2026-11-11T14:40:00"
+  },
+  {
+    "id": "c5",
+    "attendee_id": "a5",
+    "text": "¡Claro! Pásate por el stand T-15 cuando quieras.",
+    "sent_by_me": false,
+    "time": "2026-11-11T14:45:00"
+  }
+]

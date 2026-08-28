@@ -1,0 +1,23 @@
+[
+  {
+    "id": "q1",
+    "session_id": "d1-2",
+    "text": "¿Qué aditivos naturales recomienda para mejorar la conversión alimenticia?",
+    "author_name": "José Luis Herrera",
+    "upvotes": 12
+  },
+  {
+    "id": "q2",
+    "session_id": "d1-2",
+    "text": "¿Cómo impacta el precio del maíz en la formulación de dietas este año?",
+    "author_name": "Ana María Torres",
+    "upvotes": 8
+  },
+  {
+    "id": "q3",
+    "session_id": "d2-1",
+    "text": "¿Cuál es la vigencia recomendada de un plan de bioseguridad ante influenza?",
+    "author_name": "Roberto Castillo",
+    "upvotes": 15
+  }
+]

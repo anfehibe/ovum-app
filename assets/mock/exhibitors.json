@@ -1,0 +1,105 @@
+[
+  {
+    "id": "ex1",
+    "name": "AgroInsumos del Sur",
+    "short_description": "Materias primas para alimento balanceado",
+    "description": "Proveedor de granos, harinas y aditivos para la industria del alimento balanceado en Centroamérica.",
+    "booth": "A-05",
+    "category": "Nutrición",
+    "web": "https://ovum2026.com",
+    "email": "ventas@agroinsumos.example"
+  },
+  {
+    "id": "ex2",
+    "name": "AviTech Systems",
+    "short_description": "Automatización y equipamiento de granjas",
+    "description": "Líneas de alimentación, ventilación y recolección automatizada de huevo.",
+    "booth": "O-12",
+    "category": "Equipamiento",
+    "web": "https://ovum2026.com"
+  },
+  {
+    "id": "ex3",
+    "name": "BioVet Latinoamérica",
+    "short_description": "Vacunas y productos veterinarios",
+    "description": "Portafolio completo de biológicos y farmacéuticos para la salud aviar.",
+    "booth": "D-02",
+    "category": "Sanidad",
+    "email": "info@biovet.example"
+  },
+  {
+    "id": "ex4",
+    "name": "Cámara Avícola de Guatemala",
+    "short_description": "Gremio del sector avícola",
+    "description": "Asociación que representa a los productores avícolas del país.",
+    "booth": "G-01",
+    "category": "Institucional"
+  },
+  {
+    "id": "ex5",
+    "name": "Empaques Guatemala",
+    "short_description": "Soluciones de empaque para huevo",
+    "description": "Bandejas, cajas y empaques sostenibles para ovoproductos.",
+    "booth": "P-40",
+    "category": "Empaque"
+  },
+  {
+    "id": "ex6",
+    "name": "FrigoLog",
+    "short_description": "Cadena de frío y logística",
+    "description": "Transporte refrigerado y almacenamiento para productos avícolas.",
+    "booth": "L-08",
+    "category": "Logística",
+    "web": "https://ovum2026.com"
+  },
+  {
+    "id": "ex7",
+    "name": "GenAvis",
+    "short_description": "Genética aviar",
+    "description": "Material genético y asesoría en programas de mejoramiento.",
+    "booth": "O-11",
+    "category": "Genética"
+  },
+  {
+    "id": "ex8",
+    "name": "NutriAgro",
+    "short_description": "Nutrición animal",
+    "description": "Aditivos, premezclas y soluciones nutricionales de alto rendimiento.",
+    "booth": "D-01",
+    "category": "Nutrición",
+    "web": "https://ovum2026.com"
+  },
+  {
+    "id": "ex9",
+    "name": "Ovoproductos Maya",
+    "short_description": "Procesamiento de huevo",
+    "description": "Huevo líquido, deshidratado y ovoproductos para la industria alimentaria.",
+    "booth": "P-42",
+    "category": "Procesamiento"
+  },
+  {
+    "id": "ex10",
+    "name": "SoftFarm",
+    "short_description": "Software de gestión de granjas",
+    "description": "Plataforma de trazabilidad, indicadores productivos y gestión sanitaria.",
+    "booth": "T-15",
+    "category": "Tecnología",
+    "web": "https://ovum2026.com"
+  },
+  {
+    "id": "ex11",
+    "name": "VacunAve",
+    "short_description": "Servicios de vacunación",
+    "description": "Aplicación de biológicos y asistencia técnica en campo.",
+    "booth": "B-32",
+    "category": "Sanidad"
+  },
+  {
+    "id": "ex12",
+    "name": "Zootecnia Integral",
+    "short_description": "Consultoría zootécnica",
+    "description": "Asesoría en manejo, ambiente y productividad de granjas comerciales.",
+    "booth": "S-19",
+    "category": "Servicios"
+  }
+]
