@@ -1,13 +1,63 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/config/app_config.dart';
+import '../../core/network/api_client.dart';
+import '../../core/network/api_exception.dart';
+import '../../core/network/auth_token_store.dart';
 import '../../core/utils/iterable_ext.dart';
 import '../models/models.dart';
+import '../repositories/api_ovum_repository.dart';
 import '../repositories/ovum_repository.dart';
+import '../services/auth_service.dart';
+import 'preferences.dart';
 
-/// Repositorio de datos (mock por ahora). Punto único para cambiar a API.
-final ovumRepositoryProvider = Provider<OvumRepository>(
-  (ref) => const MockOvumRepository(),
+// ── Infraestructura de red / API ────────────────────────────────────────────
+
+/// Almacén del token Bearer (reusa SharedPreferences).
+final authTokenStoreProvider = Provider<AuthTokenStore>(
+  (ref) => AuthTokenStore(ref.watch(sharedPreferencesProvider)),
 );
+
+/// Cliente HTTP con headers `X-Tenant` + `Bearer` y errores tipados.
+final apiClientProvider = Provider<ApiClient>(
+  (ref) => ApiClient(ref.watch(authTokenStoreProvider)),
+);
+
+/// Servicio de autenticación (`/login`, `/me`, `/logout`).
+final authServiceProvider = Provider<AuthService>(
+  (ref) => AuthService(ref.watch(apiClientProvider)),
+);
+
+/// Evento configurado (resuelto por `codigo`). `null` si el flag está apagado o
+/// si el backend aún no responde (la app cae a datos mock / constantes).
+final eventProvider = FutureProvider<Event?>((ref) async {
+  if (!AppConfig.useApiEvents) return null;
+  final api = ref.watch(apiClientProvider);
+  try {
+    final data = await api.get('/events', query: {'all': 1});
+    final list = (data is Map && data['data'] is List)
+        ? (data['data'] as List)
+        : (data is List ? data : const []);
+    final maps =
+        list.whereType<Map>().map((e) => e.cast<String, dynamic>()).toList();
+    final match =
+        maps.firstWhereOrNull((e) => e['codigo'] == AppConfig.eventCode) ??
+        (maps.isNotEmpty ? maps.first : null);
+    return match == null ? null : Event.fromJson(match);
+  } on ApiException {
+    return null; // resiliente mientras el backend está en construcción
+  }
+});
+
+/// Repositorio de datos: híbrido API + mock. Punto único de inyección.
+final ovumRepositoryProvider = Provider<OvumRepository>((ref) {
+  final api = ref.watch(apiClientProvider);
+  return ApiOvumRepository(
+    api,
+    fallback: const MockOvumRepository(),
+    eventId: () => ref.read(eventProvider.future).then((e) => e?.id),
+  );
+});
 
 // ── Listados de contenido (cargados una vez y cacheados por Riverpod) ──────
 

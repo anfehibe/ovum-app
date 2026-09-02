@@ -15,6 +15,10 @@ abstract interface class OvumRepository {
   Future<List<Organizer>> getOrganizers();
   Future<List<InfoItem>> getInfoItems();
   Future<List<Poll>> getPolls();
+
+  /// Registra el voto del usuario en una encuesta (escritura).
+  Future<void> votePoll(String pollId, int optionIndex);
+
   Future<List<LiveQuestion>> getSeedQuestions();
   Future<List<Meeting>> getSeedMeetings();
   Future<List<ChatMessage>> getSeedChatMessages();
@@ -82,6 +86,11 @@ class MockOvumRepository implements OvumRepository {
   Future<List<Poll>> getPolls() async {
     final rows = await loadJsonList('assets/mock/polls.json');
     return rows.map(Poll.fromJson).toList();
+  }
+
+  @override
+  Future<void> votePoll(String pollId, int optionIndex) async {
+    // Mock: el voto vive en memoria (pollAnswersProvider); nada que persistir.
   }
 
   @override

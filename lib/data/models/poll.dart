@@ -24,11 +24,15 @@ class Poll {
   final String question;
   final List<PollOption> options;
 
+  /// Índice de la opción ya votada por el usuario (del servidor), o `null`.
+  final int? myVoteIndex;
+
   const Poll({
     required this.id,
     required this.sessionId,
     required this.question,
     this.options = const [],
+    this.myVoteIndex,
   });
 
   factory Poll.fromJson(Map<String, dynamic> json) => Poll(
@@ -39,5 +43,6 @@ class Poll {
                 ?.map((e) => PollOption.fromJson(e as Map<String, dynamic>))
                 .toList() ??
             const [],
+        myVoteIndex: json['my_vote_index'] as int?,
       );
 }

@@ -105,7 +105,17 @@ class _PollCard extends ConsumerWidget {
       borderRadius: BorderRadius.circular(14),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => ref.read(pollAnswersProvider.notifier).answer(poll.id, option.id),
+        onTap: () async {
+          try {
+            await ref.read(pollAnswersProvider.notifier).answer(poll.id, option.id);
+          } catch (_) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('No se pudo registrar tu voto.')),
+              );
+            }
+          }
+        },
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Text(option.text, style: Theme.of(context).textTheme.bodyLarge),

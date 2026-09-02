@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_strings.dart';
 import '../../core/constants/ovum_event.dart';
+import '../../core/network/api_exception.dart';
 import '../../core/router/route_paths.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/ovum_logo.dart';
@@ -21,6 +22,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   bool _obscure = true;
+  bool _busy = false;
+  String? _error;
 
   @override
   void dispose() {
@@ -29,16 +32,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  void _login() {
-    if (_formKey.currentState?.validate() ?? false) {
-      ref.read(authControllerProvider.notifier).loginWithEmail(_emailCtrl.text.trim());
-      context.go(R.home);
+  Future<void> _login() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await ref
+          .read(authControllerProvider.notifier)
+          .login(_emailCtrl.text.trim(), _passwordCtrl.text);
+      if (mounted) context.go(R.home);
+    } on ApiException catch (e) {
+      if (mounted) {
+        setState(() => _error =
+            e.isUnauthorized ? 'Correo o contraseña incorrectos.' : e.message);
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _error = 'No se pudo iniciar sesión. Intenta de nuevo.');
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
   }
 
-  void _loginAsGuest() {
-    ref.read(authControllerProvider.notifier).loginAsGuest();
-    context.go(R.home);
+  Future<void> _loginAsGuest() async {
+    setState(() => _busy = true);
+    await ref.read(authControllerProvider.notifier).loginAsGuest();
+    if (mounted) context.go(R.home);
   }
 
   @override
@@ -84,7 +106,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       _loginCard(theme),
                       const SizedBox(height: 20),
                       TextButton(
-                        onPressed: _loginAsGuest,
+                        onPressed: _busy ? null : _loginAsGuest,
                         style: TextButton.styleFrom(foregroundColor: Colors.white),
                         child: const Text(AppStrings.enterAsGuest),
                       ),
@@ -146,12 +168,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   icon: Icon(_obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined),
                 ),
               ),
-              onFieldSubmitted: (_) => _login(),
+              validator: (v) => (v == null || v.isEmpty) ? 'Ingresa tu contraseña' : null,
+              onFieldSubmitted: (_) {
+                if (!_busy) _login();
+              },
             ),
+            if (_error != null) ...[
+              const SizedBox(height: 14),
+              Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error),
+              ),
+            ],
             const SizedBox(height: 22),
             FilledButton(
-              onPressed: _login,
-              child: const Text(AppStrings.login),
+              onPressed: _busy ? null : _login,
+              child: _busy
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text(AppStrings.login),
             ),
           ],
         ),

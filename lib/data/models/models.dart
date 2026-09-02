@@ -1,6 +1,7 @@
 export 'app_user.dart';
 export 'attendee.dart';
 export 'chat_message.dart';
+export 'event.dart';
 export 'exhibitor.dart';
 export 'hotel.dart';
 export 'info_item.dart';

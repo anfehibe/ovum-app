@@ -24,6 +24,8 @@ class AttendeeDetailScreen extends ConsumerWidget {
       return Scaffold(appBar: AppBar(), body: const EmptyState(message: 'Asistente no encontrado'));
     }
     final scheme = context.scheme;
+    final location =
+        [attendee.city, attendee.country].where((s) => s.isNotEmpty).join(', ');
 
     return Scaffold(
       body: ListView(
@@ -83,8 +85,10 @@ class AttendeeDetailScreen extends ConsumerWidget {
               children: [
                 _actionsRow(context),
                 const SizedBox(height: 20),
-                _metaRow(context, PhosphorIconsRegular.briefcase, attendee.sector),
-                _metaRow(context, PhosphorIconsRegular.mapPin, '${attendee.city}, ${attendee.country}'),
+                if (attendee.sector.isNotEmpty)
+                  _metaRow(context, PhosphorIconsRegular.briefcase, attendee.sector),
+                if (location.isNotEmpty)
+                  _metaRow(context, PhosphorIconsRegular.mapPin, location),
                 if (attendee.bio.isNotEmpty) ...[
                   const SizedBox(height: 18),
                   Text('Biografía', style: Theme.of(context).textTheme.titleMedium),

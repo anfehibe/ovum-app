@@ -31,6 +31,8 @@ class SessionDetailScreen extends ConsumerWidget {
     final scheme = context.scheme;
     final color = trackColor(context, session.track);
     final speakers = ref.watch(speakersForSessionProvider(sessionId));
+    // La entrada a encuestas es data-driven: el API de agenda no trae has_polls.
+    final hasPolls = ref.watch(pollsForSessionProvider(sessionId)).isNotEmpty;
 
     return Scaffold(
       body: Column(
@@ -69,7 +71,7 @@ class SessionDetailScreen extends ConsumerWidget {
                       child: _speakerTile(context, s.id, s.name, s.role, s.photoUrl),
                     ),
                 ],
-                if (session.hasQuestions || session.hasPolls) ...[
+                if (session.hasQuestions || hasPolls) ...[
                   const SizedBox(height: 24),
                   Text('Participa', style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 12),
@@ -82,7 +84,7 @@ class SessionDetailScreen extends ConsumerWidget {
                       subtitle: 'Envía tu pregunta al panel',
                       onTap: () => context.push(R.liveQuestionsFor(session.id)),
                     ),
-                  if (session.hasPolls)
+                  if (hasPolls)
                     _participateTile(
                       context,
                       icon: PhosphorIconsRegular.chartBar,

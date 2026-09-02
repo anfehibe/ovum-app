@@ -27,4 +27,12 @@ class SocialLinks {
 
   bool get hasAny =>
       [web, linkedin, twitter, instagram, facebook].any((e) => e != null && e.isNotEmpty);
+
+  Map<String, dynamic> toJson() => {
+    if (web != null) 'web': web,
+    if (linkedin != null) 'linkedin': linkedin,
+    if (twitter != null) 'twitter': twitter,
+    if (instagram != null) 'instagram': instagram,
+    if (facebook != null) 'facebook': facebook,
+  };
 }

@@ -1,7 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/config/app_config.dart';
+import '../../core/network/api_exception.dart';
 import '../models/models.dart';
+import 'content_providers.dart';
 import 'preferences.dart';
 
 // ── Tema (claro / oscuro / sistema), persistido ────────────────────────────
@@ -30,49 +35,81 @@ class ThemeModeNotifier extends Notifier<ThemeMode> {
 final themeModeProvider =
     NotifierProvider<ThemeModeNotifier, ThemeMode>(ThemeModeNotifier.new);
 
-// ── Sesión de usuario (mock) ────────────────────────────────────────────────
+// ── Sesión de usuario ───────────────────────────────────────────────────────
 
 /// Controla el usuario logueado. `null` = sin sesión (se muestra el login).
+/// La sesión (usuario + token) se persiste en SharedPreferences y se restaura
+/// al arrancar. El modo invitado no lleva token y tiene acceso limitado.
 class AuthController extends Notifier<AppUser?> {
-  static const _loggedKey = 'logged_in';
-  static const _nameKey = 'user_name';
-  static const _emailKey = 'user_email';
+  static const _userKey = 'auth_user';
 
   @override
   AppUser? build() {
-    final prefs = ref.watch(sharedPreferencesProvider);
-    if (prefs.getBool(_loggedKey) != true) return null;
-    return AppUser.guest.copyWith(
-      name: prefs.getString(_nameKey) ?? AppUser.guest.name,
-      email: prefs.getString(_emailKey) ?? '',
-    );
+    final raw = ref.watch(sharedPreferencesProvider).getString(_userKey);
+    if (raw == null) return null;
+    AppUser user;
+    try {
+      user = AppUser.fromJson(json.decode(raw) as Map<String, dynamic>);
+    } catch (_) {
+      return null;
+    }
+    // Refresca el perfil en segundo plano (no bloquea el arranque).
+    if (!user.isGuest && AppConfig.useApiAuth) {
+      Future.microtask(_refreshMe);
+    }
+    return user;
   }
 
-  void loginAsGuest() => _login(AppUser.guest);
-
-  void loginWithEmail(String email) {
-    final name = _nameFromEmail(email);
-    _login(AppUser.guest.copyWith(name: name, email: email));
+  /// Login real contra la API. Propaga [ApiException] en error (la UI lo maneja).
+  Future<void> login(String email, String password) async {
+    if (!AppConfig.useApiAuth) {
+      // Kill-switch: comportamiento mock previo (sin red).
+      _persist(AppUser.guest.copyWith(name: _nameFromEmail(email), email: email));
+      return;
+    }
+    final result = await ref.read(authServiceProvider).login(email, password);
+    await ref.read(authTokenStoreProvider).save(result.token);
+    _persist(result.user);
   }
 
-  void _login(AppUser user) {
-    final prefs = ref.read(sharedPreferencesProvider);
-    prefs.setBool(_loggedKey, true);
-    prefs.setString(_nameKey, user.name);
-    prefs.setString(_emailKey, user.email);
-    state = user;
+  /// Entra en modo invitado (sin token; por ahora solo la agenda).
+  Future<void> loginAsGuest() async {
+    await ref.read(authTokenStoreProvider).clear();
+    _persist(AppUser.guest);
   }
 
-  void updateUser(AppUser user) {
-    final prefs = ref.read(sharedPreferencesProvider);
-    prefs.setString(_nameKey, user.name);
-    prefs.setString(_emailKey, user.email);
-    state = user;
+  /// Revalida la sesión contra `/me`. Cierra sesión solo si el token expiró
+  /// (401); ante errores de red mantiene la sesión local (backend en construcción).
+  Future<void> _refreshMe() async {
+    if (!ref.read(authTokenStoreProvider).hasToken) return;
+    try {
+      _persist(await ref.read(authServiceProvider).me());
+    } on ApiException catch (e) {
+      if (e.isUnauthorized) await logout();
+    } catch (_) {
+      // Silencioso: no cerramos sesión por fallos de red.
+    }
   }
 
-  void logout() {
-    ref.read(sharedPreferencesProvider).setBool(_loggedKey, false);
+  Future<void> logout() async {
+    final tokens = ref.read(authTokenStoreProvider);
+    if (AppConfig.useApiAuth && tokens.hasToken) {
+      try {
+        await ref.read(authServiceProvider).logout();
+      } catch (_) {
+        // Best-effort: aunque el backend falle, limpiamos la sesión local.
+      }
+    }
+    await tokens.clear();
+    await ref.read(sharedPreferencesProvider).remove(_userKey);
     state = null;
+  }
+
+  void updateUser(AppUser user) => _persist(user);
+
+  void _persist(AppUser user) {
+    ref.read(sharedPreferencesProvider).setString(_userKey, json.encode(user.toJson()));
+    state = user;
   }
 
   String _nameFromEmail(String email) {
@@ -93,3 +130,7 @@ final authControllerProvider =
 final currentUserProvider = Provider<AppUser?>((ref) => ref.watch(authControllerProvider));
 
 final isLoggedInProvider = Provider<bool>((ref) => ref.watch(authControllerProvider) != null);
+
+/// `true` cuando la sesión activa es de invitado (sin token; acceso limitado).
+final isGuestProvider =
+    Provider<bool>((ref) => ref.watch(authControllerProvider)?.isGuest ?? false);

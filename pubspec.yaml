@@ -27,6 +27,9 @@ dependencies:
   url_launcher: ^6.3.2
   share_plus: ^13.3.0
 
+  # Red / API
+  dio: ^5.7.0
+
   # Persistencia local + formato
   shared_preferences: ^2.5.5
   intl: ^0.20.2
