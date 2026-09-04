@@ -1,4 +1,4 @@
-package com.menta.ovum
+package com.trivvo.ovum
 
 import io.flutter.embedding.android.FlutterActivity
 

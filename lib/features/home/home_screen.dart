@@ -188,7 +188,7 @@ class _QuickTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 78,
+      width: 92,
       child: Column(
         children: [
           Material(
@@ -210,7 +210,10 @@ class _QuickTile extends StatelessWidget {
             maxLines: 2,
             textAlign: TextAlign.center,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.labelSmall,
+            style: Theme.of(context)
+                .textTheme
+                .labelSmall
+                ?.copyWith(fontSize: 10.5, height: 1.1),
           ),
         ],
       ),
