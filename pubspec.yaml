@@ -2,7 +2,7 @@ name: ovum
 description: "OVUM 2026 - XXIX Congreso Latinoamericano de Avicultura"
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 0.0.1+1
 
 environment:
   sdk: ^3.12.2
@@ -47,11 +47,16 @@ dependency_overrides:
   path_provider_foundation: 2.4.1
 
 flutter_launcher_icons:
-  image_path: "assets/logo/ovum_icon.png"
+  image_path: "assets/logo/icon.png"        # iOS + iconos legacy Android
   android: true
   ios: true
   remove_alpha_ios: true
+  background_color_ios: "#021D70"           # rellena las esquinas transparentes en iOS con el azul del arte
   min_sdk_android: 21
+  # --- Adaptive icons (Android 8+) ---
+  adaptive_icon_background: "#021D70"        # fondo sólido = azul del diseño (los bordes recortados se funden)
+  adaptive_icon_foreground: "assets/logo/icon.png"
+  adaptive_icon_foreground_inset: 10         # % de margen; el logo se ve grande y el arte completo queda dentro de la máscara. Ajustable 6-20
 
 flutter_native_splash:
   color: "#E8991C"
