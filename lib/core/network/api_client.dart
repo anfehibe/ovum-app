@@ -23,6 +23,9 @@ class ApiClient {
           print(
             'API request: ${options.method} ${options.baseUrl}${options.path}',
           );
+          print('Headers: ${options.headers}');
+          print('Query: ${options.queryParameters}');
+          print('Body: ${options.data}');
           final token = _tokens.token;
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
@@ -31,7 +34,7 @@ class ApiClient {
         },
         onResponse: (response, handler) {
           print(
-            'API response: ${response.statusCode}${response.requestOptions.baseUrl}${response.requestOptions.path}',
+            'API response: ${response.statusCode} ${response.requestOptions.baseUrl}${response.requestOptions.path}',
           );
           print(response.data.toString());
           handler.next(response);

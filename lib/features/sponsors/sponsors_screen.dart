@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/router/route_paths.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/widgets/initials_avatar.dart';
+import '../../core/widgets/sponsor_logo.dart';
 import '../../core/widgets/states.dart';
 import '../../data/models/models.dart';
 import '../../data/providers/content_providers.dart';
@@ -47,7 +47,7 @@ class SponsorsScreen extends ConsumerWidget {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   crossAxisCount: tier == SponsorTier.diamante ? 2 : 3,
-                  childAspectRatio: tier == SponsorTier.diamante ? 1.45 : 0.95,
+                  childAspectRatio: tier == SponsorTier.diamante ? 1.4 : 0.82,
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 12,
                   children: [
@@ -102,16 +102,24 @@ class _SponsorCard extends StatelessWidget {
       child: InkWell(
         onTap: () => context.push(R.sponsor(sponsor.id)),
         child: Container(
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.all(big ? 12 : 10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: color.withValues(alpha: 0.4)),
           ),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              InitialsAvatar(name: sponsor.name, imageUrl: sponsor.logoUrl, size: big ? 52 : 40),
-              const SizedBox(height: 8),
+              // El logo ocupa el espacio flexible: nunca desborda el card y se
+              // muestra completo (BoxFit.contain) en una tarjeta blanca.
+              Expanded(
+                child: SponsorLogo(
+                  name: sponsor.name,
+                  logoUrl: sponsor.logoUrl,
+                  radius: big ? 14 : 12,
+                  padding: big ? 12 : 9,
+                ),
+              ),
+              SizedBox(height: big ? 10 : 8),
               Text(
                 sponsor.name,
                 maxLines: 2,
@@ -120,7 +128,7 @@ class _SponsorCard extends StatelessWidget {
                 style: (big
                         ? Theme.of(context).textTheme.titleSmall
                         : Theme.of(context).textTheme.labelMedium)
-                    ?.copyWith(fontWeight: FontWeight.w600),
+                    ?.copyWith(fontWeight: FontWeight.w600, height: 1.15),
               ),
             ],
           ),

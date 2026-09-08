@@ -30,6 +30,7 @@ import '../../features/venue/hotels_screen.dart';
 import '../../features/venue/info_screen.dart';
 import '../../features/venue/organizers_screen.dart';
 import '../../features/venue/venues_screen.dart';
+import '../../features/splash/splash_screen.dart';
 import 'route_paths.dart';
 
 /// Puente entre el estado de auth (Riverpod) y el `refreshListenable` de go_router.
@@ -51,9 +52,11 @@ final routerProvider = Provider<GoRouter>((ref) {
   ref.onDispose(refresh.dispose);
 
   return GoRouter(
-    initialLocation: R.home,
+    initialLocation: R.splash,
     refreshListenable: refresh,
     redirect: (context, state) {
+      // El splash decide a dónde ir (login/home); no lo redirijas por auth.
+      if (state.matchedLocation == R.splash) return null;
       final loggedIn = ref.read(isLoggedInProvider);
       final loggingIn = state.matchedLocation == R.login;
       if (!loggedIn) return loggingIn ? null : R.login;
@@ -61,6 +64,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      GoRoute(path: R.splash, builder: (_, _) => const SplashScreen()),
       GoRoute(path: R.login, builder: (_, _) => const LoginScreen()),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) => HomeShell(navigationShell: navigationShell),

@@ -7,6 +7,7 @@ import '../../core/constants/ovum_event.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/router/route_paths.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/event_header_banner.dart';
 import '../../core/widgets/ovum_logo.dart';
 import '../../data/providers/user_provider.dart';
 
@@ -66,6 +67,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final topInset = MediaQuery.paddingOf(context).top;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -75,49 +78,67 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             colors: [Color(0xFFF6C453), BrandColors.yolk, BrandColors.sunrise],
           ),
         ),
-        child: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) => SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 36),
-                      const OvumEggMark(size: 84, onDark: true),
-                      const SizedBox(height: 20),
-                      Text(
-                        'OVUM 2026',
-                        style: theme.textTheme.displaySmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 3,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        OvumEvent.edition,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.titleSmall?.copyWith(color: Colors.white),
-                      ),
-                      const SizedBox(height: 32),
-                      _loginCard(theme),
-                      const SizedBox(height: 20),
-                      TextButton(
-                        onPressed: _busy ? null : _loginAsGuest,
-                        style: TextButton.styleFrom(foregroundColor: Colors.white),
-                        child: const Text(AppStrings.enterAsGuest),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            child: ConstrainedBox(
+              // Fuerza el contenido a ocupar al menos toda la pantalla para que el
+              // gradiente llene el fondo (evita la franja blanca inferior).
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Column(
+                children: [
+                  // Banner del congreso: ancho completo, en el tope, fuera del safe
+                  // area (solo el espacio de la status bar; el gradiente va detrás).
+                  Padding(
+                    padding: EdgeInsets.only(top: topInset),
+                    child: EventHeaderBanner(fallback: _brandingFallback(theme)),
                   ),
-                ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(24, 24, 24, bottomInset + 24),
+                    child: Column(
+                      children: [
+                        _loginCard(theme),
+                        const SizedBox(height: 20),
+                        TextButton(
+                          onPressed: _busy ? null : _loginAsGuest,
+                          style: TextButton.styleFrom(foregroundColor: Colors.white),
+                          child: const Text(AppStrings.enterAsGuest),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  /// Header de marca (fallback cuando aún no hay banner del API).
+  Widget _brandingFallback(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const OvumEggMark(size: 84, onDark: true),
+        const SizedBox(height: 20),
+        Text(
+          'OVUM 2026',
+          style: theme.textTheme.displaySmall?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 3,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          OvumEvent.edition,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.titleSmall?.copyWith(color: Colors.white),
+        ),
+        ],
       ),
     );
   }

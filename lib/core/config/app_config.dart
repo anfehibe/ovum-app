@@ -42,6 +42,8 @@ abstract final class AppConfig {
       bool.fromEnvironment('OVUM_API_CONTENT', defaultValue: true);
   static const bool useApiPolls =
       bool.fromEnvironment('OVUM_API_POLLS', defaultValue: true);
+  static const bool useApiSplash =
+      bool.fromEnvironment('OVUM_API_SPLASH', defaultValue: true);
 
   // Pendientes de endpoint (siguen en mock):
   static const bool useApiVenues = false;

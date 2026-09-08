@@ -1,6 +1,7 @@
 /// Rutas de la app (go_router). Centralizadas para navegar con seguridad.
 abstract final class R {
   // Auth
+  static const splash = '/splash';
   static const login = '/login';
 
   // Pestañas del shell (bottom navigation)

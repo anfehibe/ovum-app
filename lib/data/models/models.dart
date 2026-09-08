@@ -12,5 +12,6 @@ export 'poll.dart';
 export 'session.dart';
 export 'social_links.dart';
 export 'speaker.dart';
+export 'splash_item.dart';
 export 'sponsor.dart';
 export 'venue.dart';

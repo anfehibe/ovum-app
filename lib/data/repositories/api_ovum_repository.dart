@@ -7,6 +7,7 @@ import 'mappers/content_mapper.dart';
 import 'mappers/poll_mapper.dart';
 import 'mappers/session_mapper.dart';
 import 'mappers/speaker_mapper.dart';
+import 'mappers/splash_mapper.dart';
 import 'mappers/sponsor_mapper.dart';
 import 'ovum_repository.dart';
 
@@ -128,6 +129,16 @@ class ApiOvumRepository implements OvumRepository {
   Future<void> votePoll(String pollId, int optionIndex) async {
     if (!AppConfig.useApiPolls) return _mock.votePoll(pollId, optionIndex);
     await _api.post('/polls/$pollId/vote', body: {'option_index': optionIndex});
+  }
+
+  @override
+  Future<List<SplashItem>> getSplashes() async {
+    if (!AppConfig.useApiSplash) return _mock.getSplashes();
+    // Endpoint top-level de institución; no depende del evento (no usa eventId).
+    final data = await _api.get('/app/splash');
+    return _listOf(data)
+        .map((e) => splashFromJson((e as Map).cast<String, dynamic>()))
+        .toList();
   }
 
   // ── Sin endpoint conectado todavía → mock ─────────────────────────────────

@@ -6,7 +6,7 @@ import 'package:ovum/core/ui/app_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/iterable_ext.dart';
 import '../../core/widgets/favorite_button.dart';
-import '../../core/widgets/initials_avatar.dart';
+import '../../core/widgets/sponsor_logo.dart';
 import '../../core/widgets/states.dart';
 import '../../data/providers/content_providers.dart';
 import '../../data/providers/favorites_provider.dart';
@@ -55,10 +55,15 @@ class SponsorDetailScreen extends ConsumerWidget {
                     FavoriteButton(kind: FavKind.sponsor, id: sponsor.id, onSurface: true),
                   ],
                 ),
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                  child: InitialsAvatar(name: sponsor.name, imageUrl: sponsor.logoUrl, size: 84),
+                SizedBox(
+                  width: 150,
+                  height: 104,
+                  child: SponsorLogo(
+                    name: sponsor.name,
+                    logoUrl: sponsor.logoUrl,
+                    radius: 20,
+                    padding: 16,
+                  ),
                 ),
                 const SizedBox(height: 14),
                 Text(

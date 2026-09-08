@@ -19,6 +19,9 @@ abstract interface class OvumRepository {
   /// Registra el voto del usuario en una encuesta (escritura).
   Future<void> votePoll(String pollId, int optionIndex);
 
+  /// Imágenes de splash de la app (nivel institución).
+  Future<List<SplashItem>> getSplashes();
+
   Future<List<LiveQuestion>> getSeedQuestions();
   Future<List<Meeting>> getSeedMeetings();
   Future<List<ChatMessage>> getSeedChatMessages();
@@ -92,6 +95,9 @@ class MockOvumRepository implements OvumRepository {
   Future<void> votePoll(String pollId, int optionIndex) async {
     // Mock: el voto vive en memoria (pollAnswersProvider); nada que persistir.
   }
+
+  @override
+  Future<List<SplashItem>> getSplashes() async => const [];
 
   @override
   Future<List<LiveQuestion>> getSeedQuestions() async {

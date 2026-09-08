@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,10 +39,80 @@ class HomeScreen extends ConsumerWidget {
 class _HeroHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final bannerUrl = ref.watch(headerBannerProvider);
+    final header = (bannerUrl != null && bannerUrl.isNotEmpty)
+        ? _banner(context, ref, bannerUrl)
+        : _hero(context, ref);
+    return header.animate().fadeIn(duration: 350.ms);
+  }
+
+  /// Header con el banner del congreso (splash order:2) + fila de saludo/countdown.
+  Widget _banner(BuildContext context, WidgetRef ref, String url) {
     final theme = Theme.of(context);
-    final user = ref.watch(currentUserProvider);
+    final firstName = (ref.watch(currentUserProvider)?.name ?? '').split(' ').first;
     final daysLeft = OvumEvent.startDate.difference(DateTime.now()).inDays;
-    final firstName = (user?.name ?? '').split(' ').first;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Banner a ancho completo, debajo de la status bar (franja de marca detrás).
+        Container(
+          color: BrandColors.yolk,
+          padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top),
+          child: CachedNetworkImage(
+            imageUrl: url,
+            width: double.infinity,
+            fit: BoxFit.fitWidth,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  firstName.isEmpty ? '${AppStrings.welcome} OVUM 2026' : '¡Hola, $firstName!',
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+              if (daysLeft > 0) _countdownChip(context, daysLeft),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _countdownChip(BuildContext context, int daysLeft) {
+    final scheme = context.scheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: scheme.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(100),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(PhosphorIconsRegular.clockCountdown, size: 16, color: scheme.primary),
+          const SizedBox(width: 6),
+          Text(
+            'Faltan $daysLeft días',
+            style: Theme.of(context)
+                .textTheme
+                .labelMedium
+                ?.copyWith(color: scheme.primary, fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Hero de marca (fallback cuando aún no hay banner del API). Sin campana.
+  Widget _hero(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final firstName = (ref.watch(currentUserProvider)?.name ?? '').split(' ').first;
+    final daysLeft = OvumEvent.startDate.difference(DateTime.now()).inDays;
 
     return Container(
       padding: EdgeInsets.fromLTRB(20, MediaQuery.paddingOf(context).top + 16, 20, 24),
@@ -59,16 +130,9 @@ class _HeroHeader extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  firstName.isEmpty ? '${AppStrings.welcome} OVUM 2026' : '¡Hola, $firstName!',
-                  style: theme.textTheme.titleMedium?.copyWith(color: Colors.white),
-                ),
-              ),
-              const Icon(PhosphorIconsRegular.bell, color: Colors.white),
-            ],
+          Text(
+            firstName.isEmpty ? '${AppStrings.welcome} OVUM 2026' : '¡Hola, $firstName!',
+            style: theme.textTheme.titleMedium?.copyWith(color: Colors.white),
           ),
           const SizedBox(height: 18),
           Text(
@@ -106,7 +170,7 @@ class _HeroHeader extends ConsumerWidget {
           ),
         ],
       ),
-    ).animate().fadeIn(duration: 350.ms);
+    );
   }
 }
 

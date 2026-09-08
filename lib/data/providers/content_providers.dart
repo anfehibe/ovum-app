@@ -59,6 +59,18 @@ final ovumRepositoryProvider = Provider<OvumRepository>((ref) {
   );
 });
 
+/// Imágenes de splash de la app (institución) — usado por la pantalla de arranque.
+final splashProvider = FutureProvider<List<SplashItem>>(
+  (ref) => ref.watch(ovumRepositoryProvider).getSplashes(),
+);
+
+/// URL del banner del congreso (splash `order 2`) — header de login/home. Null si
+/// aún no cargó, falló, o no existe (la UI cae al header actual).
+final headerBannerProvider = Provider<String?>((ref) {
+  final list = ref.watch(splashProvider).valueOrNull ?? const [];
+  return list.firstWhereOrNull((s) => s.order == 2)?.imageUrl;
+});
+
 // ── Listados de contenido (cargados una vez y cacheados por Riverpod) ──────
 
 final sessionsProvider = FutureProvider<List<Session>>(

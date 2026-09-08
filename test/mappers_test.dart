@@ -6,6 +6,7 @@ import 'package:ovum/data/repositories/mappers/content_mapper.dart';
 import 'package:ovum/data/repositories/mappers/poll_mapper.dart';
 import 'package:ovum/data/repositories/mappers/session_mapper.dart';
 import 'package:ovum/data/repositories/mappers/speaker_mapper.dart';
+import 'package:ovum/data/repositories/mappers/splash_mapper.dart';
 import 'package:ovum/data/repositories/mappers/sponsor_mapper.dart';
 import 'package:ovum/data/repositories/mappers/user_mapper.dart';
 
@@ -345,6 +346,23 @@ void main() {
       final p = pollFromJson({'id': 1, 'pregunta': 'X', 'program_id': null, 'opciones': []});
       expect(p.sessionId, '');
       expect(p.myVoteIndex, isNull);
+    });
+  });
+
+  group('splashFromJson', () {
+    test('mapea orden, imagen (absoluta) y link', () {
+      final s = splashFromJson({
+        'orden': 1,
+        'imagen': 'https://trivvo.events/storage/agenda/splashes/s.jpg',
+        'link': null,
+      });
+      expect(s.order, 1);
+      expect(s.imageUrl, 'https://trivvo.events/storage/agenda/splashes/s.jpg');
+      expect(s.link, isNull);
+    });
+
+    test('imagen relativa → null', () {
+      expect(splashFromJson({'orden': 2, 'imagen': '/img/no_pic.jpg'}).imageUrl, isNull);
     });
   });
 }

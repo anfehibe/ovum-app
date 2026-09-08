@@ -2,7 +2,7 @@ name: ovum
 description: "OVUM 2026 - XXIX Congreso Latinoamericano de Avicultura"
 publish_to: 'none'
 
-version: 0.0.1+1
+version: 0.1.0+2
 
 environment:
   sdk: ^3.12.2
@@ -39,7 +39,6 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
-  flutter_native_splash: ^2.4.8
 
 # path_provider_foundation 2.5+ adoptó "native code assets" (objective_c.dylib)
 # que rompe el build de iOS en Flutter 3.44. Se fija a la última versión previa.
@@ -57,13 +56,6 @@ flutter_launcher_icons:
   adaptive_icon_background: "#021D70"        # fondo sólido = azul del diseño (los bordes recortados se funden)
   adaptive_icon_foreground: "assets/logo/icon.png"
   adaptive_icon_foreground_inset: 10         # % de margen; el logo se ve grande y el arte completo queda dentro de la máscara. Ajustable 6-20
-
-flutter_native_splash:
-  color: "#E8991C"
-  image: assets/logo/ovum_splash.png
-  android_12:
-    color: "#E8991C"
-    image: assets/logo/ovum_splash.png
 
 flutter:
   uses-material-design: true
