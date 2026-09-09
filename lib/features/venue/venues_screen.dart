@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ovum/core/ui/app_icons.dart';
@@ -97,12 +98,25 @@ class _VenueCard extends StatelessWidget {
               ],
             ),
           ],
-          const SizedBox(height: 14),
-          OutlinedButton.icon(
-            onPressed: () => openUrl(_mapUrl(venue)),
-            icon: const Icon(PhosphorIconsRegular.mapTrifold, size: 18),
-            label: const Text('Ver en mapa'),
-          ),
+          if (venue.plans.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Text('Planos del recinto',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 10),
+            for (final plan in venue.plans)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _PlanThumb(plan: plan),
+              ),
+          ],
+          if (venue.lat != null || venue.address.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            OutlinedButton.icon(
+              onPressed: () => openUrl(_mapUrl(venue)),
+              icon: const Icon(PhosphorIconsRegular.mapTrifold, size: 18),
+              label: const Text('Ver en mapa'),
+            ),
+          ],
         ],
       ),
     );
@@ -115,4 +129,89 @@ class _VenueCard extends StatelessWidget {
     final q = Uri.encodeComponent(v.address.isNotEmpty ? v.address : v.name);
     return 'https://www.google.com/maps/search/?api=1&query=$q';
   }
+}
+
+/// Miniatura de un plano del recinto; al tocarla abre el visor con zoom.
+class _PlanThumb extends StatelessWidget {
+  const _PlanThumb({required this.plan});
+  final VenuePlan plan;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.scheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (plan.title.isNotEmpty) ...[
+          Text(plan.title,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 6),
+        ],
+        GestureDetector(
+          onTap: () => _openPlanViewer(context, plan),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: Stack(
+              alignment: Alignment.bottomRight,
+              children: [
+                CachedNetworkImage(
+                  imageUrl: plan.imageUrl,
+                  width: double.infinity,
+                  fit: BoxFit.fitWidth,
+                  placeholder: (_, _) => Container(
+                    height: 150,
+                    color: scheme.surfaceContainerHighest,
+                    alignment: Alignment.center,
+                    child: const SizedBox(
+                      width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)),
+                  ),
+                  errorWidget: (_, _, _) => const SizedBox.shrink(),
+                ),
+                Container(
+                  margin: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(PhosphorIconsRegular.magnifyingGlass, size: 16, color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Visor de plano a pantalla completa con pinch-zoom.
+void _openPlanViewer(BuildContext context, VenuePlan plan) {
+  showDialog<void>(
+    context: context,
+    barrierColor: Colors.black,
+    builder: (ctx) => Stack(
+      children: [
+        Positioned.fill(
+          child: InteractiveViewer(
+            minScale: 0.5,
+            maxScale: 5,
+            child: Center(child: CachedNetworkImage(imageUrl: plan.imageUrl, fit: BoxFit.contain)),
+          ),
+        ),
+        Positioned(
+          top: MediaQuery.paddingOf(ctx).top + 8,
+          right: 8,
+          child: IconButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            icon: const Icon(PhosphorIconsRegular.x, color: Colors.white),
+            style: IconButton.styleFrom(backgroundColor: Colors.black54),
+          ),
+        ),
+      ],
+    ),
+  );
 }

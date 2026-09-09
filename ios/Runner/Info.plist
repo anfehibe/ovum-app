@@ -28,6 +28,12 @@
 		<false/>
 		<key>LSRequiresIPhoneOS</key>
 		<true/>
+		<key>NSCalendarsUsageDescription</key>
+		<string>OVUM 2026 usa tu calendario para añadir las sesiones del congreso que elijas.</string>
+		<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+		<string>OVUM 2026 necesita añadir eventos a tu calendario para guardar las sesiones que elijas.</string>
+		<key>NSContactsUsageDescription</key>
+		<string>OVUM 2026 usa tus contactos solo si eliges una ubicación al añadir una sesión al calendario.</string>
 		<key>UIApplicationSceneManifest</key>
 		<dict>
 			<key>UIApplicationSupportsMultipleScenes</key>

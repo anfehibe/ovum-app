@@ -4,11 +4,14 @@ import '../../core/network/api_exception.dart';
 import '../models/models.dart';
 import 'mappers/attendee_mapper.dart';
 import 'mappers/content_mapper.dart';
+import 'mappers/hotel_mapper.dart';
 import 'mappers/poll_mapper.dart';
+import 'mappers/question_mapper.dart';
 import 'mappers/session_mapper.dart';
 import 'mappers/speaker_mapper.dart';
 import 'mappers/splash_mapper.dart';
 import 'mappers/sponsor_mapper.dart';
+import 'mappers/venue_mapper.dart';
 import 'ovum_repository.dart';
 
 /// Repositorio híbrido: usa la API TRIVVO en los métodos con endpoint (y flag
@@ -132,22 +135,61 @@ class ApiOvumRepository implements OvumRepository {
   }
 
   @override
+  Future<List<Hotel>> getHotels() async {
+    if (!AppConfig.useApiHotels) return _mock.getHotels();
+    final id = await _eventIdResolver();
+    if (id == null) return _mock.getHotels();
+    final data = await _api.get('/events/$id/hotels');
+    return _listOf(data)
+        .map((e) => hotelFromJson((e as Map).cast<String, dynamic>()))
+        .toList();
+  }
+
+  @override
   Future<List<SplashItem>> getSplashes() async {
     if (!AppConfig.useApiSplash) return _mock.getSplashes();
-    // Endpoint top-level de institución; no depende del evento (no usa eventId).
-    final data = await _api.get('/app/splash');
+    final id = await _eventIdResolver();
+    if (id == null) return _mock.getSplashes();
+    // Splash POR EVENTO: aquí viven las 2 imágenes (order:1 = pantalla splash,
+    // order:2 = banner del congreso). El top-level /app/splash quedó vacío.
+    final data = await _api.get('/events/$id/splash');
     return _listOf(data)
         .map((e) => splashFromJson((e as Map).cast<String, dynamic>()))
         .toList();
   }
 
+  @override
+  Future<List<Venue>> getVenues() async {
+    if (!AppConfig.useApiVenues) return _mock.getVenues();
+    final id = await _eventIdResolver();
+    if (id == null) return _mock.getVenues();
+    // Las sedes (con sus planos) viven en la respuesta de agenda: data[] = sedes.
+    final data = await _api.get('/events/$id/agenda');
+    final venues = venuesFromAgendaJson(_listOf(data));
+    return venues.isEmpty ? _mock.getVenues() : venues;
+  }
+
+  @override
+  Future<List<LiveQuestion>> getSessionQuestions(String sessionId) async {
+    if (!AppConfig.useApiQuestions) return _mock.getSessionQuestions(sessionId);
+    final id = await _eventIdResolver();
+    if (id == null) return _mock.getSessionQuestions(sessionId);
+    // Detalle de sesión: trae las preguntas aprobadas (con respuesta si existe).
+    final data = await _api.get('/events/$id/program/$sessionId');
+    return questionsFromProgramJson(data, sessionId);
+  }
+
+  @override
+  Future<void> askQuestion(String sessionId, String question) async {
+    if (!AppConfig.useApiQuestions) return _mock.askQuestion(sessionId, question);
+    final id = await _eventIdResolver();
+    if (id == null) return _mock.askQuestion(sessionId, question);
+    // OJO: GET usa /program/{id} (singular); POST usa /programs/{id}/questions (plural).
+    await _api.post('/events/$id/programs/$sessionId/questions',
+        body: {'question': question});
+  }
+
   // ── Sin endpoint conectado todavía → mock ─────────────────────────────────
-  @override
-  Future<List<Venue>> getVenues() => _mock.getVenues();
-  @override
-  Future<List<Hotel>> getHotels() => _mock.getHotels();
-  @override
-  Future<List<LiveQuestion>> getSeedQuestions() => _mock.getSeedQuestions();
   @override
   Future<List<Meeting>> getSeedMeetings() => _mock.getSeedMeetings();
   @override

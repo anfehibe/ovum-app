@@ -4,6 +4,7 @@ import 'package:ovum/core/ui/app_icons.dart';
 
 import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/launchers.dart';
 import '../../core/widgets/states.dart';
 import '../../data/models/models.dart';
 import '../../data/providers/content_providers.dart';
@@ -69,25 +70,19 @@ class _HotelCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(hotel.name, style: Theme.of(context).textTheme.titleMedium),
-                    if (hotel.isOfficial)
-                      Container(
-                        margin: const EdgeInsets.only(top: 2),
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: scheme.primary.withValues(alpha: 0.14),
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                        child: Text('Hotel oficial',
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelSmall
-                                ?.copyWith(color: scheme.primary, fontWeight: FontWeight.w700)),
+                    if (hotel.soldOut || hotel.isOfficial)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: hotel.soldOut
+                            ? _pill(context, 'AGOTADO', scheme.error, scheme.onError)
+                            : _pill(context, 'Hotel oficial',
+                                scheme.primary.withValues(alpha: 0.14), scheme.primary),
                       ),
                   ],
                 ),
               ),
               if (hotel.priceFrom != null)
-                Text(hotel.priceFrom!,
+                Text('Desde ${hotel.priceFrom!}',
                     style: Theme.of(context)
                         .textTheme
                         .labelMedium
@@ -99,12 +94,37 @@ class _HotelCard extends StatelessWidget {
             Text(hotel.description, style: Theme.of(context).textTheme.bodyMedium),
           ],
           const SizedBox(height: 10),
-          _row(context, PhosphorIconsRegular.mapPin, hotel.address),
+          if (hotel.address.isNotEmpty) _row(context, PhosphorIconsRegular.mapPin, hotel.address),
           if (hotel.distance.isNotEmpty) _row(context, PhosphorIconsRegular.mapTrifold, hotel.distance),
+          if (hotel.contact != null)
+            _row(context, PhosphorIconsRegular.user, 'Reservas: ${hotel.contact}'),
           const SizedBox(height: 12),
-          ContactButtons(web: hotel.web, phone: hotel.phone),
+          ContactButtons(web: hotel.web, email: hotel.email, phone: hotel.phone),
+          if (hotel.bookingUrl != null && !hotel.soldOut) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () => openUrl(hotel.bookingUrl!),
+                icon: const Icon(PhosphorIconsRegular.calendarPlus, size: 18),
+                label: const Text('Reservar'),
+              ),
+            ),
+          ],
         ],
       ),
+    );
+  }
+
+  Widget _pill(BuildContext context, String text, Color bg, Color fg) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(100)),
+      child: Text(text,
+          style: Theme.of(context)
+              .textTheme
+              .labelSmall
+              ?.copyWith(color: fg, fontWeight: FontWeight.w700)),
     );
   }
 

@@ -3,11 +3,14 @@ import 'package:ovum/data/models/info_item.dart';
 import 'package:ovum/data/models/sponsor.dart';
 import 'package:ovum/data/repositories/mappers/attendee_mapper.dart';
 import 'package:ovum/data/repositories/mappers/content_mapper.dart';
+import 'package:ovum/data/repositories/mappers/hotel_mapper.dart';
 import 'package:ovum/data/repositories/mappers/poll_mapper.dart';
+import 'package:ovum/data/repositories/mappers/question_mapper.dart';
 import 'package:ovum/data/repositories/mappers/session_mapper.dart';
 import 'package:ovum/data/repositories/mappers/speaker_mapper.dart';
 import 'package:ovum/data/repositories/mappers/splash_mapper.dart';
 import 'package:ovum/data/repositories/mappers/sponsor_mapper.dart';
+import 'package:ovum/data/repositories/mappers/venue_mapper.dart';
 import 'package:ovum/data/repositories/mappers/user_mapper.dart';
 
 void main() {
@@ -363,6 +366,113 @@ void main() {
 
     test('imagen relativa → null', () {
       expect(splashFromJson({'orden': 2, 'imagen': '/img/no_pic.jpg'}).imageUrl, isNull);
+    });
+  });
+
+  group('hotelFromJson', () {
+    test('mapea contacto/reservar/agotado y habitaciones (precio "desde")', () {
+      final h = hotelFromJson({
+        'id': 7,
+        'nombre': 'Real InterContinental',
+        'direccion': 'Av. Las Américas 9-08',
+        'telefono': '+502 2413-4444',
+        'email': 'reservas@hotel.com',
+        'contacto': 'Esperanza García',
+        'web': 'https://hotel.com',
+        'reservar': 'https://hotel.com/reservar',
+        'agotado': false,
+        'descripcion': 'Tarifa especial del congreso',
+        'imagen': 'https://trivvo.events/storage/hotels/h.jpg',
+        'habitaciones': [
+          {'id': 1, 'nombre': 'Doble', 'codigo': 'DBL', 'precio': '150.00', 'capacidad': 2},
+          {'id': 2, 'nombre': 'Sencilla', 'codigo': 'SGL', 'precio': '120.00', 'capacidad': 1},
+        ],
+      });
+      expect(h.id, '7');
+      expect(h.name, 'Real InterContinental');
+      expect(h.contact, 'Esperanza García');
+      expect(h.bookingUrl, 'https://hotel.com/reservar');
+      expect(h.soldOut, isFalse);
+      expect(h.imageUrl, 'https://trivvo.events/storage/hotels/h.jpg');
+      expect(h.rooms.length, 2);
+      expect(h.priceFrom, '120.00'); // la tarifa más baja
+    });
+
+    test('agotado=true; reservar/imagen vacíos → null; sin habitaciones', () {
+      final h = hotelFromJson({
+        'id': 8,
+        'nombre': 'Courtyard by Marriott',
+        'direccion': 'Zona 10',
+        'telefono': '+502 2225-2500',
+        'reservar': '',
+        'imagen': '/img/no_pic.jpg',
+        'agotado': true,
+        'habitaciones': [],
+      });
+      expect(h.soldOut, isTrue);
+      expect(h.bookingUrl, isNull);
+      expect(h.imageUrl, isNull); // ruta relativa placeholder
+      expect(h.priceFrom, isNull);
+      expect(h.rooms, isEmpty);
+    });
+  });
+
+  group('venuesFromAgendaJson', () {
+    test('extrae sedes con planos; coords → isPrimary; plano sin imagen se descarta', () {
+      final venues = venuesFromAgendaJson([
+        {
+          'id': 1,
+          'nombre': 'Host Venue Parque de La Industria',
+          'direccion': '6a Calle, Cdad. de Guatemala',
+          // El backend manda las coords como String, incluso con coma final.
+          'lat': '14.609184161164723,', 'lng': '-90.52377176014456',
+          'planos': [
+            {'id': 1, 'titulo': 'Mapa General', 'imagen': 'https://trivvo.events/storage/agenda/planos/p.jpg'},
+            {'id': 2, 'titulo': 'Sin imagen', 'imagen': '/img/no_pic.jpg'},
+          ],
+          'sesiones': [],
+        },
+        {
+          'id': 4, 'nombre': 'Programa Científico', 'direccion': '',
+          'lat': null, 'lng': null, 'planos': [], 'sesiones': [],
+        },
+      ]);
+      expect(venues.length, 2);
+      final host = venues.first;
+      expect(host.id, '1');
+      expect(host.lat, closeTo(14.6091, 0.001)); // string "14.60…," → double
+      expect(host.isPrimary, isTrue); // tiene coordenadas
+      expect(host.plans.length, 1); // el plano con ruta relativa se descarta
+      expect(host.plans.first.title, 'Mapa General');
+      final program = venues[1];
+      expect(program.isPrimary, isFalse);
+      expect(program.plans, isEmpty);
+    });
+  });
+
+  group('questionsFromProgramJson', () {
+    test('extrae preguntas aprobadas; respuesta vacía → answer null', () {
+      final qs = questionsFromProgramJson({
+        'data': {
+          'id': 10,
+          'titulo': 'Influenza Aviar',
+          'preguntas': [
+            {'id': 1, 'pregunta': '¿Vigencia del plan?', 'respuesta': 'Doce meses.'},
+            {'id': 2, 'pregunta': 'Sin responder aún', 'respuesta': ''},
+            {'id': 3, 'pregunta': '   ', 'respuesta': 'X'}, // pregunta vacía → se descarta
+          ],
+        },
+      }, '10');
+      expect(qs.length, 2);
+      expect(qs.first.sessionId, '10');
+      expect(qs.first.isAnswered, isTrue);
+      expect(qs.first.answer, 'Doce meses.');
+      expect(qs[1].isAnswered, isFalse); // respuesta vacía
+    });
+
+    test('sin preguntas / shape inesperado → lista vacía', () {
+      expect(questionsFromProgramJson({'data': {'preguntas': null}}, '10'), isEmpty);
+      expect(questionsFromProgramJson(const [], '10'), isEmpty);
     });
   });
 }

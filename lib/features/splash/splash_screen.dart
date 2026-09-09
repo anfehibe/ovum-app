@@ -25,7 +25,7 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
-  static const _duration = Duration(seconds: 3);
+  static const _duration = Duration(seconds: 4);
   Timer? _timer;
   bool _precachedBanner = false;
 
@@ -61,7 +61,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       }
     }
 
-    final item = splashes.firstWhereOrNull((s) => s.order == 1) ??
+    final item =
+        splashes.firstWhereOrNull((s) => s.order == 1) ??
         (splashes.isNotEmpty ? splashes.first : null);
     final imageUrl = item?.imageUrl;
 

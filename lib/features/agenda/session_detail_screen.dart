@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
 import '../../core/constants/app_strings.dart';
+import '../../core/constants/ovum_event.dart';
 import '../../core/router/route_paths.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/date_ext.dart';
@@ -12,6 +13,7 @@ import '../../core/widgets/category_chip.dart';
 import '../../core/widgets/favorite_button.dart';
 import '../../core/widgets/initials_avatar.dart';
 import '../../core/widgets/states.dart';
+import '../../data/models/models.dart';
 import '../../data/providers/content_providers.dart';
 import '../../data/providers/favorites_provider.dart';
 
@@ -50,7 +52,7 @@ class SessionDetailScreen extends ConsumerWidget {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
               children: [
-                _actionRow(context, session.title),
+                _actionRow(context, session),
                 if (session.description.isNotEmpty) ...[
                   const SizedBox(height: 20),
                   Text('Descripción', style: Theme.of(context).textTheme.titleMedium),
@@ -102,16 +104,18 @@ class SessionDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _actionRow(BuildContext context, String title) {
+  Widget _actionRow(BuildContext context, Session session) {
     return Row(
       children: [
         Expanded(
           child: OutlinedButton.icon(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Sesión añadida a tu calendario')),
-              );
-            },
+            onPressed: () => addToCalendar(
+              title: session.title,
+              description: session.description,
+              location: session.room.isNotEmpty ? session.room : OvumEvent.mainVenue,
+              start: session.startDate,
+              end: session.endDate,
+            ),
             icon: const Icon(PhosphorIconsRegular.calendarPlus, size: 18),
             label: const Text('Calendario'),
           ),
@@ -119,7 +123,7 @@ class SessionDetailScreen extends ConsumerWidget {
         const SizedBox(width: 12),
         Expanded(
           child: OutlinedButton.icon(
-            onPressed: () => shareText('$title · OVUM 2026'),
+            onPressed: () => shareText('${session.title} · OVUM 2026'),
             icon: const Icon(PhosphorIconsRegular.shareNetwork, size: 18),
             label: const Text('Compartir'),
           ),

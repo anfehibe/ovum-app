@@ -22,7 +22,12 @@ abstract interface class OvumRepository {
   /// Imágenes de splash de la app (nivel institución).
   Future<List<SplashItem>> getSplashes();
 
-  Future<List<LiveQuestion>> getSeedQuestions();
+  /// Preguntas **aprobadas** (Q&A) de una sesión, con su respuesta si existe.
+  Future<List<LiveQuestion>> getSessionQuestions(String sessionId);
+
+  /// Envía una pregunta a una sesión. Queda pendiente de moderación del organizador.
+  Future<void> askQuestion(String sessionId, String question);
+
   Future<List<Meeting>> getSeedMeetings();
   Future<List<ChatMessage>> getSeedChatMessages();
 }
@@ -100,9 +105,17 @@ class MockOvumRepository implements OvumRepository {
   Future<List<SplashItem>> getSplashes() async => const [];
 
   @override
-  Future<List<LiveQuestion>> getSeedQuestions() async {
+  Future<List<LiveQuestion>> getSessionQuestions(String sessionId) async {
     final rows = await loadJsonList('assets/mock/questions.json');
-    return rows.map(LiveQuestion.fromJson).toList();
+    return rows
+        .map(LiveQuestion.fromJson)
+        .where((q) => q.sessionId == sessionId)
+        .toList();
+  }
+
+  @override
+  Future<void> askQuestion(String sessionId, String question) async {
+    // Mock: sin backend de moderación; nada que persistir.
   }
 
   @override

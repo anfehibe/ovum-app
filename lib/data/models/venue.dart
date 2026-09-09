@@ -1,3 +1,12 @@
+/// Plano / mapa del recinto (una sede puede tener varios, con título).
+class VenuePlan {
+  final String id;
+  final String title;
+  final String imageUrl;
+
+  const VenuePlan({required this.id, required this.title, required this.imageUrl});
+}
+
 /// Sede o recinto del congreso (principal o de actividades especiales).
 class Venue {
   final String id;
@@ -10,6 +19,9 @@ class Venue {
   final double? lng;
   final bool isPrimary;
 
+  /// Planos/mapas del recinto (`sede.planos[]` de la agenda del API).
+  final List<VenuePlan> plans;
+
   const Venue({
     required this.id,
     required this.name,
@@ -20,6 +32,7 @@ class Venue {
     this.lat,
     this.lng,
     this.isPrimary = false,
+    this.plans = const [],
   });
 
   factory Venue.fromJson(Map<String, dynamic> json) {

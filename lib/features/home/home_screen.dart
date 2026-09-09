@@ -12,6 +12,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/date_ext.dart';
 import '../../core/widgets/initials_avatar.dart';
 import '../../core/widgets/section_header.dart';
+import '../../core/widgets/sponsor_logo.dart';
 import '../../data/providers/content_providers.dart';
 import '../../data/providers/user_provider.dart';
 
@@ -445,7 +446,7 @@ class _SponsorsRow extends ConsumerWidget {
           onAction: () => context.push(R.sponsors),
         ),
         SizedBox(
-          height: 96,
+          height: 92,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -453,27 +454,22 @@ class _SponsorsRow extends ConsumerWidget {
             separatorBuilder: (_, _) => const SizedBox(width: 12),
             itemBuilder: (context, i) {
               final s = top[i];
-              return Container(
-                width: 130,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: context.scheme.surfaceContainerLow,
+              // Solo el logo (sin nombre) en una tarjeta blanca; toca → detalle.
+              return SizedBox(
+                width: 132,
+                child: Material(
+                  color: Colors.transparent,
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: context.scheme.outlineVariant.withValues(alpha: 0.5)),
-                ),
-                child: Row(
-                  children: [
-                    InitialsAvatar(name: s.name, size: 40),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        s.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.labelMedium,
-                      ),
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    onTap: () => context.push(R.sponsor(s.id)),
+                    child: SponsorLogo(
+                      name: s.name,
+                      logoUrl: s.logoUrl,
+                      radius: 18,
+                      padding: 14,
                     ),
-                  ],
+                  ),
                 ),
               );
             },
