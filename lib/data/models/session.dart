@@ -18,6 +18,14 @@ class Session {
   final String? imageUrl;
 
   final bool isOtherActivity;
+
+  /// Grupo de agenda al que pertenece la sesión. El API TRIVVO no tiene un
+  /// campo que separe el programa científico de la agenda general: usa el
+  /// agrupamiento de `data[]` (sedes) para eso — la sede "Programa Científico"
+  /// no tiene dirección ni coordenadas, es un contenedor lógico.
+  /// Vacío en el mock y en las otras actividades.
+  final String agendaGroup;
+
   final List<String> photos;
   final bool hasQuestions;
   final bool hasPolls;
@@ -36,6 +44,7 @@ class Session {
     this.sponsorLogo,
     this.imageUrl,
     this.isOtherActivity = false,
+    this.agendaGroup = '',
     this.photos = const [],
     this.hasQuestions = false,
     this.hasPolls = false,
@@ -64,9 +73,22 @@ class Session {
       sponsorLogo: json['sponsor_logo'] as String?,
       imageUrl: json['image_url'] as String?,
       isOtherActivity: json['is_other_activity'] as bool? ?? false,
+      agendaGroup: json['agenda_group'] as String? ?? '',
       photos: (json['photos'] as List?)?.map((e) => e as String).toList() ?? const [],
       hasQuestions: json['has_questions'] as bool? ?? false,
       hasPolls: json['has_polls'] as bool? ?? false,
     );
   }
+}
+
+/// Grupos de agenda distintos presentes en [sessions], en orden de primera
+/// aparición — que es el orden de `data[]` (el backend ya ordena las sedes por
+/// `order`). Ignora otras actividades y sesiones sin grupo.
+List<String> agendaGroupsOf(Iterable<Session> sessions) {
+  final out = <String>[];
+  for (final s in sessions) {
+    if (s.isOtherActivity || s.agendaGroup.isEmpty) continue;
+    if (!out.contains(s.agendaGroup)) out.add(s.agendaGroup);
+  }
+  return out;
 }

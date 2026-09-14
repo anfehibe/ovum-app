@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ovum/data/models/info_item.dart';
+import 'package:ovum/data/models/session.dart';
 import 'package:ovum/data/models/sponsor.dart';
 import 'package:ovum/data/repositories/mappers/attendee_mapper.dart';
 import 'package:ovum/data/repositories/mappers/content_mapper.dart';
@@ -103,6 +104,108 @@ void main() {
         },
       ];
       expect(sessionsFromAgendaJson(malo), isEmpty);
+    });
+
+    // El API no tiene campo para separar el programa científico de la agenda
+    // general: reutiliza el agrupamiento de `data[]` (sedes) para eso.
+    test('una sede con dirección/coords es la agenda general', () {
+      expect(sessionsFromAgendaJson(venues).first.agendaGroup, 'Agenda general');
+    });
+
+    test('una sede sin dirección, coords ni planos se etiqueta con su nombre', () {
+      final logico = [
+        {
+          'id': 4,
+          'nombre': 'Programa Científico',
+          'direccion': null,
+          'lat': null,
+          'lng': null,
+          'planos': [],
+          'sesiones': [
+            {
+              'id': 11,
+              'titulo': 'Influenza Aviar',
+              'sala': 'Plenaria',
+              'inicio': '2026-11-11T09:00:00-05:00',
+              'fin': '2026-11-11T10:00:00-05:00',
+            },
+          ],
+        },
+      ];
+      expect(sessionsFromAgendaJson(logico).first.agendaGroup, 'Programa Científico');
+    });
+
+    test('una sede con planos pero sin dirección sigue siendo agenda general', () {
+      final conPlano = [
+        {
+          'nombre': 'Recinto',
+          'planos': [
+            {'id': 1, 'titulo': 'Mapa', 'imagen': 'https://x/m.jpg'},
+          ],
+          'sesiones': [
+            {
+              'id': 12,
+              'titulo': 'Charla',
+              'inicio': '2026-11-11T11:00:00-05:00',
+              'fin': '2026-11-11T12:00:00-05:00',
+            },
+          ],
+        },
+      ];
+      expect(sessionsFromAgendaJson(conPlano).first.agendaGroup, 'Agenda general');
+    });
+
+    test('una sede sin nombre ni datos de sede deja el grupo vacío', () {
+      final anonima = [
+        {
+          'sesiones': [
+            {
+              'id': 13,
+              'titulo': 'Charla',
+              'inicio': '2026-11-11T11:00:00-05:00',
+              'fin': '2026-11-11T12:00:00-05:00',
+            },
+          ],
+        },
+      ];
+      expect(sessionsFromAgendaJson(anonima).first.agendaGroup, '');
+    });
+  });
+
+  group('agendaGroupsOf', () {
+    Session session(String group, {bool otherActivity = false}) => Session(
+          id: 'x',
+          title: 't',
+          description: '',
+          shortDescription: '',
+          room: '',
+          track: 'General',
+          startDate: DateTime(2026, 11, 11),
+          endDate: DateTime(2026, 11, 11, 1),
+          agendaGroup: group,
+          isOtherActivity: otherActivity,
+        );
+
+    test('deduplica y preserva el orden de aparición de data[]', () {
+      final groups = agendaGroupsOf([
+        session('Agenda general'),
+        session('Programa Científico'),
+        session('Agenda general'),
+      ]);
+      expect(groups, ['Agenda general', 'Programa Científico']);
+    });
+
+    test('ignora otras actividades y sesiones sin grupo', () {
+      final groups = agendaGroupsOf([
+        session(''),
+        session('Cóctel', otherActivity: true),
+        session('Programa Científico'),
+      ]);
+      expect(groups, ['Programa Científico']);
+    });
+
+    test('sin agenda no hay grupos', () {
+      expect(agendaGroupsOf(const []), isEmpty);
     });
   });
 

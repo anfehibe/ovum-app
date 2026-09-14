@@ -1,3 +1,4 @@
+import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/url_ext.dart';
 import '../../models/session.dart';
 
@@ -9,11 +10,13 @@ List<Session> sessionsFromAgendaJson(List<dynamic> venues) {
   for (final venue in venues) {
     if (venue is! Map) continue;
     final venueName = venue['nombre'] as String?;
+    final group = _agendaGroupOf(venue);
     final sesiones = venue['sesiones'];
     if (sesiones is! List) continue;
     for (final s in sesiones) {
       if (s is! Map) continue;
-      final session = _sessionFromSesion(s.cast<String, dynamic>(), venueName);
+      final session =
+          _sessionFromSesion(s.cast<String, dynamic>(), venueName, group);
       if (session != null) sessions.add(session);
     }
   }
@@ -49,7 +52,23 @@ List<Session> sessionsFromOtherActivitiesJson(List<dynamic> items) {
   return sessions;
 }
 
-Session? _sessionFromSesion(Map<String, dynamic> j, String? venueName) {
+/// Etiqueta del grupo de agenda de una entrada de `data[]`.
+///
+/// Una entrada con dirección, coordenadas o planos es un recinto físico → sus
+/// sesiones son la agenda general del congreso. Una sin nada de eso es un
+/// contenedor lógico (hoy "Programa Científico") y se etiqueta con su propio
+/// nombre. Genérico a propósito: si mañana agregan otro bloque, aparece solo.
+String _agendaGroupOf(Map venue) {
+  final address = (venue['direccion'] as String?)?.trim() ?? '';
+  final hasCoords = venue['lat'] != null || venue['lng'] != null;
+  final planos = venue['planos'];
+  final hasPlans = planos is List && planos.isNotEmpty;
+  if (address.isNotEmpty || hasCoords || hasPlans) return AppStrings.agendaGeneral;
+  return (venue['nombre'] as String?)?.trim() ?? '';
+}
+
+Session? _sessionFromSesion(
+    Map<String, dynamic> j, String? venueName, String agendaGroup) {
   // Fechas ISO-8601 con offset -05:00 (America/Bogota). Sin horario no va a la agenda.
   final start = DateTime.tryParse(j['inicio'] as String? ?? '');
   final end = DateTime.tryParse(j['fin'] as String? ?? '');
@@ -95,5 +114,6 @@ Session? _sessionFromSesion(Map<String, dynamic> j, String? venueName) {
     // El API v1 no expone flag de encuestas por sesión (se revisita en el paso de polls).
     hasPolls: false,
     isOtherActivity: false,
+    agendaGroup: agendaGroup,
   );
 }

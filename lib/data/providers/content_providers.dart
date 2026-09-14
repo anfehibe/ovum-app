@@ -123,6 +123,17 @@ final agendaSessionsProvider = Provider<List<Session>>((ref) {
   return list;
 });
 
+/// Grupos de agenda disponibles (el agrupamiento por sede que manda el API:
+/// hoy "Agenda general" y "Programa Científico").
+///
+/// Lee de [sessionsProvider] y no de [agendaSessionsProvider] a propósito: ése
+/// ordena por hora y destruye el orden de `data[]`, que es el que queremos para
+/// los chips del filtro.
+final agendaGroupsProvider = Provider<List<String>>((ref) {
+  final all = ref.watch(sessionsProvider).valueOrNull ?? const [];
+  return agendaGroupsOf(all);
+});
+
 /// Otras actividades, ordenadas por hora.
 final otherActivitiesProvider = Provider<List<Session>>((ref) {
   final all = ref.watch(sessionsProvider).valueOrNull ?? const [];

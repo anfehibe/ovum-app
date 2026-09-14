@@ -7,6 +7,12 @@ abstract final class AppStrings {
   static const navNetworking = 'Networking';
   static const navProfile = 'Perfil';
 
+  // Agenda: etiqueta del grupo de sesiones que ocurren en una sede física, para
+  // distinguirlo de los bloques lógicos que el API manda en `data[]` (hoy
+  // "Programa Científico"). Ver `session_mapper.dart`.
+  static const agendaGeneral = 'Agenda general';
+  static const agendaNoGroupSelected = 'Selecciona al menos un programa';
+
   // Secciones
   static const speakers = 'Conferencistas';
   static const sponsors = 'Patrocinadores';
