@@ -10,6 +10,8 @@ abstract final class PhosphorIconsRegular {
   static const IconData airplane = Icons.flight;
   static const IconData bed = Icons.bed_outlined;
   static const IconData bell = Icons.notifications_none_rounded;
+  static const IconData bellRinging = Icons.notifications_active_outlined;
+  static const IconData bellSlash = Icons.notifications_off_outlined;
   static const IconData briefcase = Icons.business_center_outlined;
   static const IconData buildings = Icons.apartment_rounded;
   static const IconData calendarBlank = Icons.calendar_today_rounded;

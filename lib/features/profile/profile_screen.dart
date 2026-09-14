@@ -9,6 +9,7 @@ import '../../core/router/route_paths.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/initials_avatar.dart';
 import '../../data/providers/favorites_provider.dart';
+import '../../data/providers/notifications_provider.dart';
 import '../../data/providers/user_provider.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -19,6 +20,7 @@ class ProfileScreen extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
     final themeMode = ref.watch(themeModeProvider);
     final favCount = ref.watch(favoritesProvider).length;
+    final notif = ref.watch(notificationPrefsProvider);
     final scheme = context.scheme;
 
     return Scaffold(
@@ -43,6 +45,46 @@ class ProfileScreen extends ConsumerWidget {
             onTap: () => context.push(R.favorites),
           ),
           const SizedBox(height: 24),
+          Text('Notificaciones', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 4),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            value: notif.pushEnabled,
+            onChanged: (v) =>
+                ref.read(notificationPrefsProvider.notifier).setPush(v),
+            secondary: const Icon(PhosphorIconsRegular.bellRinging),
+            title: const Text('Avisos del congreso'),
+            subtitle: const Text('Cambios de agenda y anuncios del organizador'),
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            value: notif.remindersEnabled,
+            onChanged: (v) =>
+                ref.read(notificationPrefsProvider.notifier).setReminders(v),
+            secondary: const Icon(PhosphorIconsRegular.clockCountdown),
+            title: const Text('Recordar mis sesiones'),
+            subtitle: const Text('Aviso antes de las sesiones que guardaste'),
+          ),
+          if (notif.remindersEnabled) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Avisarme con antelación de',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 8),
+            SegmentedButton<int>(
+              segments: const [
+                ButtonSegment(value: 5, label: Text('5 min')),
+                ButtonSegment(value: 15, label: Text('15 min')),
+                ButtonSegment(value: 30, label: Text('30 min')),
+              ],
+              selected: {notif.leadMinutes},
+              onSelectionChanged: (s) => ref
+                  .read(notificationPrefsProvider.notifier)
+                  .setLeadMinutes(s.first),
+            ),
+          ],
+          const SizedBox(height: 28),
           Text('Apariencia', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 12),
           SegmentedButton<ThemeMode>(

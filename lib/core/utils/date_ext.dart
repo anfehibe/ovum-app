@@ -17,3 +17,15 @@ extension DateFmt on DateTime {
 
 String timeRange(DateTime start, DateTime end) =>
     '${DateFormat('HH:mm').format(start)} – ${DateFormat('HH:mm').format(end)}';
+
+/// Convierte una fecha del API (que llega como instante **UTC**, por el offset
+/// `-05:00` que manda TRIVVO) a una fecha "flotante" con los MISMOS componentes
+/// que muestra la app (año/mes/día/hora/min).
+///
+/// Las extensiones de arriba formatean **sin `.toLocal()`**, así que la agenda
+/// muestra la hora UTC cruda (`08:00-05:00` se ve como "13:00"). Todo lo que
+/// derive una hora real de una sesión — el botón de calendario y los
+/// recordatorios locales — debe pasar por aquí para coincidir con lo mostrado.
+/// Si algún día se corrige el display a hora local, basta con cambiar esto.
+DateTime wallClock(DateTime dt) =>
+    DateTime(dt.year, dt.month, dt.day, dt.hour, dt.minute);

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import '../../core/config/app_config.dart';
 import '../../core/network/api_exception.dart';
 import '../models/models.dart';
 import 'content_providers.dart';
+import 'notifications_provider.dart';
 import 'preferences.dart';
 
 // ── Tema (claro / oscuro / sistema), persistido ────────────────────────────
@@ -56,6 +58,8 @@ class AuthController extends Notifier<AppUser?> {
     // Refresca el perfil en segundo plano (no bloquea el arranque).
     if (!user.isGuest && AppConfig.useApiAuth) {
       Future.microtask(_refreshMe);
+      // Reafirma el token FCM por si cambió con la app cerrada (es idempotente).
+      Future.microtask(() => ref.read(pushRegistrationProvider.notifier).register());
     }
     return user;
   }
@@ -70,9 +74,15 @@ class AuthController extends Notifier<AppUser?> {
     final result = await ref.read(authServiceProvider).login(email, password);
     await ref.read(authTokenStoreProvider).save(result.token);
     _persist(result.user);
+    // Best-effort y sin bloquear la navegación post-login.
+    unawaited(ref.read(pushRegistrationProvider.notifier).register());
   }
 
   /// Entra en modo invitado (sin token; por ahora solo la agenda).
+  ///
+  /// El invitado **no recibe push**: `/me/device-token` exige Bearer, así que no
+  /// hay forma de registrar su dispositivo (haría falta un topic de FCM o un
+  /// endpoint sin auth, ambos cambios de backend).
   Future<void> loginAsGuest() async {
     await ref.read(authTokenStoreProvider).clear();
     _persist(AppUser.guest);
@@ -93,6 +103,10 @@ class AuthController extends Notifier<AppUser?> {
 
   Future<void> logout() async {
     final tokens = ref.read(authTokenStoreProvider);
+    // Primero el device-token: `POST /logout` no lo borra en el backend, y una
+    // vez limpiado el Bearer el DELETE respondería 401.
+    await ref.read(pushRegistrationProvider.notifier).unregister();
+    await ref.read(sessionRemindersProvider).cancelAll();
     if (AppConfig.useApiAuth && tokens.hasToken) {
       try {
         await ref.read(authServiceProvider).logout();

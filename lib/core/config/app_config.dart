@@ -54,4 +54,22 @@ abstract final class AppConfig {
   // Pendientes de endpoint (siguen en mock):
   static const bool useApiMeetings = false;
   static const bool useApiChat = false;
+
+  // ── Notificaciones ─────────────────────────────────────────────────────────
+
+  /// Push (FCM). Apagarlo evita inicializar Firebase Messaging por completo.
+  static const bool usePush =
+      bool.fromEnvironment('OVUM_PUSH', defaultValue: true);
+
+  /// Registro del token del dispositivo (`POST/DELETE /me/device-token`).
+  static const bool useApiDeviceToken =
+      bool.fromEnvironment('OVUM_API_DEVICE_TOKEN', defaultValue: true);
+
+  /// Recordatorios locales de las sesiones favoritas (no requiere backend).
+  static const bool useLocalReminders =
+      bool.fromEnvironment('OVUM_LOCAL_REMINDERS', defaultValue: true);
+
+  /// Minutos de antelación por defecto del recordatorio de sesión.
+  static const int reminderLeadMinutes =
+      int.fromEnvironment('OVUM_REMINDER_LEAD', defaultValue: 15);
 }

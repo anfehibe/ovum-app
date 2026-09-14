@@ -17,14 +17,56 @@ import '../../core/widgets/initials_avatar.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/sponsor_logo.dart';
 import '../../data/providers/content_providers.dart';
+import '../../data/providers/notifications_provider.dart';
 import '../../data/providers/preferences.dart';
 import '../../data/providers/user_provider.dart';
+import '../notifications/notification_permission_sheet.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _abrirRutaPendiente();
+      _pedirPermisoSiHaceFalta();
+    });
+  }
+
+  /// Abre la pantalla que produjo el tap de una notificación. Se hace desde
+  /// aquí (y no al recibirla) porque el splash navega con un temporizador y
+  /// pisaría cualquier navegación anterior.
+  void _abrirRutaPendiente() {
+    final ruta = ref.read(pendingNotificationRouteProvider.notifier).take();
+    if (ruta != null && mounted) context.push(ruta);
+  }
+
+  /// Hoja explicativa de permiso, una sola vez y nunca en modo invitado.
+  Future<void> _pedirPermisoSiHaceFalta() async {
+    if (!mounted) return;
+    if (ref.read(isGuestProvider)) return;
+    if (ref.read(notificationPrefsProvider).promptSeen) return;
+    if (await ref.read(notificationServiceProvider).hasPermission()) {
+      await ref.read(notificationPrefsProvider.notifier).markPromptSeen();
+      return;
+    }
+    if (!mounted) return;
+    await showNotificationPermissionSheet(context, ref);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Una notificación tocada con la app ya abierta encola su ruta aquí.
+    ref.listen(pendingNotificationRouteProvider, (_, next) {
+      if (next != null) _abrirRutaPendiente();
+    });
+
     return Scaffold(
       body: CustomScrollView(
         slivers: [

@@ -9,6 +9,7 @@ import '../models/models.dart';
 import '../repositories/api_ovum_repository.dart';
 import '../repositories/ovum_repository.dart';
 import '../services/auth_service.dart';
+import '../services/device_token_service.dart';
 import 'preferences.dart';
 
 // ── Infraestructura de red / API ────────────────────────────────────────────
@@ -26,6 +27,11 @@ final apiClientProvider = Provider<ApiClient>(
 /// Servicio de autenticación (`/login`, `/me`, `/logout`).
 final authServiceProvider = Provider<AuthService>(
   (ref) => AuthService(ref.watch(apiClientProvider)),
+);
+
+/// Registro del token FCM (`POST/DELETE /me/device-token`).
+final deviceTokenServiceProvider = Provider<DeviceTokenService>(
+  (ref) => DeviceTokenService(ref.watch(apiClientProvider)),
 );
 
 /// Evento configurado (resuelto por `codigo`). `null` si el flag está apagado o

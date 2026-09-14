@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "515944242709",
+    "project_id": "trivvo-ovum",
+    "storage_bucket": "trivvo-ovum.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:515944242709:android:4f366fd9d070e5d83cf81c",
+        "android_client_info": {
+          "package_name": "com.trivvo.ovum"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4b5nkGITyjaRsWNrpLjZh9arDdWvN20Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

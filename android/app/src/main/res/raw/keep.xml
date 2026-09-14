@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Evita que R8 descarte los drawables en builds de release. Sin esto el ícono de
+  notificación (@drawable/ic_stat_ovum) puede eliminarse y las notificaciones
+  fallan EN SILENCIO solo en release.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/*" />

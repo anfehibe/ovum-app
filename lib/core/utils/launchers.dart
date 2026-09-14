@@ -2,6 +2,8 @@ import 'package:add_2_calendar/add_2_calendar.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'date_ext.dart';
+
 Future<void> shareText(String text) async {
   await SharePlus.instance.share(ShareParams(text: text));
 }
@@ -35,8 +37,8 @@ Future<void> addToCalendar({
   required DateTime end,
 }) async {
   if (title.trim().isEmpty) return;
-  final startWall = _wallClock(start);
-  var endWall = _wallClock(end);
+  final startWall = wallClock(start);
+  var endWall = wallClock(end);
   if (!endWall.isAfter(startWall)) {
     endWall = startWall.add(const Duration(hours: 1));
   }
@@ -48,10 +50,3 @@ Future<void> addToCalendar({
     endDate: endWall,
   ));
 }
-
-/// Convierte una fecha (que del API llega en UTC, por el offset -05:00) a una
-/// hora local "flotante" con los MISMOS componentes que muestra la app
-/// (año/mes/día/hora/min). Así el evento del calendario coincide con la hora
-/// mostrada en la agenda, sin el corrimiento que causaría un `toLocal()`.
-DateTime _wallClock(DateTime dt) =>
-    DateTime(dt.year, dt.month, dt.day, dt.hour, dt.minute);

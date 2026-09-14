@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Ícono de la barra de estado. Android >= 5 lo pinta como SILUETA: solo importa
+  el canal alfa, el color lo aporta default_notification_color. Por eso es un
+  huevo blanco macizo (OVUM) y no el logo a color, que saldría como un cuadro gris.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,2.5c3.6,0 6.75,5.6 6.75,10.1c0,4.3 -3.02,7.9 -6.75,7.9c-3.73,0 -6.75,-3.6 -6.75,-7.9C5.25,8.1 8.4,2.5 12,2.5z" />
+</vector>

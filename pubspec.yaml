@@ -35,6 +35,13 @@ dependencies:
   shared_preferences: ^2.5.5
   intl: ^0.20.2
 
+  # Notificaciones (push FCM + locales)
+  firebase_core: ^4.14.0
+  firebase_messaging: ^16.5.0
+  flutter_local_notifications: ^22.2.0
+  timezone: ^0.11.1          # tz.TZDateTime para programar recordatorios
+  flutter_timezone: ^5.1.0   # zona horaria del dispositivo en runtime
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

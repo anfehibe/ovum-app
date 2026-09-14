@@ -52,6 +52,10 @@ class ApiClient {
   Future<dynamic> post(String path, {Object? body}) =>
       _send(() => _dio.post(path, data: body));
 
+  /// `DELETE` con cuerpo: `DELETE /me/device-token` lee el token del body.
+  Future<dynamic> delete(String path, {Object? body}) =>
+      _send(() => _dio.delete(path, data: body));
+
   Future<dynamic> _send(Future<Response<dynamic>> Function() run) async {
     try {
       final res = await run();

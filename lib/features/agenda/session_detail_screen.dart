@@ -16,6 +16,7 @@ import '../../core/widgets/states.dart';
 import '../../data/models/models.dart';
 import '../../data/providers/content_providers.dart';
 import '../../data/providers/favorites_provider.dart';
+import '../../data/providers/notifications_provider.dart';
 
 class SessionDetailScreen extends ConsumerWidget {
   const SessionDetailScreen({super.key, required this.sessionId});
@@ -53,6 +54,7 @@ class SessionDetailScreen extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
               children: [
                 _actionRow(context, session),
+                _reminderHint(context, ref, session),
                 if (session.description.isNotEmpty) ...[
                   const SizedBox(height: 20),
                   Text('Descripción', style: Theme.of(context).textTheme.titleMedium),
@@ -129,6 +131,40 @@ class SessionDetailScreen extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+
+  /// Aviso de que esta sesión tiene recordatorio programado.
+  ///
+  /// El recordatorio lo dispara el propio favorito (la ★ del encabezado), así
+  /// que aquí no va otro botón: solo se explica qué va a pasar.
+  Widget _reminderHint(BuildContext context, WidgetRef ref, Session session) {
+    final esFavorita = ref.watch(
+      isFavoriteProvider((kind: FavKind.session, id: session.id)),
+    );
+    final prefs = ref.watch(notificationPrefsProvider);
+    final yaPaso = !session.startDate.toUtc().isAfter(DateTime.now().toUtc());
+    if (!esFavorita || !prefs.remindersEnabled || yaPaso) {
+      return const SizedBox.shrink();
+    }
+
+    final scheme = context.scheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Row(
+        children: [
+          Icon(PhosphorIconsRegular.bellRinging, size: 16, color: scheme.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Te avisaremos ${prefs.leadMinutes} min antes de que empiece.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
