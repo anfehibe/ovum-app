@@ -3,14 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
+import '../../core/auth/biometric_service.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/constants/ovum_event.dart';
 import '../../core/router/route_paths.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/initials_avatar.dart';
+import '../../data/providers/biometric_provider.dart';
 import '../../data/providers/favorites_provider.dart';
 import '../../data/providers/notifications_provider.dart';
 import '../../data/providers/user_provider.dart';
+import '../auth/biometric_enroll_sheet.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -21,6 +24,11 @@ class ProfileScreen extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
     final favCount = ref.watch(favoritesProvider).length;
     final notif = ref.watch(notificationPrefsProvider);
+    final bio = ref.watch(biometricPrefsProvider);
+    final bioDisponible =
+        ref.watch(biometricAvailableProvider).valueOrNull ?? false;
+    final bioKind =
+        ref.watch(biometricKindProvider).valueOrNull ?? BiometricKind.fingerprint;
     final scheme = context.scheme;
 
     return Scaffold(
@@ -84,6 +92,32 @@ class ProfileScreen extends ConsumerWidget {
                   .setLeadMinutes(s.first),
             ),
           ],
+          // Solo tiene sentido con una cuenta real (el invitado no tiene
+          // contraseña que guardar) y en un dispositivo capaz de verificar.
+          if (!(user?.isGuest ?? true) && bioDisponible) ...[
+            const SizedBox(height: 28),
+            Text('Seguridad', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 4),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: bio.enabled,
+              onChanged: (v) => v
+                  ? showBiometricEnableSheet(
+                      context,
+                      ref,
+                      email: user?.email ?? '',
+                      kind: bioKind,
+                    )
+                  : _desactivarAccesoRapido(context, ref),
+              secondary: Icon(biometricIcon(bioKind)),
+              title: Text('Entrar con ${biometricLabel(bioKind)}'),
+              subtitle: Text(
+                bio.enabled
+                    ? 'Activado para ${bio.email}'
+                    : 'Entra sin escribir tu contraseña',
+              ),
+            ),
+          ],
           const SizedBox(height: 28),
           Text('Apariencia', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 12),
@@ -105,9 +139,13 @@ class ProfileScreen extends ConsumerWidget {
           _infoRow(context, 'Versión', '1.0.0'),
           const SizedBox(height: 28),
           FilledButton.tonalIcon(
-            onPressed: () {
-              ref.read(authControllerProvider.notifier).logout();
-              context.go(R.login);
+            // Se espera a que `logout()` termine antes de navegar: si no, el
+            // estado de auth todavía es válido cuando el router evalúa /login
+            // y el `redirect` rebota de vuelta a /home, dejando la app sin
+            // sesión pero fuera de la pantalla de acceso.
+            onPressed: () async {
+              await ref.read(authControllerProvider.notifier).logout();
+              if (context.mounted) context.go(R.login);
             },
             icon: const Icon(PhosphorIconsRegular.signOut, size: 18),
             label: const Text(AppStrings.logout),
@@ -118,6 +156,19 @@ class ProfileScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  /// Apaga el acceso rápido y borra las credenciales. Sin confirmación: es
+  /// reversible en dos toques.
+  Future<void> _desactivarAccesoRapido(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    await ref.read(biometricPrefsProvider.notifier).disable();
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Acceso rápido desactivado.')),
     );
   }
 

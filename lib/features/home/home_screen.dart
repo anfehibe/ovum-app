@@ -16,10 +16,14 @@ import '../../core/widgets/edge_fade.dart';
 import '../../core/widgets/initials_avatar.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/sponsor_logo.dart';
+import '../../core/auth/biometric_service.dart';
+import '../../core/config/app_config.dart';
+import '../../data/providers/biometric_provider.dart';
 import '../../data/providers/content_providers.dart';
 import '../../data/providers/notifications_provider.dart';
 import '../../data/providers/preferences.dart';
 import '../../data/providers/user_provider.dart';
+import '../auth/biometric_enroll_sheet.dart';
 import '../notifications/notification_permission_sheet.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -33,9 +37,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       _abrirRutaPendiente();
-      _pedirPermisoSiHaceFalta();
+      // En serie: en el primer login las dos hojas competirían por la pantalla.
+      await _pedirPermisoSiHaceFalta();
+      await _ofrecerAccesoRapido();
     });
   }
 
@@ -58,6 +64,42 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
     if (!mounted) return;
     await showNotificationPermissionSheet(context, ref);
+  }
+
+  /// Ofrece el acceso rápido tras un login con correo y contraseña.
+  ///
+  /// Va aquí y no en /login porque esa pantalla ya no existe cuando el login
+  /// termina: al cambiar el estado de auth, el `redirect` de go_router la
+  /// reemplaza. El login deja las credenciales en
+  /// [pendingBiometricEnrollProvider] y aquí se consumen.
+  Future<void> _ofrecerAccesoRapido() async {
+    if (!AppConfig.useBiometricLogin) return;
+    final creds = ref.read(pendingBiometricEnrollProvider.notifier).take();
+    if (creds == null || !mounted) return;
+    if (ref.read(isGuestProvider)) return;
+
+    final prefs = ref.read(biometricPrefsProvider);
+    if (prefs.isReady && prefs.email != creds.email) {
+      // Entró otra cuenta: lo guardado ya no corresponde a quien está usando
+      // la app, así que se descarta antes de ofrecer lo nuevo.
+      await ref.read(biometricPrefsProvider.notifier).disable();
+    } else if (prefs.enabled || prefs.promptSeen) {
+      return;
+    }
+
+    if (!await ref.read(biometricAvailableProvider.future)) return;
+    final kind = await ref.read(biometricKindProvider.future);
+    // Sin biometría enrolada la promesa "entra con tu huella" no se sostiene,
+    // aunque el PIN serviría de respaldo. Mejor no ofrecer nada.
+    if (kind == BiometricKind.none || !mounted) return;
+
+    await showBiometricEnrollSheet(
+      context,
+      ref,
+      email: creds.email,
+      password: creds.password,
+      kind: kind,
+    );
   }
 
   @override

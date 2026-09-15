@@ -55,6 +55,12 @@ abstract final class AppConfig {
   static const bool useApiMeetings = false;
   static const bool useApiChat = false;
 
+  // ── Seguridad ──────────────────────────────────────────────────────────────
+
+  /// Acceso rápido con huella / Face ID en la pantalla de login.
+  static const bool useBiometricLogin =
+      bool.fromEnvironment('OVUM_BIOMETRIC', defaultValue: true);
+
   // ── Notificaciones ─────────────────────────────────────────────────────────
 
   /// Push (FCM). Apagarlo evita inicializar Firebase Messaging por completo.

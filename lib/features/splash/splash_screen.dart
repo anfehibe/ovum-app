@@ -35,13 +35,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     _timer = Timer(_duration, _goNext);
   }
 
+  /// Espera a que el token salga del almacén seguro. Es asíncrono y no bloquea
+  /// el arranque (ver `AuthTokenStore.ready`), así que el splash —que ya dura
+  /// unos segundos— es el sitio natural para asegurarse de que las peticiones
+  /// posteriores al login ya lleven el Bearer.
+  Future<void> _esperarToken() => ref.read(authTokenStoreProvider).ready;
+
   @override
   void dispose() {
     _timer?.cancel();
     super.dispose();
   }
 
-  void _goNext() {
+  Future<void> _goNext() async {
+    if (!mounted) return;
+    await _esperarToken();
     if (!mounted) return;
     final loggedIn = ref.read(isLoggedInProvider);
     context.go(loggedIn ? R.home : R.login);

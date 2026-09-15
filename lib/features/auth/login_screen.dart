@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/auth/biometric_service.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/constants/ovum_event.dart';
 import '../../core/network/api_exception.dart';
@@ -9,7 +10,9 @@ import '../../core/router/route_paths.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/event_header_banner.dart';
 import '../../core/widgets/ovum_logo.dart';
+import '../../data/providers/biometric_provider.dart';
 import '../../data/providers/user_provider.dart';
+import 'biometric_enroll_sheet.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -25,6 +28,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _obscure = true;
   bool _busy = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    // Deja el correo puesto aunque no se use la huella: es el mismo usuario.
+    final guardado = ref.read(biometricPrefsProvider).email;
+    if (guardado.isNotEmpty) _emailCtrl.text = guardado;
+  }
 
   @override
   void dispose() {
@@ -62,6 +73,54 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _busy = true);
     await ref.read(authControllerProvider.notifier).loginAsGuest();
     if (mounted) context.go(R.home);
+  }
+
+  /// Verifica la identidad y reusa las credenciales guardadas para volver a
+  /// llamar a `POST /login`. El token anterior se revocó al cerrar sesión, así
+  /// que hace falta una sesión nueva de verdad.
+  Future<void> _loginConBiometria() async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    String? correoGuardado;
+    try {
+      final r = await ref.read(biometricPrefsProvider.notifier).unlock();
+      final creds = r.credentials;
+      if (creds == null) {
+        // Cancelar no es un error: no se pinta nada.
+        if (!r.result.isSilent && mounted) {
+          setState(() => _error = r.result.message);
+        }
+        return;
+      }
+      correoGuardado = creds.email;
+      await ref
+          .read(authControllerProvider.notifier)
+          .login(creds.email, creds.password, rememberForBiometrics: false);
+      if (mounted) context.go(R.home);
+    } on ApiException catch (e) {
+      if (e.isUnauthorized) {
+        // La contraseña cambió o la revocaron: lo guardado ya no sirve.
+        await ref.read(biometricPrefsProvider.notifier).disable();
+        if (mounted) {
+          setState(() {
+            _emailCtrl.text = correoGuardado ?? _emailCtrl.text;
+            _passwordCtrl.clear();
+            _error = 'Tu contraseña cambió. Ingrésala de nuevo y vuelve a '
+                'activar el acceso rápido.';
+          });
+        }
+      } else if (mounted) {
+        setState(() => _error = e.message);
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _error = 'No se pudo iniciar sesión. Intenta de nuevo.');
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   @override
@@ -213,9 +272,37 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     )
                   : const Text(AppStrings.login),
             ),
+            ..._accesoRapido(theme),
           ],
         ),
       ),
     );
+  }
+
+  /// Botón de acceso rápido. Solo aparece si el usuario lo activó antes y el
+  /// dispositivo sigue siendo capaz de verificar la identidad (puede haber
+  /// dejado de serlo: quitó el bloqueo, cambió de teléfono restaurando, etc.).
+  List<Widget> _accesoRapido(ThemeData theme) {
+    final bio = ref.watch(biometricPrefsProvider);
+    final disponible = ref.watch(biometricAvailableProvider).valueOrNull ?? false;
+    if (!bio.isReady || !disponible) return const [];
+
+    final kind =
+        ref.watch(biometricKindProvider).valueOrNull ?? BiometricKind.fingerprint;
+    return [
+      const SizedBox(height: 14),
+      OutlinedButton.icon(
+        onPressed: _busy ? null : _loginConBiometria,
+        icon: Icon(biometricIcon(kind), size: 20),
+        label: Text('Entrar con ${biometricLabel(kind)}'),
+      ),
+      const SizedBox(height: 6),
+      Text(
+        bio.email,
+        textAlign: TextAlign.center,
+        style: theme.textTheme.bodySmall
+            ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+      ),
+    ];
   }
 }

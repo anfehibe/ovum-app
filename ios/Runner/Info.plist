@@ -34,6 +34,8 @@
 	<string>OVUM 2026 necesita añadir eventos a tu calendario para guardar las sesiones que elijas.</string>
 	<key>NSContactsUsageDescription</key>
 	<string>OVUM 2026 usa tus contactos solo si eliges una ubicación al añadir una sesión al calendario.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>OVUM 2026 usa Face ID para que entres a tu cuenta sin escribir tu contraseña.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

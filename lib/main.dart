@@ -7,7 +7,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
 import 'core/config/app_config.dart';
+import 'core/network/auth_token_store.dart';
 import 'core/notifications/notification_service.dart';
+import 'data/providers/content_providers.dart';
 import 'data/providers/preferences.dart';
 import 'firebase_options.dart';
 
@@ -25,9 +27,18 @@ Future<void> main() async {
 
   final prefs = await SharedPreferences.getInstance();
 
+  // El token Bearer vive en el Keychain/KeyStore. La lectura arranca aquí pero
+  // **no se espera**: bloquear `runApp` con ella dejaba la pantalla en blanco
+  // casi un segundo en Android (KeyStore recién creado). Quien necesite el
+  // token espera a `tokens.ready`; lo hace el splash antes de navegar.
+  final tokens = AuthTokenStore(prefs);
+
   runApp(
     ProviderScope(
-      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        authTokenStoreProvider.overrideWithValue(tokens),
+      ],
       child: const OvumApp(),
     ),
   );

@@ -2,7 +2,7 @@ name: ovum
 description: "OVUM 2026 - XXIX Congreso Latinoamericano de Avicultura"
 publish_to: 'none'
 
-version: 0.4.0+4
+version: 0.5.0+5
 
 environment:
   sdk: ^3.12.2
@@ -34,6 +34,18 @@ dependencies:
   # Persistencia local + formato
   shared_preferences: ^2.5.5
   intl: ^0.20.2
+
+  # Seguridad: token Bearer + credenciales del acceso rápido (Keychain / KeyStore).
+  # La 11.x exige compileSdk 37 y la app está en 36; nos quedamos en la línea 10.x.
+  flutter_secure_storage: ">=10.3.0 <11.0.0"
+
+  # Biometría / bloqueo del dispositivo
+  local_auth: ^3.0.2
+  # AndroidAuthMessages / IOSAuthMessages (los textos en español) no los
+  # reexporta `package:local_auth`; se declaran para importarlos sin disparar
+  # el lint depend_on_referenced_packages.
+  local_auth_android: ^2.0.0
+  local_auth_darwin: ^2.0.0
 
   # Notificaciones (push FCM + locales)
   firebase_core: ^4.14.0

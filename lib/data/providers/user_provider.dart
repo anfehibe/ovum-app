@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/config/app_config.dart';
 import '../../core/network/api_exception.dart';
 import '../models/models.dart';
+import 'biometric_provider.dart';
 import 'content_providers.dart';
 import 'notifications_provider.dart';
 import 'preferences.dart';
@@ -55,17 +56,32 @@ class AuthController extends Notifier<AppUser?> {
     } catch (_) {
       return null;
     }
-    // Refresca el perfil en segundo plano (no bloquea el arranque).
+    // Refresca el perfil en segundo plano (no bloquea el arranque). Ambas
+    // tareas necesitan el Bearer, que se lee del almacén seguro de forma
+    // asíncrona, así que esperan a `ready` antes de salir a la red.
     if (!user.isGuest && AppConfig.useApiAuth) {
-      Future.microtask(_refreshMe);
-      // Reafirma el token FCM por si cambió con la app cerrada (es idempotente).
-      Future.microtask(() => ref.read(pushRegistrationProvider.notifier).register());
+      final tokens = ref.read(authTokenStoreProvider);
+      Future.microtask(() async {
+        await tokens.ready;
+        await _refreshMe();
+        // Reafirma el token FCM por si cambió con la app cerrada (idempotente).
+        await ref.read(pushRegistrationProvider.notifier).register();
+      });
     }
     return user;
   }
 
   /// Login real contra la API. Propaga [ApiException] en error (la UI lo maneja).
-  Future<void> login(String email, String password) async {
+  ///
+  /// [rememberForBiometrics] deja las credenciales en memoria para que `/home`
+  /// pueda ofrecer el acceso rápido. Se pasa `false` cuando el login vino del
+  /// propio acceso rápido o de la reautenticación en Perfil: ahí ya están
+  /// guardadas y no hay nada que ofrecer.
+  Future<void> login(
+    String email,
+    String password, {
+    bool rememberForBiometrics = true,
+  }) async {
     if (!AppConfig.useApiAuth) {
       // Kill-switch: comportamiento mock previo (sin red).
       _persist(AppUser.guest.copyWith(name: _nameFromEmail(email), email: email));
@@ -73,6 +89,14 @@ class AuthController extends Notifier<AppUser?> {
     }
     final result = await ref.read(authServiceProvider).login(email, password);
     await ref.read(authTokenStoreProvider).save(result.token);
+    // Antes de `_persist`: en cuanto cambia el estado, el `redirect` de
+    // go_router saca la pantalla de login de la pila y ya no hay dónde
+    // preguntar nada.
+    if (rememberForBiometrics && AppConfig.useBiometricLogin) {
+      ref
+          .read(pendingBiometricEnrollProvider.notifier)
+          .offer(email: email, password: password);
+    }
     _persist(result.user);
     // Best-effort y sin bloquear la navegación post-login.
     unawaited(ref.read(pushRegistrationProvider.notifier).register());
@@ -116,6 +140,10 @@ class AuthController extends Notifier<AppUser?> {
     }
     await tokens.clear();
     await ref.read(sharedPreferencesProvider).remove(_userKey);
+    // Las credenciales del acceso rápido **sobreviven** al logout a propósito:
+    // el botón de huella en /login es justamente su razón de existir. Se borran
+    // solo desde el interruptor de Perfil o si el backend rechaza la contraseña.
+    ref.read(pendingBiometricEnrollProvider.notifier).clear();
     state = null;
   }
 

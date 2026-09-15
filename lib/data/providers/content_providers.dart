@@ -14,9 +14,15 @@ import 'preferences.dart';
 
 // ── Infraestructura de red / API ────────────────────────────────────────────
 
-/// Almacén del token Bearer (reusa SharedPreferences).
+/// Almacén del token Bearer (Keychain / KeyStore).
+///
+/// La instancia se crea en `main()` con `AuthTokenStore.open()` —leer el
+/// almacén seguro es asíncrono— y se inyecta aquí, igual que
+/// [sharedPreferencesProvider].
 final authTokenStoreProvider = Provider<AuthTokenStore>(
-  (ref) => AuthTokenStore(ref.watch(sharedPreferencesProvider)),
+  (ref) => throw UnimplementedError(
+    'authTokenStoreProvider debe sobreescribirse en main()',
+  ),
 );
 
 /// Cliente HTTP con headers `X-Tenant` + `Bearer` y errores tipados.
