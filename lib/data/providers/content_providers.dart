@@ -10,6 +10,7 @@ import '../repositories/api_ovum_repository.dart';
 import '../repositories/ovum_repository.dart';
 import '../services/auth_service.dart';
 import '../services/device_token_service.dart';
+import '../services/networking_service.dart';
 import 'preferences.dart';
 
 // ── Infraestructura de red / API ────────────────────────────────────────────
@@ -38,6 +39,15 @@ final authServiceProvider = Provider<AuthService>(
 /// Registro del token FCM (`POST/DELETE /me/device-token`).
 final deviceTokenServiceProvider = Provider<DeviceTokenService>(
   (ref) => DeviceTokenService(ref.watch(apiClientProvider)),
+);
+
+/// Networking del evento (`/events/{id}/networking/*`). Requiere Bearer y que el
+/// organizador tenga el networking abierto; si no, el backend responde 403.
+final networkingServiceProvider = Provider<NetworkingService>(
+  (ref) => NetworkingService(
+    ref.watch(apiClientProvider),
+    eventId: () => ref.read(eventProvider.future).then((e) => e?.id),
+  ),
 );
 
 /// Evento configurado (resuelto por `codigo`). `null` si el flag está apagado o

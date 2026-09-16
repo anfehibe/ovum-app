@@ -28,8 +28,11 @@ abstract final class R {
   static const organizers = '/organizers';
   static const favorites = '/favorites';
 
+  // Networking (API por evento)
+  static const networkingProfile = '/networking/profile';
+  static const networkingAttendeeDetail = '/networking/attendee'; // /:id
+
   // Interactivos
-  static const meetings = '/meetings';
   static const newMeeting = '/new-meeting'; // /new-meeting/:attendeeId
   static const chats = '/chats';
   static const chat = '/chat'; // /chat/:attendeeId
@@ -41,6 +44,7 @@ abstract final class R {
   static String sponsor(String id) => '$sponsorDetail/$id';
   static String exhibitor(String id) => '$exhibitorDetail/$id';
   static String attendee(String id) => '$attendeeDetail/$id';
+  static String networkingAttendee(String id) => '$networkingAttendeeDetail/$id';
   static String session(String id) => '$sessionDetail/$id';
   static String meetingWith(String attendeeId) => '$newMeeting/$attendeeId';
   static String chatWith(String attendeeId) => '$chat/$attendeeId';

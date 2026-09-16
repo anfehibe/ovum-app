@@ -24,7 +24,7 @@ class SponsorDetailScreen extends ConsumerWidget {
     if (sponsor == null) {
       return Scaffold(appBar: AppBar(), body: const EmptyState(message: 'Patrocinador no encontrado'));
     }
-    final color = sponsorTierColor(sponsor.tier);
+    final color = sponsorTierColor(context, sponsor.tier);
 
     return Scaffold(
       body: ListView(
@@ -81,7 +81,7 @@ class SponsorDetailScreen extends ConsumerWidget {
                     color: Colors.white.withValues(alpha: 0.25),
                     borderRadius: BorderRadius.circular(100),
                   ),
-                  child: Text('Patrocinador ${sponsor.tier.label}',
+                  child: Text(sponsor.tier.badge,
                       style: Theme.of(context)
                           .textTheme
                           .labelMedium

@@ -52,6 +52,16 @@ class ProfileScreen extends ConsumerWidget {
             subtitle: favCount == 0 ? 'Sin favoritos aún' : '$favCount guardados',
             onTap: () => context.push(R.favorites),
           ),
+          if (!(user?.isGuest ?? true)) ...[
+            const SizedBox(height: 10),
+            _tile(
+              context,
+              icon: PhosphorIconsRegular.identificationCard,
+              title: 'Mi perfil de networking',
+              subtitle: 'Sectores e intereses para que te encuentren',
+              onTap: () => context.push(R.networkingProfile),
+            ),
+          ],
           const SizedBox(height: 24),
           Text('Notificaciones', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 4),

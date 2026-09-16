@@ -18,6 +18,7 @@ import '../../core/widgets/section_header.dart';
 import '../../core/widgets/sponsor_logo.dart';
 import '../../core/auth/biometric_service.dart';
 import '../../core/config/app_config.dart';
+import '../../data/models/models.dart';
 import '../../data/providers/biometric_provider.dart';
 import '../../data/providers/content_providers.dart';
 import '../../data/providers/notifications_provider.dart';
@@ -667,7 +668,9 @@ class _SponsorsRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sponsors = ref.watch(sponsorsProvider).valueOrNull ?? const [];
-    final top = sponsors.where((s) => s.tier.order <= 1).toList();
+    // Los dos niveles conocidos más altos que existan (hoy Diamante + Platino);
+    // se ajusta solo si el organizador cambia los niveles.
+    final top = topTierSponsors(sponsors);
     if (top.isEmpty) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

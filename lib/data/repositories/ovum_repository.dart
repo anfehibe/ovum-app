@@ -28,8 +28,6 @@ abstract interface class OvumRepository {
   /// Envía una pregunta a una sesión. Queda pendiente de moderación del organizador.
   Future<void> askQuestion(String sessionId, String question);
 
-  Future<List<Meeting>> getSeedMeetings();
-  Future<List<ChatMessage>> getSeedChatMessages();
 }
 
 /// Implementación que lee los datos simulados desde `assets/mock/*.json`.
@@ -118,15 +116,4 @@ class MockOvumRepository implements OvumRepository {
     // Mock: sin backend de moderación; nada que persistir.
   }
 
-  @override
-  Future<List<Meeting>> getSeedMeetings() async {
-    final rows = await loadJsonList('assets/mock/meetings.json');
-    return rows.map(Meeting.fromJson).toList();
-  }
-
-  @override
-  Future<List<ChatMessage>> getSeedChatMessages() async {
-    final rows = await loadJsonList('assets/mock/chats.json');
-    return rows.map(ChatMessage.fromJson).toList();
-  }
 }

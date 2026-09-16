@@ -10,6 +10,7 @@ import '../../core/widgets/initials_avatar.dart';
 import '../../core/widgets/states.dart';
 import '../../data/providers/content_providers.dart';
 import '../../data/providers/favorites_provider.dart';
+import '../../data/providers/networking_provider.dart';
 import '../widgets/session_tile.dart';
 
 class FavoritesScreen extends ConsumerWidget {
@@ -22,7 +23,9 @@ class FavoritesScreen extends ConsumerWidget {
     final sessions = ref.watch(sessionsProvider).valueOrNull ?? const [];
     final speakers = ref.watch(speakersProvider).valueOrNull ?? const [];
     final sponsors = ref.watch(sponsorsProvider).valueOrNull ?? const [];
-    final attendees = ref.watch(attendeesProvider).valueOrNull ?? const [];
+    // Los asistentes favoritos viven en el servidor (networking), no en disco.
+    final favAttendees =
+        ref.watch(serverFavoritesProvider).valueOrNull ?? const [];
     final exhibitors = ref.watch(exhibitorsProvider).valueOrNull ?? const [];
 
     bool has(FavKind k, String id) => favs.contains(favKey(k, id));
@@ -30,15 +33,13 @@ class FavoritesScreen extends ConsumerWidget {
     final favSessions = sessions.where((s) => has(FavKind.session, s.id)).toList();
     final favSpeakers = speakers.where((s) => has(FavKind.speaker, s.id)).toList();
     final favSponsors = sponsors.where((s) => has(FavKind.sponsor, s.id)).toList();
-    final favAttendees = attendees.where((a) => has(FavKind.attendee, a.id)).toList();
     final favExhibitors = exhibitors.where((e) => has(FavKind.exhibitor, e.id)).toList();
 
-    final isEmpty = favs.isEmpty ||
-        (favSessions.isEmpty &&
-            favSpeakers.isEmpty &&
-            favSponsors.isEmpty &&
-            favAttendees.isEmpty &&
-            favExhibitors.isEmpty);
+    final isEmpty = favSessions.isEmpty &&
+        favSpeakers.isEmpty &&
+        favSponsors.isEmpty &&
+        favAttendees.isEmpty &&
+        favExhibitors.isEmpty;
 
     return Scaffold(
       appBar: AppBar(title: const Text(AppStrings.favorites)),
@@ -73,7 +74,7 @@ class FavoritesScreen extends ConsumerWidget {
                   for (final s in favSponsors)
                     _FavTile(
                       name: s.name,
-                      subtitle: 'Patrocinador ${s.tier.label}',
+                      subtitle: s.tier.badge,
                       photoUrl: s.logoUrl,
                       onTap: () => context.push(R.sponsor(s.id)),
                     ),
@@ -93,9 +94,9 @@ class FavoritesScreen extends ConsumerWidget {
                   for (final a in favAttendees)
                     _FavTile(
                       name: a.name,
-                      subtitle: '${a.position} · ${a.company}',
+                      subtitle: a.subtitle,
                       photoUrl: a.photoUrl,
-                      onTap: () => context.push(R.attendee(a.id)),
+                      onTap: () => context.push(R.networkingAttendee(a.id)),
                     ),
                 ],
               ],

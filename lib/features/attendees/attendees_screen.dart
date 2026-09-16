@@ -7,6 +7,7 @@ import '../../core/constants/app_strings.dart';
 import '../../core/router/route_paths.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/initials_avatar.dart';
+import '../../core/widgets/sign_in_prompt.dart';
 import '../../core/widgets/states.dart';
 import '../../data/models/models.dart';
 import '../../data/providers/content_providers.dart';
@@ -28,7 +29,9 @@ class _AttendeesScreenState extends ConsumerState<AttendeesScreen> {
     if (ref.watch(isGuestProvider)) {
       return Scaffold(
         appBar: AppBar(title: const Text(AppStrings.attendees)),
-        body: const _SignInPrompt(),
+        body: const SignInPrompt(
+          message: 'Inicia sesión para ver a los asistentes y hacer networking.',
+        ),
       );
     }
     final async = ref.watch(attendeesProvider);
@@ -168,36 +171,3 @@ class _AttendeeTile extends StatelessWidget {
 
 /// Aviso para el modo invitado: el networking necesita sesión real. El botón
 /// cierra la sesión de invitado, lo que redirige al login (ver router).
-class _SignInPrompt extends ConsumerWidget {
-  const _SignInPrompt();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = context.scheme;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(PhosphorIconsRegular.usersThree, size: 44, color: scheme.onSurfaceVariant),
-            const SizedBox(height: 12),
-            Text(
-              'Inicia sesión para ver a los asistentes y hacer networking.',
-              textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-            const SizedBox(height: 20),
-            FilledButton(
-              onPressed: () => ref.read(authControllerProvider.notifier).logout(),
-              child: const Text(AppStrings.login),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

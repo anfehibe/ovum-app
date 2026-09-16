@@ -1,138 +1,296 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
+import '../../core/config/app_config.dart';
+import '../../core/network/api_exception.dart';
+import '../../core/notifications/notification_routes.dart';
+import '../../core/notifications/notification_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/date_ext.dart';
 import '../../core/widgets/initials_avatar.dart';
 import '../../core/widgets/states.dart';
-import '../../data/models/models.dart';
-import '../../data/providers/chat_provider.dart';
-import '../../data/providers/content_providers.dart';
+import '../../data/models/networking_message.dart';
+import '../../data/providers/messages_provider.dart';
+import '../../data/providers/notifications_provider.dart';
+import '../networking/networking_gate.dart';
+import '../networking/networking_tab_error.dart';
 
+/// Conversación 1 a 1 con otro asistente.
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key, required this.attendeeId});
+
   final String attendeeId;
 
   @override
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends ConsumerState<ChatScreen> {
+class _ChatScreenState extends ConsumerState<ChatScreen>
+    with WidgetsBindingObserver {
   final _controller = TextEditingController();
+  Timer? _poll;
+  StreamSubscription<Map<String, dynamic>>? _pushSub;
+  bool _sending = false;
+
+  /// Se guarda en `initState` en vez de leerse en `dispose`: leer un provider
+  /// mientras el scope se desmonta puede lanzar.
+  late final NotificationService _notifications;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _startPolling();
+    _listenPush();
+  }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _poll?.cancel();
+    _pushSub?.cancel();
+    // Solo se suelta si sigue siendo este hilo: al encadenar dos chats el
+    // `initState` del nuevo corre antes que el `dispose` del viejo.
+    if (_notifications.activeChatId == widget.attendeeId) {
+      _notifications.activeChatId = null;
+    }
     _controller.dispose();
     super.dispose();
   }
 
-  void _send() {
-    final text = _controller.text;
-    if (text.trim().isEmpty) return;
-    ref.read(chatProvider.notifier).send(widget.attendeeId, text);
+  /// Una push de mensaje nuevo refresca el hilo al instante, sin esperar al
+  /// poll. Se usa `refresh()` (silencioso) y no `invalidate`: invalidar
+  /// reconstruiría el notifier y la conversación parpadearía en `LoadingView`.
+  void _listenPush() {
+    _notifications = ref.read(notificationServiceProvider);
+    _notifications.activeChatId = widget.attendeeId; // no notificar lo ya visible
+    _pushSub = _notifications.onDataMessage.listen((data) {
+      if (chatCounterpartId(data) == widget.attendeeId) _refresh();
+    });
+  }
+
+  /// El polling solo corre en primer plano: en background no gasta radio ni batería.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _refresh();
+      _startPolling();
+    } else {
+      _poll?.cancel();
+    }
+  }
+
+  void _startPolling() {
+    _poll?.cancel();
+    final seconds = AppConfig.messagePollSeconds;
+    if (seconds <= 0) return; // apagado por configuración
+    _poll = Timer.periodic(Duration(seconds: seconds), (_) => _refresh());
+  }
+
+  void _refresh() {
+    if (!mounted) return;
+    ref.read(messageThreadProvider(widget.attendeeId).notifier).refresh();
+  }
+
+  Future<void> _send() async {
+    final text = _controller.text.trim();
+    if (text.isEmpty || _sending) return;
+    setState(() => _sending = true);
     _controller.clear();
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref
+          .read(messageThreadProvider(widget.attendeeId).notifier)
+          .send(text);
+    } catch (e) {
+      if (!mounted) return;
+      // Devuelve el texto al campo: nada de perder lo que el usuario escribió.
+      _controller.text = text;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            e is ApiException ? e.message : 'No se pudo enviar el mensaje.',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final attendee = ref.watch(attendeeByIdProvider(widget.attendeeId));
-    final messages = ref.watch(conversationProvider(widget.attendeeId));
+    return NetworkingGate(
+      signInMessage: 'Inicia sesión para escribirte con otros asistentes.',
+      builder: (context) => _thread(context),
+    );
+  }
+
+  Widget _thread(BuildContext context) {
+    final async = ref.watch(messageThreadProvider(widget.attendeeId));
     final scheme = context.scheme;
+    final card = async.valueOrNull?.counterpart;
 
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 0,
         title: Row(
           children: [
-            InitialsAvatar(name: attendee?.name ?? '?', imageUrl: attendee?.photoUrl, size: 36),
+            InitialsAvatar(
+              name: card?.name ?? '?',
+              imageUrl: card?.photoUrl,
+              size: 36,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(attendee?.name ?? 'Chat',
-                      style: Theme.of(context).textTheme.titleSmall, overflow: TextOverflow.ellipsis),
-                  if (attendee != null)
-                    Text(attendee.company,
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelSmall
-                            ?.copyWith(color: scheme.onSurfaceVariant),
-                        overflow: TextOverflow.ellipsis),
+                  Text(
+                    card?.name.isNotEmpty == true ? card!.name : 'Chat',
+                    style: Theme.of(context).textTheme.titleSmall,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (card != null && card.subtitle.isNotEmpty)
+                    Text(
+                      card.subtitle,
+                      style: Theme.of(context).textTheme.labelSmall
+                          ?.copyWith(color: scheme.onSurfaceVariant),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                 ],
               ),
             ),
           ],
         ),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: messages.isEmpty
-                ? const EmptyState(
-                    message: 'Escribe el primer mensaje',
-                    icon: PhosphorIconsRegular.chatCircleText,
-                  )
-                : ListView.builder(
-                    reverse: true,
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                    itemCount: messages.length,
-                    itemBuilder: (context, i) {
-                      final msg = messages[messages.length - 1 - i];
-                      return _Bubble(message: msg);
-                    },
-                  ),
-          ),
-          _InputBar(controller: _controller, onSend: _send),
-        ],
+      body: async.when(
+        loading: () => const LoadingView(),
+        error: (e, _) => NetworkingTabError(error: e),
+        data: (thread) => Column(
+          children: [
+            Expanded(
+              child: thread.messages.isEmpty
+                  ? const EmptyState(
+                      message: 'Escribe el primer mensaje',
+                      icon: PhosphorIconsRegular.chatCircleText,
+                    )
+                  : RefreshIndicator(
+                      onRefresh: () async => _refresh(),
+                      child: ListView.builder(
+                        reverse: true,
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                        itemCount: thread.messages.length,
+                        itemBuilder: (context, i) => _Bubble(
+                          message: thread.messages[thread.messages.length - 1 - i],
+                        ),
+                      ),
+                    ),
+            ),
+            if (thread.closedReason != null)
+              _closed(context, thread.closedReason!)
+            else
+              _InputBar(
+                controller: _controller,
+                onSend: _send,
+                sending: _sending,
+              ),
+          ],
+        ),
       ),
     );
   }
+
+  Widget _closed(BuildContext context, String reason) => SafeArea(
+    top: false,
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: context.scheme.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              PhosphorIconsRegular.info,
+              size: 18,
+              color: context.scheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                reason,
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(color: context.scheme.onSurfaceVariant),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 class _Bubble extends StatelessWidget {
   const _Bubble({required this.message});
-  final ChatMessage message;
+
+  final NetworkingMessage message;
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.scheme;
-    final mine = message.sentByMe;
+    final mine = message.isMine;
+    final onBubble = mine ? scheme.onPrimary : scheme.onSurface;
+
     return Align(
       alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.75),
-        decoration: BoxDecoration(
-          color: mine ? scheme.primary : scheme.surfaceContainerHigh,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(18),
-            topRight: const Radius.circular(18),
-            bottomLeft: Radius.circular(mine ? 18 : 4),
-            bottomRight: Radius.circular(mine ? 4 : 18),
+      child: Opacity(
+        // La burbuja optimista se ve atenuada hasta que el servidor la confirma.
+        opacity: message.pending ? 0.6 : 1,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.sizeOf(context).width * 0.75,
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              message.text,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: mine ? scheme.onPrimary : scheme.onSurface),
+          decoration: BoxDecoration(
+            color: mine ? scheme.primary : scheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.only(
+              topLeft: const Radius.circular(18),
+              topRight: const Radius.circular(18),
+              bottomLeft: Radius.circular(mine ? 18 : 4),
+              bottomRight: Radius.circular(mine ? 4 : 18),
             ),
-            const SizedBox(height: 2),
-            Text(
-              message.time.hm,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: (mine ? scheme.onPrimary : scheme.onSurfaceVariant).withValues(alpha: 0.7),
-                  ),
-            ),
-          ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                message.text,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: onBubble),
+              ),
+              const SizedBox(height: 2),
+              message.pending
+                  ? Icon(
+                      PhosphorIconsRegular.clock,
+                      size: 12,
+                      color: onBubble.withValues(alpha: 0.7),
+                    )
+                  : Text(
+                      message.sentAt?.hm ?? '',
+                      style: Theme.of(context).textTheme.labelSmall
+                          ?.copyWith(color: onBubble.withValues(alpha: 0.7)),
+                    ),
+            ],
+          ),
         ),
       ),
     );
@@ -140,9 +298,15 @@ class _Bubble extends StatelessWidget {
 }
 
 class _InputBar extends StatelessWidget {
-  const _InputBar({required this.controller, required this.onSend});
+  const _InputBar({
+    required this.controller,
+    required this.onSend,
+    required this.sending,
+  });
+
   final TextEditingController controller;
   final VoidCallback onSend;
+  final bool sending;
 
   @override
   Widget build(BuildContext context) {
@@ -158,8 +322,12 @@ class _InputBar extends StatelessWidget {
                 controller: controller,
                 minLines: 1,
                 maxLines: 4,
+                maxLength: 2000,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(hintText: 'Mensaje…'),
+                decoration: const InputDecoration(
+                  hintText: 'Mensaje…',
+                  counterText: '', // el tope importa, el contador estorba
+                ),
                 onSubmitted: (_) => onSend(),
               ),
             ),
@@ -169,10 +337,22 @@ class _InputBar extends StatelessWidget {
               shape: const CircleBorder(),
               clipBehavior: Clip.antiAlias,
               child: InkWell(
-                onTap: onSend,
+                onTap: sending ? null : onSend,
                 child: Padding(
                   padding: const EdgeInsets.all(12),
-                  child: Icon(PhosphorIconsRegular.paperPlaneRight, color: scheme.onPrimary),
+                  child: sending
+                      ? SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: scheme.onPrimary,
+                          ),
+                        )
+                      : Icon(
+                          PhosphorIconsRegular.paperPlaneRight,
+                          color: scheme.onPrimary,
+                        ),
                 ),
               ),
             ),

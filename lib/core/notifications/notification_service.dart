@@ -55,6 +55,18 @@ class NotificationService {
   /// Rutas producidas al tocar una notificación con la app ya viva.
   Stream<String> get onNotificationRoute => _routes.stream;
 
+  final _data = StreamController<Map<String, dynamic>>.broadcast();
+
+  /// `data` crudo de las push que llegan con la app en primer plano, **sin
+  /// esperar a que el usuario las toque**. Es lo que permite que una pantalla se
+  /// refresque sola al llegar el aviso; quien escucha decide si le incumbe.
+  Stream<Map<String, dynamic>> get onDataMessage => _data.stream;
+
+  /// Id del interlocutor cuyo hilo está abierto ahora mismo, si lo hay. Lo fija
+  /// `ChatScreen`. Sirve para no notificar un mensaje que el usuario está viendo
+  /// entrar en pantalla.
+  String? activeChatId;
+
   /// Ruta con la que se abrió la app desde cero (arranque en frío). La UI la
   /// consume después de que el splash termine de navegar.
   String? initialRoute;
@@ -156,9 +168,20 @@ class NotificationService {
   /// En iOS ya lo hace el sistema (setForegroundNotificationPresentationOptions),
   /// así que replicarlo sacaría la notificación dos veces.
   Future<void> _onForegroundMessage(RemoteMessage message) async {
+    // El dato se publica SIEMPRE y antes de cualquier corte por plataforma: es
+    // lo que refresca la UI, y eso vale igual en iOS que en Android.
+    _data.add(message.data);
+
     if (!Platform.isAndroid) return;
     final n = message.notification;
     if (n == null) return;
+
+    // El hilo abierto ya va a mostrar el mensaje solo: notificarlo sería ruido.
+    // Solo se puede evitar en Android, que es donde dibujamos nosotros; en iOS
+    // la decisión es del sistema por `setForegroundNotificationPresentationOptions`
+    // y suprimir caso por caso obligaría a dibujar todas las push a mano.
+    final chat = chatCounterpartId(message.data);
+    if (chat != null && chat == activeChatId) return;
     await _fln.show(
       id: message.messageId?.hashCode.abs() ?? DateTime.now().millisecond,
       title: n.title,

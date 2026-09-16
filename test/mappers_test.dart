@@ -1,10 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ovum/data/models/info_item.dart';
+import 'package:ovum/data/models/networking_catalog.dart';
+import 'package:ovum/data/models/networking_meeting.dart';
 import 'package:ovum/data/models/session.dart';
 import 'package:ovum/data/models/sponsor.dart';
 import 'package:ovum/data/repositories/mappers/attendee_mapper.dart';
 import 'package:ovum/data/repositories/mappers/content_mapper.dart';
 import 'package:ovum/data/repositories/mappers/hotel_mapper.dart';
+import 'package:ovum/data/repositories/mappers/networking_mapper.dart';
 import 'package:ovum/data/repositories/mappers/poll_mapper.dart';
 import 'package:ovum/data/repositories/mappers/question_mapper.dart';
 import 'package:ovum/data/repositories/mappers/session_mapper.dart';
@@ -338,15 +341,107 @@ void main() {
       expect(s.id, '3');
       expect(s.name, 'ACME');
       expect(s.tier, SponsorTier.oro);
+      expect(s.tier.label, 'Oro');
       expect(s.description, 'Líder en avicultura');
       expect(s.logoUrl, 'https://x/acme.png');
       expect(s.web, 'https://acme.com');
     });
 
-    test('nivel desconocido cae a bronce; logo relativo → null', () {
-      final s = sponsorFromJson({'id': 4, 'nombre': 'X', 'nivel': 'platino', 'logo': '/img/no_pic.jpg'});
-      expect(s.tier, SponsorTier.bronce);
+    test('Platino es conocido y va por encima de Oro; logo relativo → null', () {
+      final s = sponsorFromJson(
+          {'id': 4, 'nombre': 'X', 'nivel': 'Platino', 'logo': '/img/no_pic.jpg'});
+      expect(s.tier, SponsorTier.platino);
+      expect(s.tier.label, 'Platino');
+      expect(s.tier.order, lessThan(SponsorTier.oro.order));
       expect(s.logoUrl, isNull);
+    });
+
+    test('nivel nuevo conserva su etiqueta y va al final (no se disfraza de bronce)', () {
+      final s = sponsorFromJson({'id': 5, 'nombre': 'Y', 'nivel': 'Media Partner'});
+      expect(s.tier.isKnown, isFalse);
+      expect(s.tier.label, 'Media Partner'); // casing intacto
+      expect(s.tier.order, greaterThan(SponsorTier.bronce.order));
+      expect(s.tier, isNot(SponsorTier.bronce)); // guardia de la regresión
+    });
+
+    test('la clave del mock y la etiqueta del API son el mismo nivel', () {
+      expect(sponsorFromJson({'id': 6, 'nombre': 'A', 'nivel': 'diamante'}).tier,
+          SponsorTier.diamante);
+      expect(sponsorFromJson({'id': 7, 'nombre': 'B', 'nivel': 'Diamante'}).tier,
+          SponsorTier.diamante);
+    });
+
+    test('nivel nulo o vacío → otros, nunca bronce', () {
+      for (final nivel in [null, '', '   ']) {
+        final s = sponsorFromJson({'id': 8, 'nombre': 'Z', 'nivel': nivel});
+        expect(s.tier, SponsorTier.otros);
+        expect(s.tier, isNot(SponsorTier.bronce));
+      }
+    });
+  });
+
+  group('SponsorTier', () {
+    Sponsor sponsorWith(String nivel, String id) =>
+        sponsorFromJson({'id': id, 'nombre': 'S$id', 'nivel': nivel});
+
+    test('agrupa por valor: el mismo nivel con distinto casing es una sola clave', () {
+      final a = SponsorTier.fromLabel('Media Partner');
+      final b = SponsorTier.fromLabel('media partner');
+      expect(a, b);
+      expect(a.hashCode, b.hashCode);
+      // Contrato que protege el Map<SponsorTier, List<Sponsor>> de sponsors_screen:
+      // sin igualdad por valor cada patrocinador formaría su propia sección.
+      final byTier = <SponsorTier, List<Sponsor>>{};
+      for (final s in [
+        sponsorWith('Media Partner', '1'),
+        sponsorWith('media partner', '2'),
+        sponsorWith('MEDIA PARTNER', '3'),
+      ]) {
+        byTier.putIfAbsent(s.tier, () => []).add(s);
+      }
+      expect(byTier.length, 1);
+      expect(byTier.values.single.length, 3);
+    });
+
+    test('ignora acentos al agrupar pero los conserva en la etiqueta', () {
+      final conAcento = SponsorTier.fromLabel('Línea Aérea Oficial');
+      expect(conAcento, SponsorTier.fromLabel('Linea Aerea Oficial'));
+      expect(conAcento.label, 'Línea Aérea Oficial');
+    });
+
+    test('ordena los conocidos por rango y deja los nuevos al final', () {
+      final tiers = [
+        SponsorTier.fromLabel('Media Partner'),
+        SponsorTier.bronce,
+        SponsorTier.diamante,
+        SponsorTier.platino,
+      ]..sort();
+      expect(tiers.map((t) => t.label).toList(),
+          ['Diamante', 'Platino', 'Bronce', 'Media Partner']);
+    });
+
+    test('topTierSponsors toma los dos niveles conocidos más altos presentes', () {
+      final top = topTierSponsors([
+        sponsorWith('Diamante', '1'),
+        sponsorWith('Platino', '2'),
+        sponsorWith('Oro', '3'),
+        sponsorWith('Media Partner', '4'),
+      ]);
+      expect(top.map((s) => s.id).toList(), ['1', '2']);
+    });
+
+    test('topTierSponsors sube de nivel cuando no hay Diamante', () {
+      final top = topTierSponsors([
+        sponsorWith('Oro', '1'),
+        sponsorWith('Plata', '2'),
+        sponsorWith('Bronce', '3'),
+      ]);
+      expect(top.map((s) => s.id).toList(), ['1', '2']);
+    });
+
+    test('topTierSponsors no deja el home vacío si solo hay niveles nuevos', () {
+      expect(topTierSponsors([sponsorWith('Media Partner', '1')]), isNotEmpty);
+      expect(topTierSponsors(const []), isEmpty);
     });
   });
 
@@ -576,6 +671,398 @@ void main() {
     test('sin preguntas / shape inesperado → lista vacía', () {
       expect(questionsFromProgramJson({'data': {'preguntas': null}}, '10'), isEmpty);
       expect(questionsFromProgramJson(const [], '10'), isEmpty);
+    });
+  });
+
+  group('networkingCardFromJson', () {
+    test('mapea el shape completo de la ficha', () {
+      final card = networkingCardFromJson({
+        'id': 12,
+        'nombre': 'Ana',
+        'apellido': 'López',
+        'foto': 'https://s3/ana.jpg',
+        'empresa': 'ACME',
+        'cargo': 'Directora',
+        'sector': ['Nutrición y alimento balanceado', 'Genética'],
+        'intereses': ['Bioseguridad'],
+        'bio': 'Veterinaria',
+        'linkedin': 'https://linkedin.com/in/ana',
+        'pais': 'Guatemala',
+        'favorito': true,
+      });
+      expect(card.id, '12'); // int → String
+      expect(card.name, 'Ana López');
+      expect(card.subtitle, 'Directora · ACME');
+      expect(card.photoUrl, 'https://s3/ana.jpg');
+      expect(card.sectors, ['Nutrición y alimento balanceado', 'Genética']);
+      expect(card.interests, ['Bioseguridad']);
+      expect(card.country, 'Guatemala');
+      expect(card.isFavorite, isTrue);
+    });
+
+    test('favorito ausente → false', () {
+      expect(networkingCardFromJson({'id': 1, 'nombre': 'X'}).isFavorite, isFalse);
+    });
+
+    test('descarta el placeholder de foto, relativo o absoluto', () {
+      expect(networkingCardFromJson({'id': 1, 'foto': '/img/usuario.jpg'}).photoUrl, isNull);
+      // Networking sirve el placeholder como URL absoluta: sin filtrarlo, todas
+      // las fichas mostrarían el mismo avatar gris en vez de las iniciales.
+      expect(
+        networkingCardFromJson(
+            {'id': 1, 'foto': 'https://trivvo.events/storage/img/usuario.jpg'}).photoUrl,
+        isNull,
+      );
+      expect(
+        networkingCardFromJson({'id': 1, 'foto': 'https://s3/fotos/ana.jpg'}).photoUrl,
+        'https://s3/fotos/ana.jpg',
+      );
+    });
+
+    test('campos nulos → cadenas vacías, sin crash', () {
+      final card = networkingCardFromJson({
+        'id': 2,
+        'nombre': 'Solo',
+        'apellido': null,
+        'empresa': null,
+        'cargo': null,
+        'bio': null,
+        'pais': null,
+        'linkedin': null,
+      });
+      expect(card.name, 'Solo');
+      expect(card.subtitle, '');
+      expect(card.bio, '');
+      expect(card.linkedin, isNull);
+      expect(card.sectors, isEmpty);
+    });
+
+    test('buscando/soluciones/regiones solo vienen en el detalle', () {
+      final lista = networkingCardFromJson({'id': 3, 'nombre': 'A'});
+      expect(lista.seeking, isEmpty);
+      final detalle = networkingCardFromJson({
+        'id': 3,
+        'nombre': 'A',
+        'buscando': ['proveedores'],
+        'soluciones': ['sanidad', 'nutricion'],
+        'regiones': ['centroamerica'],
+      });
+      expect(detalle.seeking, ['proveedores']);
+      expect(detalle.solutions, ['sanidad', 'nutricion']);
+      expect(detalle.regions, ['centroamerica']);
+    });
+  });
+
+  group('directoryPageFromJson', () {
+    test('lee data + meta de paginación', () {
+      final page = directoryPageFromJson({
+        'data': [
+          {'id': 1, 'nombre': 'A'},
+          {'id': 2, 'nombre': 'B'},
+        ],
+        'meta': {'page': 2, 'per': 25, 'total': 57, 'last_page': 3},
+      });
+      expect(page.items.length, 2);
+      expect(page.page, 2);
+      expect(page.lastPage, 3);
+      expect(page.total, 57);
+    });
+
+    test('sin meta → página 1 de 1 y total = items', () {
+      final page = directoryPageFromJson({
+        'data': [
+          {'id': 1, 'nombre': 'A'},
+        ],
+      });
+      expect(page.page, 1);
+      expect(page.lastPage, 1);
+      expect(page.total, 1);
+    });
+  });
+
+  group('networkingCatalogFromJson', () {
+    test('sectores/intereses (sin clave) usan la etiqueta es como valor', () {
+      final cat = networkingCatalogFromJson({
+        'sectores': [
+          {'es': 'Producción de pollo de engorde', 'en': 'Broiler production'},
+        ],
+        'intereses': [
+          {'es': 'Bioseguridad', 'en': 'Biosecurity'},
+        ],
+      });
+      expect(cat.sectors.single.value, 'Producción de pollo de engorde');
+      expect(cat.sectors.single.es, 'Producción de pollo de engorde');
+      expect(cat.interests.single.value, 'Bioseguridad');
+    });
+
+    test('buscando/soluciones/regiones usan clave y conservan el ícono', () {
+      final cat = networkingCatalogFromJson({
+        'soluciones': [
+          {'clave': 'genetica', 'es': 'Genética', 'en': 'Genetics', 'icono': 'fa-dna'},
+        ],
+      });
+      final opt = cat.solutions.single;
+      expect(opt.value, 'genetica'); // la clave, no la etiqueta
+      expect(opt.es, 'Genética');
+      expect(opt.icon, 'fa-dna');
+    });
+
+    test('lee topes; sin topes cae a 3 / 7', () {
+      final conTopes = networkingCatalogFromJson({
+        'topes': {'sectores': 2, 'intereses': 5},
+      });
+      expect(conTopes.maxSectors, 2);
+      expect(conTopes.maxInterests, 5);
+      final sinTopes = networkingCatalogFromJson({});
+      expect(sinTopes.maxSectors, 3);
+      expect(sinTopes.maxInterests, 7);
+    });
+  });
+
+  group('networkingProfileFromJson', () {
+    test('extrae la ficha y las cinco listas de selección', () {
+      final p = networkingProfileFromJson({
+        'activo': true,
+        'sector': ['Genética'],
+        'intereses': ['Bioseguridad', 'Nutrición'],
+        'buscando': ['proveedores'],
+        'soluciones': ['sanidad'],
+        'regiones': ['centroamerica'],
+        'perfil': {'id': 7, 'nombre': 'Yo', 'apellido': 'Mismo', 'favorito': false},
+      });
+      expect(p.card.name, 'Yo Mismo');
+      expect(p.sectors, ['Genética']);
+      expect(p.interests.length, 2);
+      expect(p.seeking, ['proveedores']);
+      expect(p.isEmpty, isFalse);
+    });
+
+    test('perfil vacío → isEmpty y ficha sin favorito', () {
+      final p = networkingProfileFromJson({'activo': true, 'perfil': {'id': 7}});
+      expect(p.isEmpty, isTrue);
+      expect(p.card.isFavorite, isFalse);
+    });
+  });
+
+  group('networkingProfileBody', () {
+    test('recorta a 3 sectores y 7 intereses como el servidor', () {
+      final body = networkingProfileBody(
+        sectors: ['a', 'b', 'c', 'd', 'e'],
+        interests: List.generate(10, (i) => 'i$i'),
+        seeking: const [],
+        solutions: const [],
+        regions: const [],
+      );
+      expect((body['sector'] as List).length, 3);
+      expect((body['intereses'] as List).length, 7);
+      expect(body['buscando'], isEmpty); // se envían vacías, no se omiten
+    });
+
+    test('respeta los topes que declare el catálogo', () {
+      final body = networkingProfileBody(
+        sectors: ['a', 'b', 'c'],
+        interests: const [],
+        seeking: const [],
+        solutions: const [],
+        regions: const [],
+        catalog: const NetworkingCatalog(maxSectors: 1, maxInterests: 2),
+      );
+      expect((body['sector'] as List).length, 1);
+    });
+  });
+
+  group('networkingMeetingFromJson', () {
+    test('mapea soy/estado/contraparte', () {
+      final m = networkingMeetingFromJson({
+        'id': 44,
+        'estatus': 1,
+        'estado': 'Pendiente',
+        'soy': 'destinatario',
+        'con': {'id': 9, 'nombre': 'Luis', 'apellido': 'Paz'},
+        'mensaje': '¿Hablamos de nutrición?',
+        'respuesta': null,
+        'fecha': '2026-11-11',
+        'hora_inicio': '10:00',
+        'hora_fin': '10:30',
+      });
+      expect(m.id, '44');
+      expect(m.state, MeetingState.pending);
+      expect(m.stateLabel, 'Pendiente'); // se muestra la copy del servidor
+      expect(m.isIncoming, isTrue);
+      expect(m.counterpart.name, 'Luis Paz');
+      expect(m.date, DateTime(2026, 11, 11));
+      expect(m.startTime, '10:00');
+      expect(m.hasSchedule, isTrue);
+    });
+
+    test('soy remitente → isIncoming false', () {
+      final m = networkingMeetingFromJson({'id': 1, 'estatus': 2, 'soy': 'remitente'});
+      expect(m.isIncoming, isFalse);
+      expect(m.state, MeetingState.confirmed);
+    });
+
+    test('mapea los seis estatus y uno desconocido no lanza', () {
+      const esperados = [
+        MeetingState.deleted,
+        MeetingState.pending,
+        MeetingState.confirmed,
+        MeetingState.declined,
+        MeetingState.rescheduled,
+        MeetingState.expired,
+      ];
+      for (var code = 0; code <= 5; code++) {
+        expect(MeetingState.fromCode(code), esperados[code]);
+      }
+      expect(networkingMeetingFromJson({'id': 1, 'estatus': 9}).state, MeetingState.unknown);
+      expect(networkingMeetingFromJson({'id': 1, 'estatus': null}).state, MeetingState.unknown);
+    });
+
+    test('fecha/horas nulas o vacías → null, sin parsear cadenas vacías', () {
+      final m = networkingMeetingFromJson({
+        'id': 2,
+        'estatus': 1,
+        'fecha': null,
+        'hora_inicio': '',
+        'hora_fin': null,
+      });
+      expect(m.date, isNull);
+      expect(m.startTime, isNull);
+      expect(m.endTime, isNull);
+      expect(m.hasSchedule, isFalse);
+    });
+
+    test('el listado de hoy no trae lugar/mesa → placeLabel null', () {
+      final m = networkingMeetingFromJson({'id': 3, 'estatus': 2});
+      expect(m.place, isNull);
+      expect(m.table, 0);
+      expect(m.placeLabel, isNull);
+    });
+
+    test('con lugar/mesa se mapean (compatibilidad futura del listado)', () {
+      final conMesa = networkingMeetingFromJson(
+          {'id': 4, 'estatus': 2, 'lugar': 'Salón A', 'mesa': 3});
+      expect(conMesa.placeLabel, 'Mesa 3 · Salón A');
+      // Espacio abierto: hay sala pero no mesa numerada.
+      final abierto = networkingMeetingFromJson(
+          {'id': 5, 'estatus': 2, 'lugar': 'Salón A', 'mesa': 0});
+      expect(abierto.placeLabel, 'Salón A');
+    });
+  });
+
+  group('meetingOutcomeFromJson', () {
+    test('aceptar con mesa asignada', () {
+      final o = meetingOutcomeFromJson(
+          {'id': 9, 'estatus': 2, 'estado': 'Confirmada', 'lugar': 'Salón A', 'mesa': 3});
+      expect(o.id, '9');
+      expect(o.state, MeetingState.confirmed);
+      expect(o.stateLabel, 'Confirmada');
+      expect(outcomePlaceLabel(o), 'Mesa 3 · Salón A');
+    });
+
+    test('rechazar no trae lugar ni mesa', () {
+      final o = meetingOutcomeFromJson({'id': 9, 'estatus': 3, 'estado': 'Rechazada'});
+      expect(o.state, MeetingState.declined);
+      expect(o.place, isNull);
+      expect(o.table, 0);
+      expect(outcomePlaceLabel(o), isNull);
+    });
+
+    test('aceptar sin mesa libre → mesa pendiente', () {
+      final o = meetingOutcomeFromJson(
+          {'id': 9, 'estatus': 2, 'estado': 'Confirmada', 'lugar': null, 'mesa': 0});
+      expect(outcomePlaceLabel(o), isNull); // la copy "por asignar" vive en la UI
+    });
+  });
+
+  group('networkingMessageFromJson', () {
+    test('mapea {id, mio, texto, fecha} y convierte la fecha a local', () {
+      final m = networkingMessageFromJson({
+        'id': 41,
+        'mio': true,
+        'texto': '¡Listo!',
+        'fecha': '2026-11-11T14:25:00-05:00',
+      });
+      expect(m.id, '41');
+      expect(m.isMine, isTrue);
+      expect(m.text, '¡Listo!');
+      expect(m.pending, isFalse);
+      // A diferencia de la agenda (wallClock), aquí SÍ se pasa a local.
+      expect(m.sentAt!.isUtc, isFalse);
+      expect(
+        m.sentAt!.toUtc(),
+        DateTime.utc(2026, 11, 11, 19, 25), // 14:25 -05:00
+      );
+    });
+
+    test('mio ausente → false; fecha nula o vacía → null', () {
+      expect(networkingMessageFromJson({'id': 1, 'texto': 'x'}).isMine, isFalse);
+      expect(networkingMessageFromJson({'id': 1, 'fecha': null}).sentAt, isNull);
+      expect(networkingMessageFromJson({'id': 1, 'fecha': ''}).sentAt, isNull);
+    });
+  });
+
+  group('conversationsFromJson', () {
+    test('mapea con/ultimo/total y conserva el orden del servidor', () {
+      final list = conversationsFromJson({
+        'data': [
+          {
+            'con': {'id': 7, 'nombre': 'Luis', 'apellido': 'Paz', 'empresa': 'ACME'},
+            'ultimo': {'texto': 'Nos vemos', 'mio': false, 'fecha': '2026-11-11T14:22:00-05:00'},
+            'total': 5,
+          },
+          {
+            'con': {'id': 8, 'nombre': 'Ana', 'apellido': 'Ríos'},
+            'ultimo': {'texto': 'Ok', 'mio': true, 'fecha': null},
+            'total': 2,
+          },
+        ],
+      });
+      expect(list.length, 2);
+      expect(list.first.counterpart.name, 'Luis Paz');
+      expect(list.first.lastText, 'Nos vemos');
+      expect(list.first.lastIsMine, isFalse);
+      expect(list.first.total, 5);
+      expect(list.first.lastAt!.isUtc, isFalse);
+      // El servidor ya ordena de más reciente a más antigua: no se reordena.
+      expect(list[1].counterpart.name, 'Ana Ríos');
+      expect(list[1].lastIsMine, isTrue);
+      expect(list[1].lastAt, isNull);
+    });
+
+    test('ultimo ausente, con ausente y shape inesperado no lanzan', () {
+      final sinUltimo = conversationsFromJson({
+        'data': [
+          {'con': {'id': 7, 'nombre': 'Luis'}},
+        ],
+      });
+      expect(sinUltimo.single.lastText, '');
+      expect(sinUltimo.single.total, 0);
+      expect(conversationsFromJson({'data': [{'total': 1}]}).single.counterpart.id, '');
+      expect(conversationsFromJson({'data': null}), isEmpty);
+      expect(conversationsFromJson(const []), isEmpty);
+    });
+  });
+
+  group('messageThreadFromJson', () {
+    test('mapea con + mensajes en orden cronológico', () {
+      final t = messageThreadFromJson({
+        'con': {'id': 7, 'nombre': 'Luis', 'apellido': 'Paz'},
+        'mensajes': [
+          {'id': 40, 'mio': true, 'texto': 'Hola', 'fecha': '2026-11-11T14:20:00-05:00'},
+          {'id': 41, 'mio': false, 'texto': 'Qué tal', 'fecha': '2026-11-11T14:21:00-05:00'},
+        ],
+      });
+      expect(t.counterpart.name, 'Luis Paz');
+      expect(t.messages.map((m) => m.id).toList(), ['40', '41']);
+      expect(t.messages.first.isMine, isTrue);
+      expect(t.messages.last.isMine, isFalse);
+    });
+
+    test('sin mensajes o sin con no lanza', () {
+      final sinMensajes = messageThreadFromJson({'con': {'id': 7, 'nombre': 'Luis'}});
+      expect(sinMensajes.messages, isEmpty);
+      expect(sinMensajes.counterpart.name, 'Luis');
+      expect(messageThreadFromJson(const {}).counterpart.id, '');
     });
   });
 }

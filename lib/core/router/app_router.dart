@@ -16,6 +16,8 @@ import '../../features/favorites/favorites_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/live/live_questions_screen.dart';
 import '../../features/live/polls_screen.dart';
+import '../../features/networking/networking_attendee_screen.dart';
+import '../../features/networking/networking_profile_screen.dart';
 import '../../features/networking/networking_screen.dart';
 import '../../features/networking/new_meeting_screen.dart';
 import '../../features/other_activities/other_activities_screen.dart';
@@ -131,6 +133,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state) => PollsScreen(sessionId: state.pathParameters['id']!),
       ),
       GoRoute(path: R.profileEdit, builder: (_, _) => const ProfileEditScreen()),
+      GoRoute(
+        path: R.networkingProfile,
+        builder: (_, _) => const NetworkingProfileScreen(),
+      ),
+      GoRoute(
+        path: '${R.networkingAttendeeDetail}/:id',
+        builder: (_, state) =>
+            NetworkingAttendeeScreen(userId: state.pathParameters['id']!),
+      ),
     ],
   );
 });

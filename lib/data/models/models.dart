@@ -1,12 +1,15 @@
 export 'app_user.dart';
 export 'attendee.dart';
-export 'chat_message.dart';
 export 'event.dart';
 export 'exhibitor.dart';
 export 'hotel.dart';
 export 'info_item.dart';
 export 'live_question.dart';
-export 'meeting.dart';
+export 'networking_card.dart';
+export 'networking_catalog.dart';
+export 'networking_meeting.dart';
+export 'networking_message.dart';
+export 'networking_profile.dart';
 export 'organizer.dart';
 export 'poll.dart';
 export 'session.dart';

@@ -189,11 +189,8 @@ class ApiOvumRepository implements OvumRepository {
         body: {'question': question});
   }
 
-  // ── Sin endpoint conectado todavía → mock ─────────────────────────────────
-  @override
-  Future<List<Meeting>> getSeedMeetings() => _mock.getSeedMeetings();
-  @override
-  Future<List<ChatMessage>> getSeedChatMessages() => _mock.getSeedChatMessages();
+  // Networking, reuniones y mensajería viven en `NetworkingService`: no tienen
+  // gemelo mock porque pueden no estar disponibles (403) — ver ese archivo.
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 

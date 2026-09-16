@@ -10,3 +10,21 @@ String? absoluteUrlOrNull(String? url) {
   if (u.startsWith('http://') || u.startsWith('https://')) return u;
   return null;
 }
+
+/// Archivos que el backend sirve como "sin foto".
+const _photoPlaceholders = {'usuario.jpg', 'no_pic.jpg', 'no-pic.jpg'};
+
+/// Como [absoluteUrlOrNull], pero además descarta los placeholders de "sin foto".
+///
+/// Hace falta porque el módulo de networking devuelve la foto **absoluta**
+/// (`https://trivvo.events/storage/img/usuario.jpg`) en vez de la ruta relativa
+/// que mandan los endpoints viejos, así que ya no basta con filtrar por relativa:
+/// sin esto, todas las fichas mostrarían el mismo gris genérico en lugar del
+/// avatar de iniciales.
+String? personPhotoOrNull(String? url) {
+  final abs = absoluteUrlOrNull(url);
+  if (abs == null) return null;
+  final segments = Uri.tryParse(abs)?.pathSegments ?? const <String>[];
+  final file = segments.isEmpty ? '' : segments.last.toLowerCase();
+  return _photoPlaceholders.contains(file) ? null : abs;
+}

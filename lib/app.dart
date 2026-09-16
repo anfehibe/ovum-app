@@ -5,10 +5,12 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/config/app_config.dart';
+import 'core/notifications/notification_routes.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'data/providers/content_providers.dart';
 import 'data/providers/favorites_provider.dart';
+import 'data/providers/messages_provider.dart';
 import 'data/providers/notifications_provider.dart';
 import 'data/providers/user_provider.dart';
 
@@ -56,6 +58,7 @@ class NotificationsBootstrap extends ConsumerStatefulWidget {
 class _NotificationsBootstrapState
     extends ConsumerState<NotificationsBootstrap> {
   StreamSubscription<String>? _routeSub;
+  StreamSubscription<Map<String, dynamic>>? _pushSub;
 
   @override
   void initState() {
@@ -63,17 +66,25 @@ class _NotificationsBootstrapState
     // Arranca la inicialización (permisos aparte: los pide la hoja explicativa).
     ref.read(notificationsInitProvider);
 
-    _routeSub = ref
-        .read(notificationServiceProvider)
-        .onNotificationRoute
-        .listen((route) {
-          ref.read(pendingNotificationRouteProvider.notifier).set(route);
-        });
+    final service = ref.read(notificationServiceProvider);
+
+    _routeSub = service.onNotificationRoute.listen((route) {
+      ref.read(pendingNotificationRouteProvider.notifier).set(route);
+    });
+
+    // Un mensaje nuevo deja obsoleta la bandeja, esté abierta o no. Invalidar
+    // basta: `conversationsProvider` es autoDispose, así que si nadie la mira
+    // esto no cuesta una petición — se recargará al abrir "Mis chats".
+    // El hilo abierto no se toca aquí; lo refresca `ChatScreen` por su cuenta.
+    _pushSub = service.onDataMessage.listen((data) {
+      if (chatCounterpartId(data) != null) ref.invalidate(conversationsProvider);
+    });
   }
 
   @override
   void dispose() {
     _routeSub?.cancel();
+    _pushSub?.cancel();
     super.dispose();
   }
 

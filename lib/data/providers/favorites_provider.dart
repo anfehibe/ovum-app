@@ -26,6 +26,18 @@ class FavoritesNotifier extends Notifier<Set<String>> {
   }
 
   bool contains(FavKind kind, String id) => state.contains(favKey(kind, id));
+
+  /// Borra todos los favoritos de un tipo. Lo usa la migración de asistentes:
+  /// esos favoritos ahora viven en el servidor (networking), así que la copia
+  /// local sobra. [FavKind.attendee] se conserva en el enum para poder seguir
+  /// parseando las claves ya guardadas en disco.
+  void removeKind(FavKind kind) {
+    final prefix = '${kind.name}:';
+    final next = {...state}..removeWhere((k) => k.startsWith(prefix));
+    if (next.length == state.length) return;
+    state = next;
+    ref.read(sharedPreferencesProvider).setStringList(_key, next.toList());
+  }
 }
 
 final favoritesProvider =

@@ -6,11 +6,9 @@ import 'package:ovum/core/ui/app_icons.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/router/route_paths.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/widgets/favorite_button.dart';
 import '../../core/widgets/initials_avatar.dart';
 import '../../core/widgets/states.dart';
 import '../../data/providers/content_providers.dart';
-import '../../data/providers/favorites_provider.dart';
 import '../widgets/social_row.dart';
 
 class AttendeeDetailScreen extends ConsumerWidget {
@@ -53,7 +51,9 @@ class AttendeeDetailScreen extends ConsumerWidget {
                       icon: const Icon(PhosphorIconsRegular.caretLeft, color: Colors.white),
                     ),
                     const Spacer(),
-                    FavoriteButton(kind: FavKind.attendee, id: attendee.id, onSurface: true),
+                    // Sin corazón aquí: los favoritos de asistentes ahora viven en
+                    // el servidor y se marcan desde el directorio de networking.
+                    // Tener uno local aquí y otro de servidor allá confundía.
                   ],
                 ),
                 Container(

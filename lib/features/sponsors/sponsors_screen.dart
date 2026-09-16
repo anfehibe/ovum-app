@@ -11,13 +11,21 @@ import '../../core/widgets/states.dart';
 import '../../data/models/models.dart';
 import '../../data/providers/content_providers.dart';
 
-/// Color representativo de cada nivel de patrocinio.
-Color sponsorTierColor(SponsorTier tier) => switch (tier) {
-      SponsorTier.diamante => const Color(0xFF25B0C4),
-      SponsorTier.oro => const Color(0xFFE0A80D),
-      SponsorTier.plata => const Color(0xFF98A2AD),
-      SponsorTier.bronce => const Color(0xFFB5793B),
-    };
+/// Colores de marca de los niveles conocidos. Va indexado por la clave del nivel
+/// (no por la instancia: `const` y `==` personalizado no conviven).
+const _tierColors = <String, Color>{
+  'diamante': Color(0xFF25B0C4),
+  'platino': Color(0xFF5F6B7A),
+  'oro': Color(0xFFE0A80D),
+  'plata': Color(0xFF98A2AD),
+  'bronce': Color(0xFFB5793B),
+};
+
+/// Color representativo de un nivel de patrocinio. Los niveles que el backend
+/// agregue sin avisar toman un color estable de la paleta de categorías, igual que
+/// `trackColor` con los tracks de agenda.
+Color sponsorTierColor(BuildContext context, SponsorTier tier) =>
+    _tierColors[tier.key] ?? context.ovum.categoryAt(tier.key.hashCode.abs());
 
 class SponsorsScreen extends ConsumerWidget {
   const SponsorsScreen({super.key});
@@ -35,7 +43,13 @@ class SponsorsScreen extends ConsumerWidget {
           for (final s in sponsors) {
             byTier.putIfAbsent(s.tier, () => []).add(s);
           }
-          final tiers = byTier.keys.toList()..sort((a, b) => a.order.compareTo(b.order));
+          // Conocidos primero por su rango; los niveles nuevos del backend van
+          // después en el orden en que llegaron (el Map preserva la inserción y
+          // `List.sort` no es estable, así que el split es explícito).
+          final keys = byTier.keys.toList();
+          final knownTiers = keys.where((t) => t.isKnown).toList()..sort();
+          final customTiers = keys.where((t) => !t.isKnown).toList();
+          final tiers = [...knownTiers, ...customTiers];
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
@@ -72,7 +86,7 @@ class _TierHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = sponsorTierColor(tier);
+    final color = sponsorTierColor(context, tier);
     return Row(
       children: [
         Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
@@ -94,7 +108,7 @@ class _SponsorCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.scheme;
-    final color = sponsorTierColor(sponsor.tier);
+    final color = sponsorTierColor(context, sponsor.tier);
     return Material(
       color: scheme.surfaceContainerLow,
       borderRadius: BorderRadius.circular(18),

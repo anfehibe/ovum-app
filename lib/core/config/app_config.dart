@@ -51,9 +51,18 @@ abstract final class AppConfig {
   static const bool useApiQuestions =
       bool.fromEnvironment('OVUM_API_QUESTIONS', defaultValue: true);
 
-  // Pendientes de endpoint (siguen en mock):
-  static const bool useApiMeetings = false;
-  static const bool useApiChat = false;
+  /// Networking (`/events/{id}/networking/*`): directorio, perfil, favoritos y
+  /// reuniones. Apagarlo cae al **mismo camino degradado que un 403** del backend
+  /// (banner + roster de solo lectura), así que sirve para probar ese estado.
+  static const bool useApiNetworking =
+      bool.fromEnvironment('OVUM_API_NETWORKING', defaultValue: true);
+
+  /// Segundos entre refrescos de un hilo de chat abierto. No hay websockets ni
+  /// push para mensajes (el backend solo manda correo), así que sin esto una
+  /// respuesta no aparece hasta reabrir. **`0` desactiva el polling** — sirve
+  /// como interruptor si molesta en desarrollo o hay que apagarlo en producción.
+  static const int messagePollSeconds =
+      int.fromEnvironment('OVUM_MESSAGE_POLL', defaultValue: 15);
 
   // ── Seguridad ──────────────────────────────────────────────────────────────
 

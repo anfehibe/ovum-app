@@ -46,6 +46,40 @@ void main() {
       // Una ruta que no empieza por "/" se ignora.
       expect(resolveNotificationRoute({'ruta': 'javascript:x'}), isNull);
     });
+
+    test('un chat abre el hilo del remitente', () {
+      expect(
+        resolveNotificationRoute({'tipo': 'chat', 'id': '28169'}),
+        R.chatWith('28169'),
+      );
+      expect(
+        resolveNotificationRoute({'type': 'message', 'entity_id': 28169}),
+        R.chatWith('28169'),
+      );
+    });
+
+    test('una reunión aterriza en networking (no hay ruta por reunión)', () {
+      expect(resolveNotificationRoute({'tipo': 'reunion', 'id': '5'}), R.networking);
+    });
+  });
+
+  group('chatCounterpartId', () {
+    test('devuelve el id solo para las push de mensaje', () {
+      expect(chatCounterpartId({'tipo': 'chat', 'id': '28169'}), '28169');
+      expect(chatCounterpartId({'tipo': 'MENSAJE', 'id': 28169}), '28169');
+      expect(chatCounterpartId({'type': 'message', 'entity_id': '7'}), '7');
+    });
+
+    test('null para cualquier otra push', () {
+      expect(chatCounterpartId({'origen': 'panel'}), isNull);
+      expect(chatCounterpartId({'tipo': 'sesion', 'id': '12'}), isNull);
+      expect(chatCounterpartId({}), isNull);
+    });
+
+    test('null si el tipo es de chat pero falta el interlocutor', () {
+      expect(chatCounterpartId({'tipo': 'chat'}), isNull);
+      expect(chatCounterpartId({'tipo': 'chat', 'id': ''}), isNull);
+    });
   });
 
   group('reminderIdFor', () {
