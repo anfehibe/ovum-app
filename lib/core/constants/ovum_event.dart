@@ -28,3 +28,29 @@ abstract final class OvumEvent {
   static const String airlineDiscountCode = 'B9781';
   static const String officialHotel = 'Hotel Real InterContinental';
 }
+
+/// Ventana y rejilla de las reuniones de networking.
+///
+/// La rejilla de 30 min **no es cosmética**: al aceptar una reunión, el backend
+/// busca en `horarios` una fila con la `fecha` y la `hora_inicio` exactas para
+/// asignarle mesa (`API/V1/NetworkingController.php:456`), y esas filas van de
+/// media en media hora. Una hora fuera de la rejilla se confirma igual, pero
+/// **sin mesa y sin avisar**.
+///
+/// Son horas de **pared**, sin zona horaria: `fecha`/`hora_inicio`/`hora_fin`
+/// viajan como strings literales y el backend las guarda tal cual. Por eso aquí
+/// no se usa `wallClock` (ver `core/utils/date_ext.dart`) — no hay ningún
+/// instante UTC que convertir, a diferencia de la agenda.
+abstract final class MeetingHours {
+  /// 08:00 — primera hora a la que puede empezar una reunión.
+  static const int openingMinute = 8 * 60;
+
+  /// 18:00 — hora de fin más tardía; nada puede terminar después.
+  static const int closingMinute = 18 * 60;
+
+  static const int stepMinutes = 30;
+
+  /// El backend solo maneja periodos de 30 y 60 (`periodo => 'in:30,60'`).
+  static const List<int> durations = [30, 60];
+  static const int defaultDuration = 30;
+}

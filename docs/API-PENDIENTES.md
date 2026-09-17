@@ -21,6 +21,17 @@ Cada punto lleva la evidencia (archivo:línea) para que no haya que buscarla.
 
 ### 1. `POST /networking/meetings/{user}` devuelve 500 siempre
 
+> **✅ Resuelto — comprobado el 17 de septiembre de 2026.** Contra producción, con la app en el
+> simulador, `POST /events/94/networking/meetings/28170` con
+> `{fecha: 2026-11-11, hora_inicio: 08:00, hora_fin: 08:30}` responde **200**
+> (`{data: {id: 10621, estatus: 1}, message: "Solicitud de reunión enviada."}`) y la reunión aparece
+> en el listado. La causa era la que se describe abajo: la migración
+> `2026_09_16_000000_reuniones_scheduling_nullable.php` hace `fecha`, `hora_inicio`, `hora_fin` y
+> `lugar_id` nullable. **Falta comprobar el caso sin hora**: la app ahora siempre manda las tres,
+> así que el camino de los `null` explícitos sigue sin ejercitarse.
+>
+> El diagnóstico original se conserva tal cual porque explica el resto del cuadro.
+
 **[comprobado]** Cualquier cuerpo, incluido el mínimo válido, responde 500. Es el único bloqueante
 duro: sin poder crear una reunión desde la app, tampoco se puede probar aceptar/rechazar, así que
 toda esa parte del producto está muerta.
@@ -142,6 +153,41 @@ es. Añadirlos al listado.
 
 ---
 
+### 10. No hay disponibilidad de horas de reunión en `/api/v1`
+
+**[comprobado]** La app ya impide que el usuario pida una hora que **él mismo** tiene tomada, pero lo
+calcula en el cliente con lo único que hay: `GET /networking/meetings`. Eso deja cuatro huecos que
+solo el backend puede cerrar.
+
+**La lógica ya existe, pero no es consumible.** `Web/ReunionController::horarios()` (`:59-135`) cruza
+`horarios` × `mesas` × solapamiento de `reuniones` (`hora_fin > inicio AND hora_inicio < fin`) y
+descarta los slots sin mesa libre. Pero devuelve **HTML** y exige sesión web, así que con Bearer no
+sirve. Falta un `GET /events/{congreso}/networking/availability?fecha=YYYY-MM-DD&periodo=30` que
+devuelva ese mismo cálculo en JSON.
+
+**La agenda del destinatario es invisible.** La app no puede saber qué horas tiene ocupadas el otro,
+así que puede ofrecerle una que ya está tomada. Haría falta ese mismo endpoint aceptando `?user={id}`
+y devolviendo solo `ocupado: true|false` por slot — **sin** nombres de contraparte, que sería fuga de
+información.
+
+**Cero validación al crear.** `requestMeeting` valida `hora_inicio` como `string|max:10`
+(`API/V1/NetworkingController.php:230-235`). No comprueba que la fecha caiga dentro del congreso, que
+la hora esté en la rejilla de 30 min, que `hora_fin > hora_inicio`, ni que el remitente no se solape
+consigo mismo. La restricción de la app es hoy **puramente cosmética**: un `curl` escribe lo que
+quiera en columnas `time`.
+
+**`autoAsignarMesa` confirma sin mesa en silencio.** Busca un `Horario` con la `fecha` y la `hora`
+exactas (`:456-459`); si no lo encuentra, cae al espacio abierto y devuelve `mesa: 0` (`:467-469`).
+La app no puede distinguir "espacio abierto sin mesa numerada" de "no había horario, te quedaste sin
+sitio". O la respuesta lo distingue, o el API se niega a confirmar fuera de la rejilla.
+
+**[hipótesis] Pregunta a operaciones:** ¿existen filas en `horarios` para el congreso 94 los días
+11-13 de noviembre de 2026, y en qué ventana? La app asume **08:00-18:00** en pasos de 30 min
+(`MeetingHours`, en `lib/core/constants/ovum_event.dart`). Si esas filas no están cargadas, **toda**
+reunión aceptada saldrá con `mesa: 0`.
+
+---
+
 ## 🟢 Menores / higiene
 
 ### 7. `google/auth` no está declarada en `composer.json`
@@ -189,10 +235,11 @@ consumidor tenga que adivinar.
 
 | # | Asunto | Impacto |
 |---|---|---|
-| 1 | 500 al crear reunión | **Bloquea toda la función de reuniones** |
+| 1 | ~~500 al crear reunión~~ | ✅ Resuelto (comprobado 17 sep 2026) |
 | 2 | 500 en listado con invitación por correo | Tumba la pestaña entera cuando ocurra |
 | 4 | Push sin disparadores | El chat no sirve como chat |
 | 5 | Sin estado de leído | No hay badge de no leídos |
 | 6 | Listado sin `lugar`/`mesa` | La tarjeta no dice dónde es la reunión |
+| 10 | Sin disponibilidad real de horas | La app solo evita que el usuario choque consigo mismo |
 | 3 | `lat` sucio | Ya workaroundeado en la app |
 | 7-9 | Higiene | Sin impacto visible hoy |
