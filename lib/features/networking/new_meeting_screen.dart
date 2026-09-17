@@ -204,7 +204,7 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Termina a las $_endTime · la otra persona confirma desde el web del congreso.',
+            'Termina a las $_endTime · le llegará la solicitud para aceptarla o rechazarla.',
             style: Theme.of(context).textTheme.labelMedium
                 ?.copyWith(color: scheme.onSurfaceVariant),
           ),

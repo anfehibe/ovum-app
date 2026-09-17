@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#021D70</color>
-    <color name="brand_splash">#E8991C</color>
+    <!-- Fondo del arranque nativo (launch_background + windowSplashScreenBackground).
+         Negro para igualar al Colors.black del SplashScreen y que no se vea un
+         parpadeo de color antes de la imagen del API.
+         Ver lib/features/splash/splash_screen.dart. -->
+    <color name="splash_background">#FF000000</color>
     <!-- Color de acento de las notificaciones (BrandColors.yolk). -->
     <color name="notification_color">#E8991C</color>
 </resources>

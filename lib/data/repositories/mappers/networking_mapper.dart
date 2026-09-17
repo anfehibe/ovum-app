@@ -19,7 +19,10 @@ import '../../models/networking_profile.dart';
 /// [absoluteUrlOrNull]: si no, todas las fichas mostrarían el mismo avatar gris.
 NetworkingCard networkingCardFromJson(Map<String, dynamic> j) {
   return NetworkingCard(
-    id: '${j['id']}',
+    // `id` llega null en las invitaciones de reunión por correo a alguien que
+    // todavía no tiene cuenta (el backend manda el correo en `nombre`). Sin este
+    // guardia la interpolación produciría la cadena "null" y acabaría en una URL.
+    id: j['id'] == null ? '' : '${j['id']}',
     firstName: _text(j['nombre']),
     lastName: _text(j['apellido']),
     photoUrl: personPhotoOrNull(j['foto'] as String?),
@@ -141,8 +144,8 @@ NetworkingMeeting networkingMeetingFromJson(Map<String, dynamic> j) {
     message: _text(j['mensaje']),
     reply: _text(j['respuesta']),
     date: DateTime.tryParse(_text(j['fecha'])),
-    startTime: _textOrNull(j['hora_inicio']),
-    endTime: _textOrNull(j['hora_fin']),
+    startTime: _hm(j['hora_inicio']),
+    endTime: _hm(j['hora_fin']),
     // Hoy el listado no los manda; se leen para cuando el backend los agregue.
     place: _textOrNull(j['lugar']),
     table: _int(j['mesa']),
@@ -192,6 +195,7 @@ List<ConversationSummary> conversationsFromJson(dynamic response) {
       lastIsMine: last['mio'] == true,
       lastAt: DateTime.tryParse(_text(last['fecha']))?.toLocal(),
       total: _int(j['total']),
+      unread: _int(j['no_leidos']),
     ));
   }
   return out;
@@ -222,6 +226,19 @@ int _int(dynamic v) => v is num ? v.toInt() : (v is String ? int.tryParse(v) ?? 
 String? _textOrNull(dynamic v) {
   final t = _text(v);
   return t.isEmpty ? null : t;
+}
+
+/// Recorta una hora a `HH:mm`.
+///
+/// El API devuelve las horas de reunión como TIME de MySQL (`"10:00:00"`), y los
+/// segundos siempre son `00`: mostrarlos solo ensucia la tarjeta. Es idempotente
+/// (`"10:00"` se queda igual) y deja intacto cualquier formato inesperado en vez
+/// de romperlo.
+String? _hm(dynamic v) {
+  final s = _textOrNull(v);
+  if (s == null) return null;
+  final m = RegExp(r'^(\d{1,2}:\d{2})(?::\d{2})?$').firstMatch(s);
+  return m?.group(1) ?? s;
 }
 
 List<String> _strings(dynamic raw) {

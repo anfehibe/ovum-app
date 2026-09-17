@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/router/route_paths.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/utils/iterable_ext.dart';
 import '../../core/utils/launchers.dart';
 import '../../core/widgets/ovum_logo.dart';
@@ -96,13 +95,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
     return Scaffold(
       body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFF6C453), BrandColors.yolk, BrandColors.sunrise],
-          ),
-        ),
+        decoration: const BoxDecoration(color: Colors.black),
         child: SizedBox.expand(child: content),
       ),
     );

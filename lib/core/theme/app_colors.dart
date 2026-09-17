@@ -36,8 +36,7 @@ class OvumColors extends ThemeExtension<OvumColors> {
   final Color warning;
   final Color info;
 
-  Color categoryAt(int index) =>
-      categoryColors[index % categoryColors.length];
+  Color categoryAt(int index) => categoryColors[index % categoryColors.length];
 
   static const OvumColors light = OvumColors(
     categoryColors: [
@@ -99,6 +98,7 @@ class OvumColors extends ThemeExtension<OvumColors> {
 
 /// Acceso conveniente a [OvumColors] desde el contexto.
 extension OvumColorsX on BuildContext {
-  OvumColors get ovum => Theme.of(this).extension<OvumColors>() ?? OvumColors.light;
+  OvumColors get ovum =>
+      Theme.of(this).extension<OvumColors>() ?? OvumColors.light;
   ColorScheme get scheme => Theme.of(this).colorScheme;
 }

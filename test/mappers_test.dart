@@ -704,6 +704,42 @@ void main() {
       expect(networkingCardFromJson({'id': 1, 'nombre': 'X'}).isFavorite, isFalse);
     });
 
+    test('las horas se recortan a HH:mm', () {
+      // El API las manda como TIME de MySQL ("10:00:00").
+      final m = networkingMeetingFromJson({
+        'id': 1, 'estatus': 1, 'soy': 'remitente',
+        'hora_inicio': '10:00:00', 'hora_fin': '10:30:00',
+      });
+      expect(m.startTime, '10:00');
+      expect(m.endTime, '10:30');
+    });
+
+    test('las horas ya cortas o con formato raro no se estropean', () {
+      final corta = networkingMeetingFromJson({
+        'id': 1, 'estatus': 1, 'soy': 'remitente', 'hora_inicio': '9:05',
+      });
+      expect(corta.startTime, '9:05');
+      // Formato inesperado: se deja tal cual antes que mutilarlo.
+      final raro = networkingMeetingFromJson({
+        'id': 1, 'estatus': 1, 'soy': 'remitente', 'hora_inicio': '10h00',
+      });
+      expect(raro.startTime, '10h00');
+      final vacia = networkingMeetingFromJson({
+        'id': 1, 'estatus': 1, 'soy': 'remitente', 'hora_inicio': null,
+      });
+      expect(vacia.startTime, isNull);
+    });
+
+    test('id null → cadena vacía, nunca la cadena "null"', () {
+      // Invitación de reunión por correo a alguien sin cuenta: el backend manda
+      // `id: null` y el correo en `nombre`. Un "null" interpolado acabaría en
+      // una URL como /networking/attendee/null.
+      final card = networkingCardFromJson({'id': null, 'nombre': 'a@b.com', 'apellido': ''});
+      expect(card.id, '');
+      expect(card.id, isNot('null'));
+      expect(card.name, 'a@b.com');
+    });
+
     test('descarta el placeholder de foto, relativo o absoluto', () {
       expect(networkingCardFromJson({'id': 1, 'foto': '/img/usuario.jpg'}).photoUrl, isNull);
       // Networking sirve el placeholder como URL absoluta: sin filtrarlo, todas
@@ -1040,6 +1076,22 @@ void main() {
       expect(conversationsFromJson({'data': [{'total': 1}]}).single.counterpart.id, '');
       expect(conversationsFromJson({'data': null}), isEmpty);
       expect(conversationsFromJson(const []), isEmpty);
+    });
+
+    test('no_leidos alimenta el badge y su ausencia no lo enciende', () {
+      final list = conversationsFromJson({
+        'data': [
+          {'con': {'id': 7, 'nombre': 'Luis'}, 'total': 5, 'no_leidos': 2},
+          {'con': {'id': 8, 'nombre': 'Ana'}, 'total': 3, 'no_leidos': 0},
+          {'con': {'id': 9, 'nombre': 'Eva'}, 'total': 1}, // servidor viejo
+        ],
+      });
+      expect(list[0].unread, 2);
+      expect(list[0].hasUnread, isTrue);
+      expect(list[1].hasUnread, isFalse);
+      // Sin la clave no se inventa un contador a partir de `total`.
+      expect(list[2].unread, 0);
+      expect(list[2].hasUnread, isFalse);
     });
   });
 

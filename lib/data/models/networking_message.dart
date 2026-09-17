@@ -36,9 +36,15 @@ class ConversationSummary {
   final bool lastIsMine;
   final DateTime? lastAt;
 
-  /// Total de mensajes de la conversación. **No es un contador de no leídos** —
-  /// el backend no guarda estado de lectura, así que no sirve para un badge.
+  /// Total **histórico** de mensajes de la conversación. No sirve para un badge:
+  /// para eso está [unread].
   final int total;
+
+  /// Mensajes recibidos que aún no se han leído (`no_leidos` del API). El backend
+  /// los marca leídos al abrir el hilo, así que vuelve a 0 solo.
+  final int unread;
+
+  bool get hasUnread => unread > 0;
 
   const ConversationSummary({
     required this.counterpart,
@@ -46,6 +52,7 @@ class ConversationSummary {
     this.lastIsMine = false,
     this.lastAt,
     this.total = 0,
+    this.unread = 0,
   });
 }
 

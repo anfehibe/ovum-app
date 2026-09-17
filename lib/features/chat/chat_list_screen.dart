@@ -15,9 +15,9 @@ import '../networking/networking_tab_error.dart';
 
 /// Mis conversaciones.
 ///
-/// Sin badge de no leídos a propósito: el backend no guarda estado de lectura y
-/// `total` es el total histórico de la conversación, así que cualquier contador
-/// estaría mal desde el primer render.
+/// El badge sale de `no_leidos`, que el backend calcula contra `mensajes.leido_at`
+/// (no de `total`, que es el histórico). Se limpia solo: abrir el hilo marca los
+/// mensajes como leídos en el servidor y `ChatScreen` invalida esta lista.
 class ChatListScreen extends ConsumerWidget {
   const ChatListScreen({super.key});
 
@@ -64,6 +64,35 @@ class ChatListScreen extends ConsumerWidget {
   }
 }
 
+/// Contador de no leídos. A partir de 100 muestra "99+": el ancho del número no
+/// puede empujar al nombre de la conversación.
+class _UnreadBadge extends StatelessWidget {
+  const _UnreadBadge({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.scheme;
+    return Container(
+      constraints: const BoxConstraints(minWidth: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: scheme.primary,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        count > 99 ? '99+' : '$count',
+        textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: scheme.onPrimary,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
 class _ConversationTile extends StatelessWidget {
   const _ConversationTile({required this.conversation});
 
@@ -77,6 +106,7 @@ class _ConversationTile extends StatelessWidget {
     final preview = conversation.lastIsMine
         ? 'Tú: ${conversation.lastText}'
         : conversation.lastText;
+    final unread = conversation.hasUnread;
 
     return Material(
       color: scheme.surfaceContainerLow,
@@ -110,21 +140,35 @@ class _ConversationTile extends StatelessWidget {
                         preview,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall
-                            ?.copyWith(color: scheme.onSurfaceVariant),
+                        // Con mensajes sin leer el preview se resalta: el badge
+                        // solo no basta para escanear la lista de un vistazo.
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: unread ? scheme.onSurface : scheme.onSurfaceVariant,
+                          fontWeight: unread ? FontWeight.w600 : null,
+                        ),
                       ),
                     ],
                   ],
                 ),
               ),
-              if (conversation.lastAt != null) ...[
-                const SizedBox(width: 8),
-                Text(
-                  conversation.lastAt!.hm,
-                  style: Theme.of(context).textTheme.labelSmall
-                      ?.copyWith(color: scheme.onSurfaceVariant),
-                ),
-              ],
+              const SizedBox(width: 8),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (conversation.lastAt != null)
+                    Text(
+                      conversation.lastAt!.hm,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: unread ? scheme.primary : scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  if (unread) ...[
+                    const SizedBox(height: 6),
+                    _UnreadBadge(count: conversation.unread),
+                  ],
+                ],
+              ),
             ],
           ),
         ),

@@ -34,6 +34,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   Timer? _poll;
   StreamSubscription<Map<String, dynamic>>? _pushSub;
   bool _sending = false;
+  bool _markedRead = false;
 
   /// Se guarda en `initState` en vez de leerse en `dispose`: leer un provider
   /// mientras el scope se desmonta puede lanzar.
@@ -133,6 +134,22 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     final async = ref.watch(messageThreadProvider(widget.attendeeId));
     final scheme = context.scheme;
     final card = async.valueOrNull?.counterpart;
+
+    // Pedir el hilo es lo que marca los mensajes como leídos en el servidor, así
+    // que en cuanto llega la respuesta el contador de la bandeja quedó viejo.
+    // Una sola vez: los refrescos del polling no cambian nada ya leído.
+    //
+    // No se usa `ref.listen`: este cuerpo corre dentro del `builder` de
+    // NetworkingGate, o sea el build de OTRO widget, y Riverpod lo rechaza. El
+    // post-frame además saca el `invalidate` de la fase de build, donde también
+    // sería ilegal. Hacerlo aquí y no en `build()` mantiene el provider creado
+    // solo cuando la compuerta está abierta.
+    if (!_markedRead && async.hasValue) {
+      _markedRead = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) ref.invalidate(conversationsProvider);
+      });
+    }
 
     return Scaffold(
       appBar: AppBar(
