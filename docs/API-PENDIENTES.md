@@ -1,245 +1,215 @@
-# Pendientes del API TRIVVO — app OVUM 2026
+# Estado app ↔ API — OVUM 2026
 
-**Fecha:** 16 de septiembre de 2026
-**Backend revisado:** `main` @ `004bf8a`
+**Actualizado:** 17 de septiembre de 2026
+**Backend:** `main` @ `75a20a3` · **App:** rama `main` con cambios sin commitear
 **Entorno:** producción (`https://trivvo.events/api/v1`), tenant `anavi`, congreso `94`
 
-Todo lo de aquí salió de integrar la app contra producción y de leer el código del backend.
-Cada punto lleva la evidencia (archivo:línea) para que no haya que buscarla.
+Tres secciones que no hay que confundir: lo que falta **en el API**, lo que falta **en la app**, y
+lo que falta **cargar en producción**. Al final, el historial de lo ya resuelto.
 
-> **Nota sobre verificación:** no tengo PHP ni acceso a la base en la máquina donde revisé esto.
-> Lo marcado como **[comprobado]** lo vi fallar contra producción o está leído directamente del
-> código. Lo marcado como **[hipótesis]** es deducción a partir del esquema y necesita que alguien
-> lo confirme ejecutándolo.
+> **Verificación:** no hay PHP ni acceso a la base en la máquina donde se revisa esto. **[comprobado]**
+> = visto fallar contra producción o leído directamente del código. **[hipótesis]** = deducción que
+> alguien debe confirmar ejecutándola. Los números de línea son los de `75a20a3`.
 >
-> **Los números de línea son los de `004bf8a` commiteado**, no los del working tree (que tiene el
-> parche sin commitear del punto 4 y va 3 líneas desplazado a partir de los `use`).
+> ⚠️ **Mergeado ≠ desplegado.** El repo va por delante de producción. Desplegado y verificado contra
+> prod: hasta `2723473`. **`75a20a3` (disponibilidad + validación estricta al solicitar) está en
+> revisión, sin aprobar ni desplegar** — todo lo que dependa de ese commit está marcado abajo.
 
 ---
 
-## 🔴 Bloqueantes
+## 🔵 Falta en el API
 
-### 1. `POST /networking/meetings/{user}` devuelve 500 siempre
+Ya no queda ningún bloqueante. Lo que sigue es higiene con consecuencias silenciosas.
 
-> **✅ Resuelto — comprobado el 17 de septiembre de 2026.** Contra producción, con la app en el
-> simulador, `POST /events/94/networking/meetings/28170` con
-> `{fecha: 2026-11-11, hora_inicio: 08:00, hora_fin: 08:30}` responde **200**
-> (`{data: {id: 10621, estatus: 1}, message: "Solicitud de reunión enviada."}`) y la reunión aparece
-> en el listado. La causa era la que se describe abajo: la migración
-> `2026_09_16_000000_reuniones_scheduling_nullable.php` hace `fecha`, `hora_inicio`, `hora_fin` y
-> `lugar_id` nullable. **Falta comprobar el caso sin hora**: la app ahora siempre manda las tres,
-> así que el camino de los `null` explícitos sigue sin ejercitarse.
->
-> El diagnóstico original se conserva tal cual porque explica el resto del cuadro.
+### A1. `google/auth` no está declarada en `composer.json`
 
-**[comprobado]** Cualquier cuerpo, incluido el mínimo válido, responde 500. Es el único bloqueante
-duro: sin poder crear una reunión desde la app, tampoco se puede probar aceptar/rechazar, así que
-toda esa parte del producto está muerta.
+**[comprobado]** `FcmSender` hace `use Google\Auth\Credentials\ServiceAccountCredentials` y funciona
+— entra **transitiva** por otra dependencia. Un `composer update` de ese otro paquete puede quitarla
+y **el push se caería en silencio**: sin credencial, `FcmSender` devuelve `skipped` sin lanzar. Nadie
+se entera. Conviene fijarla explícita.
 
-**[hipótesis] Causa probable — columnas NOT NULL sin default.** Comparando el `Reunion::create()`
-del API (`app/Http/Controllers/API/V1/NetworkingController.php:233`) con el esquema
-(`database/schema/mysql-schema.sql`, tabla `reuniones`):
+### A2. Correo y push son síncronos dentro del request
 
-| Columna | Esquema | Qué hace el API |
-|---|---|---|
-| `fecha` | `date NOT NULL` | manda **`null` explícito** cuando el cliente la omite |
-| `hora_inicio` | `time NOT NULL` | manda **`null` explícito** |
-| `hora_fin` | `time NOT NULL` | manda **`null` explícito** |
-| `confirmacion` | `varchar(191) NOT NULL` (sin default) | **no la manda** |
-| `lugar_id` | `int unsigned NOT NULL` (sin default) | **no la manda** |
+**[comprobado]** `Mail::...->send()` y `pushAUsuario()` bloquean el `POST /messages/{user}`. Lo
+correcto sería que ambos fueran a cola (`ShouldQueue`). No es urgente con el volumen actual, pero en
+los días del congreso se va a notar.
 
-Sospecho que el disparador principal son las tres primeras: el API las declara opcionales en el
-`validate()` (`:226-232`) y luego hace `'fecha' => $data['fecha'] ?? null`. La app, en consecuencia,
-las omite (`networking_service.dart:137`), así que llega `null` a tres columnas `NOT NULL`. Un INSERT
-de una sola fila con `NULL` explícito en `NOT NULL` falla en MySQL **aunque el modo estricto esté
-apagado**, así que esto reventaría en cualquier configuración.
+### A3. `POST /logout` y los tokens huérfanos
 
-**Detalle raro que conviene mirar:** el flujo web que sí funciona
-(`app/Http/Controllers/Web/ReunionController.php:226`) sí manda `confirmacion`, `code_meeting` y
-`mesa`… pero **tampoco manda `lugar_id`**, que es `NOT NULL` sin default. O la tabla en producción
-difiere del esquema commiteado, o ese camino también fallaría en modo estricto. Vale la pena
-confirmarlo antes de arreglar, porque cambia la solución.
+**[comprobado]** La app llama a `DELETE /me/device-token` antes de limpiar el Bearer, así que el
+camino feliz queda limpio. Pero si la app se desinstala o el logout falla a medias, el token queda
+huérfano. `FcmSender` ya purga los que FCM reporta como muertos, lo que mitiga el problema pero no
+lo cierra.
 
-**Qué esperaría la app:** que `fecha`/`hora_inicio`/`hora_fin` sean opcionales de verdad (una
-solicitud "sin hora" es el caso normal: se pide la reunión y luego se cuadra), o que el contrato
-diga que son obligatorias y la app las pida en el formulario. Cualquiera de las dos sirve — pero
-hoy el contrato dice "opcional" y el código no lo soporta.
+### A4. Etiquetas de nivel de patrocinador sin normalizar
 
----
+**[comprobado]** 29 patrocinadores con **8 etiquetas distintas**, varias mal escritas. La app ya lo
+absorbe (`SponsorTier` normaliza, ordena y conserva la etiqueta desconocida en vez de descartarla),
+pero limpiarlo en origen evita que cada consumidor tenga que adivinar.
 
-## 🟠 Errores latentes
+### A5. Falta `PUT /me` — el perfil general no se puede guardar
 
-### 2. `GET /networking/meetings` puede dar 500 con invitaciones solo-por-correo
+**[comprobado]** No existe ningún endpoint para escribir el perfil del usuario. En `/me` solo hay
+`GET /me`, `POST /logout`, `GET /me/registrations` y el par `POST`/`DELETE /me/device-token`. El
+único perfil escribible es el de networking (`PUT /events/{id}/networking/me`).
 
-**[comprobado en el código]** El listado hace
-`card($m->remitente_id === $me ? $m->destinatario : $m->remitente)`
-(`API/V1/NetworkingController.php:207`), pero `card()` está tipado como
-`private function card(User $u, ...)` (`:526`) — **no acepta null**.
+**Qué provoca hoy en la app:** `ProfileEditScreen` (`lib/features/profile/profile_edit_screen.dart`)
+ofrece seis campos y, al guardar, muestra *"Perfil actualizado"* — pero `updateUser()` solo escribe
+en `shared_preferences` (`user_provider.dart:152`). Peor: al iniciar sesión, `login()` hace
+`_persist(result.user)` (`:100`) con lo que devuelve el servidor y **machaca lo editado**. El usuario
+corrige su cargo, ve el toast de éxito, vuelve a entrar y está como antes. Es un editor que miente.
 
-En el esquema, `reuniones.destinatario_id` es `int unsigned DEFAULT NULL` y existe una columna
-`email` justo al lado: el modelo admite invitar a alguien que todavía no tiene cuenta. En cuanto
-una de esas reuniones caiga en el listado de un usuario, `card(null)` lanza `TypeError` → 500, y se
-cae **toda la pestaña de Reuniones**, no solo esa fila.
+**Lo que se pide:** `PUT /events/.../me` no; basta un **`PUT /me`** simétrico al `GET /me` que ya
+existe, escribiendo sobre `users` y `perfiles`.
 
-**Sugerencia:** `?User $u` con un retorno mínimo (`['id' => null, 'nombre' => $m->email]`) o filtrar
-esas reuniones del listado del API.
-
-### 3. `lat` llega como string con coma final
-
-**[comprobado]** El endpoint de sedes devuelve, por ejemplo, `"lat": "14.609184161164723,"` — string,
-con una coma pegada al final. Parsearlo como número lanza, y tumbaba la pantalla de Sedes con un
-error genérico.
-
-En la app ya está workaroundeado con un parser defensivo, pero **es dato sucio en origen**: conviene
-limpiarlo en la base y castearlo a `float` en el modelo, porque cualquier otro consumidor va a
-tropezar igual.
-
----
-
-## 🟡 Huecos funcionales
-
-### 4. El push no tiene disparadores automáticos
-
-**[comprobado]** `FcmSender` ya está migrado a FCM HTTP v1 y funciona. Pero tiene **un único call
-site**: `Admin/PushController::send()` (`:67`), el envío manual del panel, con `data: ['origen' =>
-'panel']`.
-
-Los eventos que deberían notificar solos solo mandan correo:
-
-| Evento | Dónde | Qué hace hoy |
-|---|---|---|
-| Mensaje nuevo | `API/V1/NetworkingController.php:385` | solo `MensajeMail` |
-| Reunión aceptada/rechazada | `API/V1/NetworkingController.php:447` (dentro de `notificarReunion`, `:441`) | solo `ReunionAprobadaMail` / `ReunionRechazadaMail` |
-| Nueva solicitud de reunión | `requestMeeting` | nada (y además da 500, ver punto 1) |
-
-**Por qué importa:** una app cerrada no puede consultar nada. Hoy el chat depende de un polling cada
-15 s que además **solo corre con el hilo abierto**. Sin push, un mensaje recibido no se entera nadie
-hasta que el usuario entra a esa conversación a mano.
-
-**La app ya está lista:** entiende `data: {tipo, id}` y con eso navega al destino, refresca el hilo
-abierto al instante e invalida la bandeja. Solo falta que el backend lo mande.
-
-**Payload que espera la app:**
-
-```json
-{ "tipo": "chat",    "id": "<id del REMITENTE>" }   // no el id del mensaje: el hilo se abre por interlocutor
-{ "tipo": "reunion", "id": "<id de la reunión>" }
+```
+PUT /api/v1/me          (auth:api)
+Body — todos opcionales, se escribe solo lo que llega:
+  { "nombre", "apellido", "empresa", "cargo", "movil", "ciudad", "bio", "linkedin" }
 ```
 
-Ojo: FCM v1 **rechaza el mensaje si algún valor de `data` no es string**. `FcmSender` ya castea,
-pero conviene mandarlos ya como string.
+- Devolver **el mismo `userPayload()` del `GET /me`** para que la app refresque con la respuesta y no
+  tenga que adivinar qué quedó guardado. Hoy ese payload no incluye `bio` ni `linkedin`; si se aceptan
+  en la escritura, conviene añadirlos también a la lectura.
+- **`email` no debe ser editable** — es la identidad de login. Tampoco `id`, `tenant_id` ni `pais_id`
+  (este último es un catálogo; si se quiere, que vaya aparte).
+- **Ojo con el solape:** `sector` e `intereses` viven en `perfiles` pero **ya los escribe**
+  `PUT /events/{id}/networking/me` (`NetworkingController::saveMe`, que los guarda como string
+  separado por comas y aplica los topes de `NetworkingVocab`). **`PUT /me` no debería tocarlos**, o
+  habrá dos endpoints peleándose por las mismas columnas con formatos distintos.
+- Precedente de validación: el propio `saveMe` (`:82-90`). Mismo estilo: `nullable` + `string` +
+  `max`, y `perfil` con `updateOrCreate` por si el usuario todavía no tiene fila en `perfiles`.
 
-> Hay un parche propuesto para esto (helper `pushA()` + las dos llamadas) escrito en el working tree
-> del repo backend, **sin commitear**, para que lo revises antes de que entre nada. `git diff`.
-
-### 5. No hay estado de leído en mensajes
-
-**[comprobado]** `GET /messages` devuelve `total`, que es el **histórico** de la conversación, no los
-pendientes. No hay ningún `leido_at` ni equivalente.
-
-Consecuencia: la app **no puede mostrar un badge de no leídos**, que es lo primero que cualquiera
-espera de una bandeja. Hoy está deliberadamente sin badge porque cualquier contador estaría mal
-desde el primer render.
-
-**Sugerencia:** columna `leido_at` en `mensajes` + un contador en la respuesta de `GET /messages`, y
-un `POST /messages/{user}/read` (o marcar al abrir el hilo).
-
-### 6. `GET /networking/meetings` no expone `lugar` ni `mesa`
-
-**[comprobado]** El `respond` sí los devuelve al aceptar, pero el listado no los incluye
-(`API/V1/NetworkingController.php:202-213`). Resultado: la app puede decir la mesa asignada en el
-SnackBar del momento, pero al volver a entrar la tarjeta de la reunión confirmada ya no sabe dónde
-es. Añadirlos al listado.
+**Mientras no exista**, la app tiene dos salidas y ninguna es buena: quitar la pantalla (el perfil de
+networking ya edita campos parecidos y sí persiste) o dejarla marcada como solo-local y quitarle el
+toast de éxito. **Decisión pendiente del lado de la app.**
 
 ---
 
-### 10. No hay disponibilidad de horas de reunión en `/api/v1`
+## 🟠 Falta en la app
 
-**[comprobado]** La app ya impide que el usuario pida una hora que **él mismo** tiene tomada, pero lo
-calcula en el cliente con lo único que hay: `GET /networking/meetings`. Eso deja cuatro huecos que
-solo el backend puede cerrar.
+### B1. `GET /networking/availability` no se consume — el hueco con más impacto
 
-**La lógica ya existe, pero no es consumible.** `Web/ReunionController::horarios()` (`:59-135`) cruza
-`horarios` × `mesas` × solapamiento de `reuniones` (`hora_fin > inicio AND hora_inicio < fin`) y
-descarta los slots sin mesa libre. Pero devuelve **HTML** y exige sesión web, así que con Bearer no
-sirve. Falta un `GET /events/{congreso}/networking/availability?fecha=YYYY-MM-DD&periodo=30` que
-devuelva ese mismo cálculo en JSON.
+> 🚧 **Bloqueado por despliegue.** El endpoint existe en `75a20a3`, **en revisión y sin desplegar**.
+> Hasta que salga a producción, conectarlo desde la app no se puede ni probar. Lo que sigue describe
+> el trabajo que quedará listo para hacer en cuanto se apruebe.
 
-**La agenda del destinatario es invisible.** La app no puede saber qué horas tiene ocupadas el otro,
-así que puede ofrecerle una que ya está tomada. Haría falta ese mismo endpoint aceptando `?user={id}`
-y devolviendo solo `ocupado: true|false` por slot — **sin** nombres de contraparte, que sería fuga de
-información.
+**[comprobado en el código, NO en producción]** El backend expone
+`GET /events/{id}/networking/availability?fecha&periodo&user`
+(`API/V1/NetworkingController.php:214`), que devuelve `{fecha, periodo, origen, espacio_abierto,
+slots}` calculados contra los `horarios` y `mesas` reales del congreso — y con `?user={id}` incluye
+**la ocupación del otro asistente**.
 
-**Cero validación al crear.** `requestMeeting` valida `hora_inicio` como `string|max:10`
-(`API/V1/NetworkingController.php:230-235`). No comprueba que la fecha caiga dentro del congreso, que
-la hora esté en la rejilla de 30 min, que `hora_fin > hora_inicio`, ni que el remitente no se solape
-consigo mismo. La restricción de la app es hoy **puramente cosmética**: un `curl` escribe lo que
-quiera en columnas `time`.
+**La app no lo llama nunca.** `features/networking/new_meeting_screen.dart` se inventa la rejilla:
+`MeetingHours` hardcodea 08:00–18:00 en pasos de 30 min (`lib/core/utils/meeting_slots.dart`) y
+`slotStates` solo cruza **mis** reuniones.
 
-**`autoAsignarMesa` confirma sin mesa en silencio.** Busca un `Horario` con la `fecha` y la `hora`
-exactas (`:456-459`); si no lo encuentra, cae al espacio abierto y devuelve `mesa: 0` (`:467-469`).
-La app no puede distinguir "espacio abierto sin mesa numerada" de "no había horario, te quedaste sin
-sitio". O la respuesta lo distingue, o el API se niega a confirmar fuera de la rejilla.
+Dos consecuencias reales:
 
-**[hipótesis] Pregunta a operaciones:** ¿existen filas en `horarios` para el congreso 94 los días
-11-13 de noviembre de 2026, y en qué ventana? La app asume **08:00-18:00** en pasos de 30 min
-(`MeetingHours`, en `lib/core/constants/ovum_event.dart`). Si esas filas no están cargadas, **toda**
-reunión aceptada saldrá con `mesa: 0`.
+1. Se puede solicitar una reunión a una hora en la que la otra persona ya está ocupada. El backend
+   la rechazará o la aceptará mal, pero el usuario no se entera al elegir.
+2. La rejilla no refleja los horarios ni las sedes que configuró el organizador. Si las filas de
+   `horarios` no cubren 08:00–18:00, la app ofrece horas que no existen.
 
----
+**Trabajo (cuando se despliegue):** mapper + método en `NetworkingService`, y sustituir
+`meetingSlots()`/`slotStates()` por la respuesta del servidor, dejando la rejilla local como respaldo
+si el endpoint falla o devuelve 404 — que es exactamente lo que hará mientras no esté desplegado.
 
-## 🟢 Menores / higiene
+**Compatibilidad ya comprobada:** ese mismo commit endurece la validación de `requestMeeting`
+(rejilla de 30 min por regex, `hora_fin > hora_inicio`, fecha dentro del congreso, y solapamiento del
+remitente). Lo que la app manda hoy **pasa esas reglas**: `apiDate()` produce `Y-m-d` dentro del
+congreso y `MeetingHours` trabaja en pasos de 30 min, así que `hora_inicio`/`hora_fin` siempre caen
+en `:00`/`:30`. El despliegue no debería romper la pantalla actual.
 
-### 7. `google/auth` no está declarada en `composer.json`
+### B2. `AttendeesScreen` es una pantalla huérfana
 
-**[comprobado]** `FcmSender` hace `use Google\Auth\Credentials\ServiceAccountCredentials`, y funciona
-— está entrando **transitiva** por otra dependencia. Un `composer update` de ese otro paquete puede
-quitarla y **el push se caería en silencio**: sin credencial, `FcmSender` devuelve `skipped` sin
-lanzar, así que nadie se entera. Conviene fijarla explícita.
+**[comprobado]** La ruta `/attendees` está registrada (`lib/core/router/app_router.dart:113`) pero
+**nada en la UI navega a ella** — es la única ruta del router en esa situación, y ya lo era antes de
+los cambios recientes. La sustituyó la pestaña **Directorio** de Networking. Decidir: borrarla, o
+darle un punto de entrada.
 
-### 8. `POST /logout` no borra el device token
+### B3. `Session.hasPolls` es un campo muerto
 
-**[comprobado]** La app llama a `DELETE /me/device-token` antes de limpiar el Bearer, así que en el
-camino feliz queda limpio. Pero si la app se desinstala o el logout falla a medias, el token queda
-huérfano y el usuario puede seguir recibiendo push de un congreso del que ya salió.
+**[comprobado]** `session_mapper.dart:115` lo fija a `false` porque el API no manda esa clave en
+`features`, y **nadie lo lee**: la ficha de sesión usa `pollsForSessionProvider(...).isNotEmpty`
+(`session_detail_screen.dart:38`). Borrarlo del modelo o alimentarlo de verdad.
 
-### 9. Correo y push son síncronos dentro del request
+### B4. El fallback al mock se dispara en silencio
 
-**[comprobado]** `Mail::...->send()` bloquea el `POST /messages/{user}`. Si se añade el push (punto 4)
-se suma una llamada HTTP más a Google. Lo correcto sería que ambos fueran a cola (`ShouldQueue`).
-No es urgente con el volumen actual, pero en los días del congreso sí se va a notar.
+**[comprobado]** Varios métodos de `ApiOvumRepository` caen a `MockOvumRepository` cuando no se
+resuelve el id del evento, no solo cuando se apaga un flag (p. ej. `api_ovum_repository.dart:111`).
+Si `GET /events?all=1` falla, la app **muestra datos de demo como si fueran reales**, sin avisar.
+Debería distinguirse de un error.
 
----
+### B5. Constantes del evento hardcodeadas
 
-## 📋 Contenido vacío en producción
+**[comprobado]** `lib/core/constants/ovum_event.dart` fija nombre, edición, lema, ciudad, sede,
+fechas, días de agenda, organizadores, email y teléfono de contacto, web, aerolínea oficial y su
+código de descuento, y hotel oficial. Parte de eso vive en `GET /events/{id}`, que la app no pide
+(resuelve el evento con `GET /events?all=1`). No molesta mientras la app sea de un solo congreso,
+pero es lo primero que estorba si se reutiliza.
 
-No es código — es que el congreso todavía no tiene datos cargados. Lo anoto porque la app tiene las
-pantallas hechas y hoy se ven vacías:
+### B6. Endpoints disponibles sin consumir (menores)
 
-| Recurso | Estado |
+| Endpoint | Nota |
 |---|---|
-| `features.qa` | 0 de 60 sesiones con Q&A activo |
-| `polls` | 0 |
-| `other-activities` | 0 |
-| `content/*` (los cinco) | 0 |
-| Ponentes | sin bio, sin foto, sin redes |
-| Sponsors | 29 cargados, pero con 8 etiquetas de nivel distintas y varias mal escritas |
+| `GET /me/registrations` | Diría el tipo de inscripción del asistente. Sin pantalla que lo pida hoy |
+| `GET /public/events/{id}/program` · `/speakers` | Redundantes: agenda y speakers ya son públicos |
+| `GET /app/splash` | Sustituido **a propósito** por `/events/{id}/splash` |
 
-Lo de sponsors ya está absorbido en la app (normaliza y ordena por nivel, y conserva la etiqueta
-desconocida en vez de descartarla), pero **limpiar las etiquetas en origen** ahorraría que cada
-consumidor tenga que adivinar.
+---
+
+## 📋 Falta cargar en producción
+
+No es código. **Las pantallas están hechas y aparecerán solas** en cuanto haya datos.
+
+| Recurso | Estado | Qué desbloquea |
+|---|---|---|
+| `polls` | **0** | La tarjeta "Encuesta en vivo" de la ficha de sesión |
+| `features.qa` | **0 de 60** sesiones | La tarjeta "Preguntas en vivo" |
+| `other-activities` | 0 | La pantalla de otras actividades |
+| `content/*` | 0 | Info, organizadores, expositores |
+| Ponentes | sin bio, foto ni redes | La ficha de ponente se ve pelada |
+| `horarios` / `mesas` | **sin confirmar** | Sin filas, toda reunión aceptada sale con `mesa: 0` |
+
+> **Esto responde a "no veo polls en la app".** Polls está implementado de punta a punta — modelo,
+> mapper, providers, pantalla, ruta y el `POST /polls/{id}/vote`. El acceso está en la ficha de
+> sesión y solo se pinta si esa sesión tiene encuestas. Como `GET /events/94/polls` devuelve 0, no
+> aparece nunca. **No hay nada que programar; hay que crear una encuesta.**
+
+**[hipótesis] Pregunta abierta a operaciones:** ¿existen filas en `horarios` para el congreso 94 los
+días 11–13 de noviembre de 2026, y en qué ventana? La app asume 08:00–18:00. Si no están cargadas,
+`autoAsignarMesa` cae siempre al espacio abierto.
+
+---
+
+## ✅ Resuelto (historial)
+
+Todo esto estaba en la versión anterior de este documento y el backend lo cerró en `eeaaf7a`,
+`2723473` y `733fee3`.
+
+| # | Asunto | Cómo se cerró |
+|---|---|---|
+| 1 | 500 al crear reunión | Migración `2026_09_16_000000_reuniones_scheduling_nullable.php`. **Verificado**: responde 200 y la reunión sale en el listado |
+| 2 | 500 en el listado con invitación por correo | `card()` acepta `?User` y devuelve ficha mínima con el correo |
+| 3 | `lat` sucio (`"14.60…,"`) | Accesores en el modelo `Venue` + migración de limpieza. La app conserva su parser defensivo como red |
+| 4 | Push sin disparadores | `pushAUsuario()` en mensaje nuevo, solicitud de reunión y aceptar/rechazar, con `data:{tipo,id}`. **La app ya lo entiende** |
+| 5 | Sin estado de leído | Columna `mensajes.leido_at` + `no_leidos` en `GET /messages`; el hilo marca leído al abrir. **Badge verificado en dispositivo** |
+| 6 | Listado sin `lugar`/`mesa` | Añadidos al `map()` del listado. **Verificado**: la tarjeta confirmada muestra "Mesa por asignar" |
+| 10 | Sin disponibilidad real de horas | ⚠️ **Escrito, NO desplegado.** `75a20a3` añade el endpoint `availability`, el servicio `DisponibilidadReuniones` y la validación al crear (rejilla de 30 min por regex, `hora_fin > hora_inicio`, fechas dentro del congreso, solapamiento del remitente). **En revisión** — no cuenta como cerrado hasta que salga a prod. Ver B1 |
 
 ---
 
 ## Resumen para priorizar
 
-| # | Asunto | Impacto |
+| Dónde | Asunto | Impacto |
 |---|---|---|
-| 1 | ~~500 al crear reunión~~ | ✅ Resuelto (comprobado 17 sep 2026) |
-| 2 | 500 en listado con invitación por correo | Tumba la pestaña entera cuando ocurra |
-| 4 | Push sin disparadores | El chat no sirve como chat |
-| 5 | Sin estado de leído | No hay badge de no leídos |
-| 6 | Listado sin `lugar`/`mesa` | La tarjeta no dice dónde es la reunión |
-| 10 | Sin disponibilidad real de horas | La app solo evita que el usuario choque consigo mismo |
-| 3 | `lat` sucio | Ya workaroundeado en la app |
-| 7-9 | Higiene | Sin impacto visible hoy |
+| **Backend** | Aprobar y desplegar `75a20a3` | Desbloquea B1; hoy el endpoint no responde en prod |
+| **App** | B1 · conectar `availability` *(bloqueado)* | Se pueden pedir horas ocupadas del otro; la rejilla es inventada |
+| **Prod** | Crear encuestas y activar `features.qa` | Dos funciones completas hoy invisibles |
+| **Prod** | Confirmar `horarios`/`mesas` | Sin ellas, ninguna reunión recibe mesa |
+| **App** | B4 · fallback mudo al mock | Puede mostrar datos de demo como reales |
+| **API** | **A5 · `PUT /me`** | Sin él, el editor de perfil general miente al usuario |
+| **API** | A1 · fijar `google/auth` | Si se cae, el push muere en silencio |
+| **App** | B2, B3 · código muerto | Sin impacto en usuario; deuda |
+| **API** | A2, A3, A4 | Sin impacto visible hoy |
