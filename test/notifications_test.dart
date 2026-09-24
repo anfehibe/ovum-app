@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ovum/core/config/app_config.dart';
 import 'package:ovum/core/notifications/notification_routes.dart';
 import 'package:ovum/core/notifications/session_reminders.dart';
 import 'package:ovum/core/router/route_paths.dart';
@@ -47,14 +48,14 @@ void main() {
       expect(resolveNotificationRoute({'ruta': 'javascript:x'}), isNull);
     });
 
-    test('un chat abre el hilo del remitente', () {
-      expect(
-        resolveNotificationRoute({'tipo': 'chat', 'id': '28169'}),
-        R.chatWith('28169'),
-      );
+    test('un chat abre el hilo del remitente, si el chat está activo', () {
+      // Con el chat oculto (App Store 1.2) la ruta no existe: la push solo
+      // abre la app.
+      final esperado = AppConfig.userContent ? R.chatWith('28169') : null;
+      expect(resolveNotificationRoute({'tipo': 'chat', 'id': '28169'}), esperado);
       expect(
         resolveNotificationRoute({'type': 'message', 'entity_id': 28169}),
-        R.chatWith('28169'),
+        esperado,
       );
     });
 

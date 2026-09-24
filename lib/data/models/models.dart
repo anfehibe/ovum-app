@@ -12,6 +12,7 @@ export 'networking_message.dart';
 export 'networking_profile.dart';
 export 'organizer.dart';
 export 'poll.dart';
+export 'profile_edits.dart';
 export 'session.dart';
 export 'social_links.dart';
 export 'speaker.dart';

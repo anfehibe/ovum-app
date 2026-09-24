@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/providers/user_provider.dart';
+import '../config/app_config.dart';
 import '../../features/agenda/agenda_screen.dart';
 import '../../features/agenda/session_detail_screen.dart';
 import '../../features/attendees/attendee_detail_screen.dart';
@@ -21,6 +22,7 @@ import '../../features/networking/networking_profile_screen.dart';
 import '../../features/networking/networking_screen.dart';
 import '../../features/networking/new_meeting_screen.dart';
 import '../../features/other_activities/other_activities_screen.dart';
+import '../../features/profile/delete_account_screen.dart';
 import '../../features/profile/profile_edit_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/shell/home_shell.dart';
@@ -115,11 +117,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '${R.attendeeDetail}/:id',
         builder: (_, state) => AttendeeDetailScreen(attendeeId: state.pathParameters['id']!),
       ),
-      GoRoute(path: R.chats, builder: (_, _) => const ChatListScreen()),
-      GoRoute(
-        path: '${R.chat}/:id',
-        builder: (_, state) => ChatScreen(attendeeId: state.pathParameters['id']!),
-      ),
+      // El chat solo existe con el flag (App Store 1.2): sin él no hay ruta a la
+      // que llegar, ni desde un botón ni desde una push.
+      if (AppConfig.userContent) ...[
+        GoRoute(path: R.chats, builder: (_, _) => const ChatListScreen()),
+        GoRoute(
+          path: '${R.chat}/:id',
+          builder: (_, state) => ChatScreen(attendeeId: state.pathParameters['id']!),
+        ),
+      ],
       GoRoute(
         path: '${R.newMeeting}/:id',
         builder: (_, state) => NewMeetingScreen(attendeeId: state.pathParameters['id']!),
@@ -133,6 +139,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state) => PollsScreen(sessionId: state.pathParameters['id']!),
       ),
       GoRoute(path: R.profileEdit, builder: (_, _) => const ProfileEditScreen()),
+      GoRoute(path: R.deleteAccount, builder: (_, _) => const DeleteAccountScreen()),
       GoRoute(
         path: R.networkingProfile,
         builder: (_, _) => const NetworkingProfileScreen(),

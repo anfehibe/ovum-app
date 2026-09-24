@@ -146,6 +146,8 @@ class DirectoryQueryNotifier extends Notifier<DirectoryQuery> {
 
   @override
   DirectoryQuery build() {
+    // Otra cuenta empieza con la búsqueda limpia.
+    ref.watch(sessionUserIdProvider);
     ref.onDispose(() => _debounce?.cancel());
     return (search: '', sector: null);
   }
@@ -268,7 +270,10 @@ final serverFavoritesProvider = FutureProvider<List<NetworkingCard>>(
 /// `PollAnswersNotifier`.
 class NetworkingFavoritesNotifier extends Notifier<Map<String, bool>> {
   @override
-  Map<String, bool> build() => const {};
+  Map<String, bool> build() {
+    ref.watch(sessionUserIdProvider); // los overrides son de una cuenta
+    return const {};
+  }
 
   Future<void> toggle(String userId, bool current) async {
     state = {...state, userId: !current};
@@ -359,12 +364,16 @@ final networkingMeetingsProvider = FutureProvider<List<NetworkingMeeting>>(
 /// Respuestas que el usuario acaba de dar, superpuestas al listado.
 ///
 /// Va en un mapa aparte y **no** derivado del future de reuniones: si `build()`
-/// dependiera de él, invalidar la lista tras responder borraría el overlay justo
-/// cuando llega la mesa asignada — que el listado del backend todavía **no**
-/// devuelve (`GET /meetings` no trae `lugar`/`mesa`), así que se perdería el dato.
+/// dependiera de él, invalidar la lista tras responder borraría el overlay antes
+/// de que llegue el refetch, y la tarjeta parpadearía al estado anterior.
+/// (El listado **sí** trae ya `lugar`/`mesa` desde `2723473`; antes no, y ese era
+/// el motivo original de este mapa.)
 class MeetingResponsesNotifier extends Notifier<Map<String, MeetingOutcome>> {
   @override
-  Map<String, MeetingOutcome> build() => const {};
+  Map<String, MeetingOutcome> build() {
+    ref.watch(sessionUserIdProvider); // las respuestas son de una cuenta
+    return const {};
+  }
 
   void record(MeetingOutcome outcome) =>
       state = {...state, outcome.id: outcome};
@@ -374,6 +383,23 @@ final meetingResponsesProvider =
     NotifierProvider<MeetingResponsesNotifier, Map<String, MeetingOutcome>>(
       MeetingResponsesNotifier.new,
     );
+
+/// Rejilla de horas del servidor para una fecha y un interlocutor.
+///
+/// `autoDispose`: cambiar de día o de duración no debe dejar vivas las combinaciones
+/// anteriores. La clave es un record para que Riverpod compare por valor.
+typedef AvailabilityKey = ({String date, String userId, int period});
+
+final meetingAvailabilityProvider = FutureProvider.autoDispose
+    .family<MeetingAvailability, AvailabilityKey>((ref, key) {
+      return ref
+          .watch(networkingServiceProvider)
+          .availability(
+            key.date,
+            periodMinutes: key.period,
+            userId: key.userId,
+          );
+    });
 
 /// Reuniones del servidor con las respuestas locales ya aplicadas, para que las
 /// tarjetas y los contadores no se contradigan mientras llega el refetch.

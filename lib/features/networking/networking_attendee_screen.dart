@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
+import '../../core/config/app_config.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/router/route_paths.dart';
 import '../../core/theme/app_colors.dart';
@@ -106,7 +107,8 @@ class NetworkingAttendeeScreen extends ConsumerWidget {
             ),
           ],
         ),
-        if (card.bio.isNotEmpty) ...[
+        // La bio es texto libre del usuario: se oculta con el chat (App Store 1.2).
+        if (AppConfig.userContent && card.bio.isNotEmpty) ...[
           const SizedBox(height: 22),
           Text('Sobre', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
@@ -118,19 +120,28 @@ class NetworkingAttendeeScreen extends ConsumerWidget {
         _chips(context, 'Ofrece', card.solutions),
         _chips(context, 'Regiones', card.regions),
         const SizedBox(height: 26),
-        FilledButton.icon(
-          onPressed: () => context.push(R.chatWith(card.id)),
-          icon: const Icon(PhosphorIconsRegular.chatCircleText, size: 18),
-          label: const Text('Enviar mensaje'),
-          style: FilledButton.styleFrom(minimumSize: const Size(0, 48)),
-        ),
-        const SizedBox(height: 10),
-        OutlinedButton.icon(
-          onPressed: () => context.push(R.meetingWith(card.id)),
-          icon: const Icon(PhosphorIconsRegular.calendarPlus, size: 18),
-          label: const Text('Solicitar reunión'),
-          style: OutlinedButton.styleFrom(minimumSize: const Size(0, 48)),
-        ),
+        // Sin chat, la reunión pasa a ser la acción principal.
+        if (AppConfig.userContent) ...[
+          FilledButton.icon(
+            onPressed: () => context.push(R.chatWith(card.id)),
+            icon: const Icon(PhosphorIconsRegular.chatCircleText, size: 18),
+            label: const Text('Enviar mensaje'),
+            style: FilledButton.styleFrom(minimumSize: const Size(0, 48)),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: () => context.push(R.meetingWith(card.id)),
+            icon: const Icon(PhosphorIconsRegular.calendarPlus, size: 18),
+            label: const Text('Solicitar reunión'),
+            style: OutlinedButton.styleFrom(minimumSize: const Size(0, 48)),
+          ),
+        ] else
+          FilledButton.icon(
+            onPressed: () => context.push(R.meetingWith(card.id)),
+            icon: const Icon(PhosphorIconsRegular.calendarPlus, size: 18),
+            label: const Text('Solicitar reunión'),
+            style: FilledButton.styleFrom(minimumSize: const Size(0, 48)),
+          ),
         if (card.linkedin != null) ...[
           const SizedBox(height: 10),
           OutlinedButton.icon(

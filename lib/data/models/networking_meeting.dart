@@ -112,3 +112,93 @@ class NetworkingMeeting {
     table: outcome.table,
   );
 }
+
+/// Por qué un slot no está del todo libre.
+///
+/// [slotStates] nunca devuelve [free]: lo que no está en el mapa lo está. El
+/// valor existe para que quien lo consulte escriba `states[slot] ?? free`.
+enum SlotState {
+  free,
+
+  /// Solicitud **recibida** que el usuario todavía no ha respondido. Avisa, pero
+  /// no bloquea: no choca en el servidor, y si bloqueara, cualquiera podría
+  /// tapar una agenda ajena a base de solicitudes.
+  tentative,
+
+  /// Reunión confirmada (en cualquier dirección) o solicitud enviada aún viva.
+  taken,
+
+  /// **El otro asistente** está ocupado a esa hora. Solo lo sabe el servidor
+  /// (`ocupado_usuario` de `/availability`); el cálculo local nunca lo produce.
+  /// Bloquea igual que [taken], pero el motivo que se enseña es distinto.
+  otherBusy,
+}
+
+/// Un hueco de la rejilla de reuniones, tal como lo calcula el servidor.
+///
+/// Sustituye a la rejilla que la app se inventaba: aquí `busyOther` es lo que
+/// **no** se podía saber en el cliente — si la otra persona ya está ocupada.
+class AvailabilitySlot {
+  /// `"HH:mm"`; es a la vez la etiqueta visible y lo que viaja en `hora_inicio`.
+  final String start;
+  final String end;
+
+  /// Veredicto del servidor: hay sitio, nadie choca y queda mesa. Es lo que
+  /// decide si el hueco se puede elegir; los demás campos solo explican por qué.
+  final bool available;
+
+  /// Choque en **mi** agenda. `tentative` avisa pero no bloquea (una solicitud
+  /// recibida sin responder), igual que el cálculo local que había antes.
+  final SlotState selfState;
+
+  /// `true` si el otro asistente ya está ocupado a esa hora. **`null` cuando no
+  /// se pidió con `user`**, que no es lo mismo que "está libre".
+  final bool? busyOther;
+
+  /// Mesas libres en ese hueco, o `null` si el congreso no tiene rejilla cargada.
+  final int? freeTables;
+
+  const AvailabilitySlot({
+    required this.start,
+    required this.end,
+    this.available = false,
+    this.selfState = SlotState.free,
+    this.busyOther,
+    this.freeTables,
+  });
+
+  /// Motivo por el que no se puede elegir, para enseñárselo al usuario. `null`
+  /// si está disponible.
+  String? get blockedReason {
+    if (available) return null;
+    if (busyOther == true) return 'La otra persona no está libre a esta hora';
+    if (selfState == SlotState.taken) return 'Ya tienes algo a esta hora';
+    if (freeTables == 0) return 'No quedan mesas libres';
+    return 'No disponible';
+  }
+}
+
+/// Respuesta de `GET /networking/availability`.
+class MeetingAvailability {
+  final List<AvailabilitySlot> slots;
+
+  /// `true` si la rejilla salió de filas reales de `horarios`; `false` si el
+  /// servidor cayó a su ventana por defecto (08:00–18:00) porque no hay ninguna.
+  /// Se conserva para poder avisar de que las mesas no están configuradas.
+  final bool fromSchedule;
+
+  /// El congreso admite reuniones sin mesa numerada.
+  final bool openSpace;
+
+  /// Minutos por hueco (30 o 60), como los devolvió el servidor.
+  final int periodMinutes;
+
+  const MeetingAvailability({
+    this.slots = const [],
+    this.fromSchedule = false,
+    this.openSpace = false,
+    this.periodMinutes = 30,
+  });
+
+  bool get isEmpty => slots.isEmpty;
+}

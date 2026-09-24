@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
+import '../../core/config/app_config.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/date_ext.dart';
@@ -154,11 +155,13 @@ class _MeetingCardState extends ConsumerState<MeetingCard> {
                 ),
             ],
           ),
-          if (_m.message.isNotEmpty) ...[
+          // Nota y respuesta son texto libre del otro asistente (pueden llegar
+          // desde la web): se ocultan con el chat (App Store 1.2).
+          if (AppConfig.userContent && _m.message.isNotEmpty) ...[
             const SizedBox(height: 12),
             Text(_m.message, style: Theme.of(context).textTheme.bodyMedium),
           ],
-          if (_m.reply.isNotEmpty) ...[
+          if (AppConfig.userContent && _m.reply.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
               'Respuesta: ${_m.reply}',

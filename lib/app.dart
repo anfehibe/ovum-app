@@ -77,7 +77,9 @@ class _NotificationsBootstrapState
     // esto no cuesta una petición — se recargará al abrir "Mis chats".
     // El hilo abierto no se toca aquí; lo refresca `ChatScreen` por su cuenta.
     _pushSub = service.onDataMessage.listen((data) {
-      if (chatCounterpartId(data) != null) ref.invalidate(conversationsProvider);
+      if (AppConfig.userContent && chatCounterpartId(data) != null) {
+        ref.invalidate(conversationsProvider);
+      }
     });
   }
 

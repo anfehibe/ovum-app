@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
+import '../../core/config/app_config.dart';
 import '../../core/constants/app_strings.dart';
+import '../../core/network/api_exception.dart';
 import '../../core/router/route_paths.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/initials_avatar.dart';
@@ -75,11 +77,12 @@ class _Shell extends StatelessWidget {
       appBar: AppBar(
         title: const Text(AppStrings.navNetworking),
         actions: [
-          IconButton(
-            tooltip: 'Mis chats',
-            icon: const Icon(PhosphorIconsRegular.chatsCircle),
-            onPressed: () => context.push(R.chats),
-          ),
+          if (AppConfig.userContent)
+            IconButton(
+              tooltip: 'Mis chats',
+              icon: const Icon(PhosphorIconsRegular.chatsCircle),
+              onPressed: () => context.push(R.chats),
+            ),
         ],
       ),
       body: child,
@@ -103,11 +106,12 @@ class _Tabs extends StatelessWidget {
               icon: const Icon(PhosphorIconsRegular.identificationCard),
               onPressed: () => context.push(R.networkingProfile),
             ),
-            IconButton(
-              tooltip: 'Mis chats',
-              icon: const Icon(PhosphorIconsRegular.chatsCircle),
-              onPressed: () => context.push(R.chats),
-            ),
+            if (AppConfig.userContent)
+              IconButton(
+                tooltip: 'Mis chats',
+                icon: const Icon(PhosphorIconsRegular.chatsCircle),
+                onPressed: () => context.push(R.chats),
+              ),
           ],
           bottom: const TabBar(
             tabs: [
@@ -125,8 +129,12 @@ class _Tabs extends StatelessWidget {
   }
 }
 
-/// Networking cerrado: se explica por qué y se ofrece el roster de asistentes,
-/// que sigue disponible porque `/events/{id}/attendees` solo exige sesión.
+/// Networking cerrado: se explica por qué y se ofrece el roster de asistentes.
+///
+/// `/events/{id}/attendees` solo responde a un asistente con networking activo
+/// (403 si no). Si el networking está cerrado para el evento, el roster sigue
+/// saliendo; si el 403 es del propio usuario, queda solo el aviso, que ya
+/// explica el motivo.
 class _Degraded extends ConsumerWidget {
   const _Degraded({required this.message});
   final String message;
@@ -166,7 +174,9 @@ class _Degraded extends ConsumerWidget {
         Expanded(
           child: async.when(
             loading: () => const LoadingView(),
-            error: (_, _) => const ErrorView(),
+            error: (e, _) => e is ApiException && e.isForbidden
+                ? const SizedBox.shrink()
+                : const ErrorView(),
             data: (attendees) => attendees.isEmpty
                 ? const EmptyState(
                     message: 'Todavía no hay asistentes publicados.',

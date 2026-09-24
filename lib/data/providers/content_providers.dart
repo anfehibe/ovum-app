@@ -12,6 +12,7 @@ import '../services/auth_service.dart';
 import '../services/device_token_service.dart';
 import '../services/networking_service.dart';
 import 'preferences.dart';
+import 'user_provider.dart';
 
 // ── Infraestructura de red / API ────────────────────────────────────────────
 
@@ -43,12 +44,17 @@ final deviceTokenServiceProvider = Provider<DeviceTokenService>(
 
 /// Networking del evento (`/events/{id}/networking/*`). Requiere Bearer y que el
 /// organizador tenga el networking abierto; si no, el backend responde 403.
-final networkingServiceProvider = Provider<NetworkingService>(
-  (ref) => NetworkingService(
+///
+/// Hay una instancia por sesión: todo lo que cachea datos de la cuenta
+/// (acceso, directorio, fichas, favoritos, reuniones, mensajes) observa este
+/// provider, así que al cambiar de cuenta se recalcula solo.
+final networkingServiceProvider = Provider<NetworkingService>((ref) {
+  ref.watch(sessionUserIdProvider);
+  return NetworkingService(
     ref.watch(apiClientProvider),
     eventId: () => ref.read(eventProvider.future).then((e) => e?.id),
-  ),
-);
+  );
+});
 
 /// Evento configurado (resuelto por `codigo`). `null` si el flag está apagado o
 /// si el backend aún no responde (la app cae a datos mock / constantes).

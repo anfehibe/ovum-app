@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
+import '../../core/config/app_config.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/router/route_paths.dart';
 import '../../core/theme/app_colors.dart';
@@ -89,7 +90,8 @@ class AttendeeDetailScreen extends ConsumerWidget {
                   _metaRow(context, PhosphorIconsRegular.briefcase, attendee.sector),
                 if (location.isNotEmpty)
                   _metaRow(context, PhosphorIconsRegular.mapPin, location),
-                if (attendee.bio.isNotEmpty) ...[
+                // Texto libre del usuario: se oculta con el chat (App Store 1.2).
+                if (AppConfig.userContent && attendee.bio.isNotEmpty) ...[
                   const SizedBox(height: 18),
                   Text('Biografía', style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 6),
@@ -120,6 +122,17 @@ class AttendeeDetailScreen extends ConsumerWidget {
   }
 
   Widget _actionsRow(BuildContext context) {
+    // Sin chat, la reunión ocupa todo el ancho como acción principal.
+    if (!AppConfig.userContent) {
+      return SizedBox(
+        width: double.infinity,
+        child: FilledButton.icon(
+          onPressed: () => context.push(R.meetingWith(attendeeId)),
+          icon: const Icon(PhosphorIconsRegular.handshake, size: 18),
+          label: const Text(AppStrings.meeting),
+        ),
+      );
+    }
     return Row(
       children: [
         Expanded(

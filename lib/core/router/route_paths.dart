@@ -10,6 +10,7 @@ abstract final class R {
   static const networking = '/networking';
   static const profile = '/profile';
   static const profileEdit = '/profile/edit';
+  static const deleteAccount = '/profile/delete';
 
   // Drill-downs (se apilan sobre el shell)
   static const speakers = '/speakers';

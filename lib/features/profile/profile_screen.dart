@@ -4,10 +4,12 @@ import 'package:go_router/go_router.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
 import '../../core/auth/biometric_service.dart';
+import '../../core/config/app_config.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/constants/ovum_event.dart';
 import '../../core/router/route_paths.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/launchers.dart';
 import '../../core/widgets/initials_avatar.dart';
 import '../../data/providers/biometric_provider.dart';
 import '../../data/providers/favorites_provider.dart';
@@ -38,12 +40,18 @@ class ProfileScreen extends ConsumerWidget {
         children: [
           _userCard(context, user?.name ?? 'Invitado', user?.position ?? '', user?.company ?? '',
               user?.email ?? '', user?.photoUrl),
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: () => context.push(R.profileEdit),
-            icon: const Icon(PhosphorIconsRegular.pencilSimple, size: 18),
-            label: const Text('Editar perfil'),
-          ),
+          // Vuelve a estar: `PUT /me` existe y está desplegado desde el
+          // 2026-09-24, así que ahora guarda de verdad en el servidor.
+          // Un invitado no tiene perfil que editar.
+          if (!(user?.isGuest ?? true)) ...[
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: () => context.push(R.profileEdit),
+              icon: const Icon(PhosphorIconsRegular.pencilSimple, size: 18),
+              label: const Text('Editar perfil'),
+              style: OutlinedButton.styleFrom(minimumSize: const Size(0, 44)),
+            ),
+          ],
           const SizedBox(height: 24),
           _tile(
             context,
@@ -147,6 +155,30 @@ class ProfileScreen extends ConsumerWidget {
           _infoRow(context, 'Sede', OvumEvent.mainVenue),
           _infoRow(context, 'Organizan', OvumEvent.organizers),
           _infoRow(context, 'Versión', '1.0.0'),
+          const SizedBox(height: 12),
+          _tile(
+            context,
+            icon: PhosphorIconsRegular.shieldCheck,
+            title: 'Política de privacidad',
+            subtitle: 'Qué datos usamos y cómo',
+            onTap: () => openUrl(AppConfig.privacyUrl),
+          ),
+          const SizedBox(height: 10),
+          _tile(
+            context,
+            icon: PhosphorIconsRegular.fileText,
+            title: 'Términos y condiciones',
+            subtitle: 'Reglas de uso de la plataforma',
+            onTap: () => openUrl(AppConfig.termsUrl),
+          ),
+          const SizedBox(height: 10),
+          _tile(
+            context,
+            icon: PhosphorIconsRegular.envelopeSimple,
+            title: 'Contacto',
+            subtitle: OvumEvent.contactEmail,
+            onTap: () => openEmail(OvumEvent.contactEmail),
+          ),
           const SizedBox(height: 28),
           FilledButton.tonalIcon(
             // Se espera a que `logout()` termine antes de navegar: si no, el
@@ -164,6 +196,16 @@ class ProfileScreen extends ConsumerWidget {
               foregroundColor: scheme.onErrorContainer,
             ),
           ),
+          // App Store exige poder eliminar la cuenta desde la app. El invitado
+          // no tiene cuenta que borrar.
+          if (!(user?.isGuest ?? true)) ...[
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () => context.push(R.deleteAccount),
+              style: TextButton.styleFrom(foregroundColor: scheme.error),
+              child: const Text('Eliminar mi cuenta'),
+            ),
+          ],
         ],
       ),
     );

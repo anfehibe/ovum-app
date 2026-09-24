@@ -1,11 +1,13 @@
 import '../../core/network/api_client.dart';
 import '../models/app_user.dart';
+import '../models/profile_edits.dart';
 import '../repositories/mappers/user_mapper.dart';
 
 /// Resultado de un login exitoso: el usuario y su token Bearer.
 typedef AuthResult = ({AppUser user, String token});
 
-/// Llamadas de autenticación de la API TRIVVO (`/login`, `/me`, `/logout`).
+/// Llamadas de autenticación de la API TRIVVO (`/login`, `/me`, `/logout` y
+/// `DELETE /me`).
 class AuthService {
   const AuthService(this._api);
 
@@ -28,5 +30,21 @@ class AuthService {
     return appUserFromApiJson((map['user'] as Map).cast<String, dynamic>());
   }
 
+  /// `PUT /me` → perfil general. Devuelve el usuario **como quedó en el
+  /// servidor**, no lo que se mandó: es la única forma de no divergir.
+  ///
+  /// El body lo arma [profileUpdateBody], que es pura y está testeada, porque
+  /// las omisiones que hace no son cosméticas — evitan un 500 del backend.
+  Future<AppUser> updateProfile(ProfileEdits edits) async {
+    final data = await _api.put('/me', body: profileUpdateBody(edits));
+    final raw = data is Map ? (data['user'] ?? data['data'] ?? data) : data;
+    return appUserFromApiJson((raw as Map).cast<String, dynamic>());
+  }
+
   Future<void> logout() => _api.post('/logout');
+
+  /// Elimina la cuenta. El backend pide la contraseña como confirmación y
+  /// responde 422 si no coincide. Ver `docs/API-APP-STORE.md` §1.
+  Future<void> deleteAccount(String password) =>
+      _api.delete('/me', body: {'password': password});
 }

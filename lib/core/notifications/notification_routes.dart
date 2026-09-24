@@ -1,3 +1,4 @@
+import '../config/app_config.dart';
 import '../router/route_paths.dart';
 
 /// Alias que el backend podría usar para un mensaje nuevo. Una sola lista para
@@ -25,8 +26,11 @@ String? resolveNotificationRoute(Map<String, dynamic> data) {
   if (tipo == null || id == null || id.isEmpty) return null;
 
   // Para un chat el `id` es el del **remitente**, no el del mensaje: el hilo se
-  // direcciona por interlocutor (`GET /messages/{userId}`).
-  if (_tiposChat.contains(tipo)) return R.chatWith(id);
+  // direcciona por interlocutor (`GET /messages/{userId}`). Con el chat oculto
+  // (`AppConfig.userContent`) la ruta no existe, así que la push solo abre la app.
+  if (_tiposChat.contains(tipo)) {
+    return AppConfig.userContent ? R.chatWith(id) : null;
+  }
 
   return switch (tipo) {
     'sesion' || 'sesión' || 'session' || 'programa' => R.session(id),

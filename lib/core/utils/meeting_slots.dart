@@ -4,6 +4,11 @@ import '../../data/models/networking_meeting.dart';
 import '../constants/ovum_event.dart';
 import 'date_ext.dart';
 
+// `SlotState` vive con los modelos porque `AvailabilitySlot` también lo usa y
+// este archivo ya depende de ellos: al revés habría ciclo. Se reexporta para que
+// quien importe la rejilla lo siga teniendo a mano.
+export '../../data/models/networking_meeting.dart' show SlotState;
+
 /// Rejilla de horas para solicitar reuniones y ocupación de la agenda propia.
 ///
 /// Todo esto es lógica pura a propósito: las reglas de solapamiento son el valor
@@ -33,22 +38,6 @@ class MeetingSlot {
 
   @override
   String toString() => 'MeetingSlot($label)';
-}
-
-/// Por qué un slot no está del todo libre.
-///
-/// [slotStates] nunca devuelve [free]: lo que no está en el mapa lo está. El
-/// valor existe para que quien lo consulte escriba `states[slot] ?? free`.
-enum SlotState {
-  free,
-
-  /// Solicitud **recibida** que el usuario todavía no ha respondido. Avisa, pero
-  /// no bloquea: no choca en el servidor, y si bloqueara, cualquiera podría
-  /// tapar una agenda ajena a base de solicitudes.
-  tentative,
-
-  /// Reunión confirmada (en cualquier dirección) o solicitud enviada aún viva.
-  taken,
 }
 
 /// Slots en los que puede **empezar** una reunión de [durationMinutes] sin
@@ -107,7 +96,8 @@ Map<MeetingSlot, SlotState> slotStates(
 }
 
 /// `true` si una reunión de [durationMinutes] que empiece en [slot] cabe antes
-/// del cierre y ningún slot que ocuparía está [SlotState.taken].
+/// del cierre y ningún slot que ocuparía está bloqueado ([SlotState.taken] o
+/// [SlotState.otherBusy]).
 ///
 /// Lo segundo es lo que evita reservar 60′ a las 09:00 teniendo las 09:30
 /// tomadas.
@@ -123,9 +113,24 @@ bool slotFits(
   for (var at = slot.minuteOfDay;
       at < slot.minuteOfDay + durationMinutes;
       at += MeetingHours.stepMinutes) {
-    if (states[MeetingSlot(at)] == SlotState.taken) return false;
+    final st = states[MeetingSlot(at)];
+    if (st == SlotState.taken || st == SlotState.otherBusy) return false;
   }
   return true;
+}
+
+/// `"HH:mm"` → [MeetingSlot], o `null` si no encaja en la rejilla.
+///
+/// Es la inversa de [MeetingSlot.label] y sirve para adoptar las horas que manda
+/// el servidor sin asumir que coinciden con la rejilla local: si un día el
+/// congreso usa pasos de 20′, esto lo deja pasar y es `slotFits` quien decide.
+MeetingSlot? slotFromLabel(String label) {
+  final m = RegExp(r'^(\d{1,2}):(\d{2})').firstMatch(label.trim());
+  if (m == null) return null;
+  final h = int.parse(m.group(1)!);
+  final min = int.parse(m.group(2)!);
+  if (h > 23 || min > 59) return null;
+  return MeetingSlot(h * 60 + min);
 }
 
 /// Hora de fin `"HH:mm"`. Aritmética pura, **sin `% 24`**: antes 23:45 + 60′

@@ -269,3 +269,54 @@ List<CatalogOption> _options(dynamic raw) {
   }
   return out;
 }
+
+/// `GET /networking/availability` →
+/// `{data:{fecha, periodo, origen, espacio_abierto, slots:[{hora_inicio, hora_fin,
+/// disponible, estado, ocupado, ocupado_usuario, mesas_libres}]}}`.
+///
+/// `origen` es `"horarios"` si la rejilla salió de filas reales y `"abierta"` si
+/// el servidor cayó a su ventana por defecto. `ocupado_usuario` llega **null**
+/// cuando no se pidió con `user`: eso no significa "libre", así que se conserva
+/// como nulo en vez de colapsarlo a `false`.
+MeetingAvailability availabilityFromJson(dynamic response) {
+  final raw = response is Map ? response['data'] : response;
+  if (raw is! Map) return const MeetingAvailability();
+  final j = raw.cast<String, dynamic>();
+
+  final slots = <AvailabilitySlot>[];
+  final lista = j['slots'];
+  if (lista is List) {
+    for (final e in lista) {
+      if (e is! Map) continue;
+      final s = e.cast<String, dynamic>();
+      final inicio = _hm(s['hora_inicio']);
+      if (inicio == null) continue; // sin hora no hay nada que ofrecer
+      slots.add(AvailabilitySlot(
+        start: inicio,
+        end: _hm(s['hora_fin']) ?? '',
+        available: s['disponible'] == true,
+        selfState: _slotStateFrom(s['estado']),
+        busyOther: s['ocupado_usuario'] is bool
+            ? s['ocupado_usuario'] as bool
+            : null,
+        freeTables: s['mesas_libres'] is num
+            ? (s['mesas_libres'] as num).toInt()
+            : null,
+      ));
+    }
+  }
+
+  return MeetingAvailability(
+    slots: slots,
+    fromSchedule: j['origen'] == 'horarios',
+    openSpace: j['espacio_abierto'] == true,
+    periodMinutes: j['periodo'] is num ? (j['periodo'] as num).toInt() : 30,
+  );
+}
+
+/// `estado` del servidor → el vocabulario que ya usa la rejilla local.
+SlotState _slotStateFrom(dynamic raw) => switch (raw) {
+  'ocupado' => SlotState.taken,
+  'tentativo' => SlotState.tentative,
+  _ => SlotState.free,
+};

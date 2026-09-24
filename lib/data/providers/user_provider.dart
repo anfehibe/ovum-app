@@ -84,7 +84,7 @@ class AuthController extends Notifier<AppUser?> {
   }) async {
     if (!AppConfig.useApiAuth) {
       // Kill-switch: comportamiento mock previo (sin red).
-      _persist(AppUser.guest.copyWith(name: _nameFromEmail(email), email: email));
+      _persist(AppUser.guest.copyWith(firstName: _nameFromEmail(email), lastName: '', email: email));
       return;
     }
     final result = await ref.read(authServiceProvider).login(email, password);
@@ -130,7 +130,6 @@ class AuthController extends Notifier<AppUser?> {
     // Primero el device-token: `POST /logout` no lo borra en el backend, y una
     // vez limpiado el Bearer el DELETE respondería 401.
     await ref.read(pushRegistrationProvider.notifier).unregister();
-    await ref.read(sessionRemindersProvider).cancelAll();
     if (AppConfig.useApiAuth && tokens.hasToken) {
       try {
         await ref.read(authServiceProvider).logout();
@@ -138,16 +137,50 @@ class AuthController extends Notifier<AppUser?> {
         // Best-effort: aunque el backend falle, limpiamos la sesión local.
       }
     }
-    await tokens.clear();
-    await ref.read(sharedPreferencesProvider).remove(_userKey);
     // Las credenciales del acceso rápido **sobreviven** al logout a propósito:
     // el botón de huella en /login es justamente su razón de existir. Se borran
-    // solo desde el interruptor de Perfil o si el backend rechaza la contraseña.
+    // solo desde el interruptor de Perfil, si el backend rechaza la contraseña
+    // o al eliminar la cuenta.
+    await _clearLocalSession();
+  }
+
+  /// Elimina la cuenta en el servidor (`DELETE /me`) y después todo lo local.
+  ///
+  /// Propaga [ApiException] si falla (p. ej. 422 por contraseña incorrecta), y
+  /// en ese caso **no toca nada**: la sesión sigue como estaba.
+  Future<void> deleteAccount(String password) async {
+    await ref.read(authServiceProvider).deleteAccount(password);
+    // El servidor ya revocó el Bearer y borró los device-tokens. Sin Bearer,
+    // `unregister()` no llama al backend (respondería 401): solo olvida el
+    // token FCM guardado.
+    await ref.read(authTokenStoreProvider).clear();
+    await ref.read(pushRegistrationProvider.notifier).unregister();
+    // La contraseña guardada para el acceso rápido ya no abre ninguna cuenta.
+    await ref.read(biometricPrefsProvider.notifier).disable();
+    await _clearLocalSession();
+  }
+
+  /// Lo común a cerrar sesión y eliminar la cuenta. Las cachés de la cuenta no
+  /// se invalidan aquí: dependen de [sessionUserIdProvider] y se recalculan
+  /// solas al poner `state = null`.
+  Future<void> _clearLocalSession() async {
+    await ref.read(sessionRemindersProvider).cancelAll();
+    await ref.read(authTokenStoreProvider).clear();
+    await ref.read(sharedPreferencesProvider).remove(_userKey);
     ref.read(pendingBiometricEnrollProvider.notifier).clear();
     state = null;
   }
 
-  void updateUser(AppUser user) => _persist(user);
+  /// Guarda el perfil general en el servidor y persiste **lo que devuelve**.
+  ///
+  /// Antes esto solo escribía en `shared_preferences`, así que el
+  /// `_persist(result.user)` del login machacaba lo editado y el usuario veía
+  /// "Perfil actualizado" sobre un cambio que se perdía. Ahora ambos caminos
+  /// vienen de la misma fuente y no pueden divergir.
+  Future<void> updateProfile(ProfileEdits edits) async {
+    final actualizado = await ref.read(authServiceProvider).updateProfile(edits);
+    _persist(actualizado);
+  }
 
   void _persist(AppUser user) {
     ref.read(sharedPreferencesProvider).setString(_userKey, json.encode(user.toJson()));
@@ -176,3 +209,15 @@ final isLoggedInProvider = Provider<bool>((ref) => ref.watch(authControllerProvi
 /// `true` cuando la sesión activa es de invitado (sin token; acceso limitado).
 final isGuestProvider =
     Provider<bool>((ref) => ref.watch(authControllerProvider)?.isGuest ?? false);
+
+/// Id de la cuenta con sesión real (`null` sin sesión o como invitado).
+///
+/// Lo observa todo lo que guarda datos de una cuenta, para que al cambiarla se
+/// recalcule solo; [isGuestProvider] no sirve para eso, porque vale `false`
+/// para cualquier cuenta real. No se puede invalidar desde [AuthController]:
+/// esos providers dependen de él y Riverpod lo rechaza como dependencia
+/// circular (`CircularDependencyError`).
+final sessionUserIdProvider = Provider<String?>((ref) {
+  final user = ref.watch(authControllerProvider);
+  return (user == null || user.isGuest) ? null : user.id;
+});

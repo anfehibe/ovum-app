@@ -30,6 +30,7 @@ abstract final class PhosphorIconsRegular {
   static const IconData confetti = Icons.celebration_rounded;
   static const IconData deviceMobile = Icons.smartphone_rounded;
   static const IconData envelopeSimple = Icons.mail_outline_rounded;
+  static const IconData fileText = Icons.description_outlined;
   static const IconData fingerprint = Icons.fingerprint_rounded;
   static const IconData forkKnife = Icons.restaurant_rounded;
   static const IconData globe = Icons.language_rounded;
@@ -52,9 +53,11 @@ abstract final class PhosphorIconsRegular {
   static const IconData phone = Icons.call_outlined;
   static const IconData scanSmiley = Icons.face_rounded;
   static const IconData shareNetwork = Icons.share_outlined;
+  static const IconData shieldCheck = Icons.privacy_tip_outlined;
   static const IconData signOut = Icons.logout_rounded;
   static const IconData storefront = Icons.storefront_outlined;
   static const IconData sun = Icons.light_mode_outlined;
+  static const IconData trash = Icons.delete_outline_rounded;
   static const IconData tray = Icons.inbox_outlined;
   static const IconData trophy = Icons.emoji_events_outlined;
   static const IconData user = Icons.person_outline_rounded;

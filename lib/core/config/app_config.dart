@@ -64,6 +64,31 @@ abstract final class AppConfig {
   static const int messagePollSeconds =
       int.fromEnvironment('OVUM_MESSAGE_POLL', defaultValue: 15);
 
+  // ── Contenido de usuarios ──────────────────────────────────────────────────
+
+  /// Chat 1 a 1, nota de las solicitudes de reunión y bio ("Sobre") de los
+  /// asistentes: todo el texto libre que un usuario escribe y otro lee.
+  ///
+  /// **Apagado hasta tener reportar y bloquear.** Con contenido de usuarios, App
+  /// Store (guideline 1.2) exige ambos mecanismos y el API todavía no los tiene
+  /// (ver `docs/API-APP-STORE.md` §5). Al ser `const`, el código del chat queda
+  /// fuera del binario de release.
+  static const bool userContent =
+      bool.fromEnvironment('OVUM_USER_CONTENT', defaultValue: false);
+
+  // ── Legal ──────────────────────────────────────────────────────────────────
+
+  /// Páginas legales de TRIVVO. Son globales (no por tenant) y App Store Connect
+  /// enlaza la misma política.
+  static const String privacyUrl = String.fromEnvironment(
+    'OVUM_PRIVACY_URL',
+    defaultValue: 'https://trivvo.events/politica_privacidad',
+  );
+  static const String termsUrl = String.fromEnvironment(
+    'OVUM_TERMS_URL',
+    defaultValue: 'https://trivvo.events/terms-conditions',
+  );
+
   // ── Seguridad ──────────────────────────────────────────────────────────────
 
   /// Acceso rápido con huella / Face ID en la pantalla de login.

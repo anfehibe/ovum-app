@@ -4,7 +4,12 @@ import 'social_links.dart';
 /// modo invitado ([guest] / [isGuest]). Se persiste localmente vía [toJson].
 class AppUser {
   final String id;
-  final String name;
+
+  /// `nombre` y `apellido` se guardan **por separado** porque `PUT /me` los pide
+  /// así. Antes el mapper los unía y se perdía el corte: volver a partirlos a ojo
+  /// mandaría `""` a una columna NOT NULL del backend, que responde 500.
+  final String firstName;
+  final String lastName;
   final String position;
   final String company;
   final String email;
@@ -24,9 +29,16 @@ class AppUser {
   /// `true` cuando la sesión es de invitado (sin token; acceso limitado).
   final bool isGuest;
 
+  /// Nombre completo para mostrar. Derivado: no hay dos fuentes que sincronizar.
+  String get name => [
+    firstName,
+    lastName,
+  ].where((s) => s.isNotEmpty).join(' ');
+
   const AppUser({
     required this.id,
-    required this.name,
+    this.firstName = '',
+    this.lastName = '',
     required this.position,
     required this.company,
     required this.email,
@@ -44,7 +56,8 @@ class AppUser {
   });
 
   AppUser copyWith({
-    String? name,
+    String? firstName,
+    String? lastName,
     String? position,
     String? company,
     String? email,
@@ -56,7 +69,8 @@ class AppUser {
   }) {
     return AppUser(
       id: id,
-      name: name ?? this.name,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
       position: position ?? this.position,
       company: company ?? this.company,
       email: email ?? this.email,
@@ -78,7 +92,11 @@ class AppUser {
   factory AppUser.fromJson(Map<String, dynamic> json) {
     return AppUser(
       id: json['id'] as String,
-      name: json['name'] as String,
+      // `name` es el formato antiguo que puede seguir en shared_preferences.
+      firstName: json['firstName'] as String? ??
+          ((json['name'] as String?) ?? '').split(' ').first,
+      lastName: json['lastName'] as String? ??
+          ((json['name'] as String?) ?? '').split(' ').skip(1).join(' '),
       position: json['position'] as String? ?? '',
       company: json['company'] as String? ?? '',
       email: json['email'] as String? ?? '',
@@ -100,7 +118,8 @@ class AppUser {
 
   Map<String, dynamic> toJson() => {
     'id': id,
-    'name': name,
+    'firstName': firstName,
+    'lastName': lastName,
     'position': position,
     'company': company,
     'email': email,
@@ -119,7 +138,8 @@ class AppUser {
 
   static const AppUser guest = AppUser(
     id: 'me',
-    name: 'Invitado OVUM',
+    firstName: 'Invitado',
+    lastName: 'OVUM',
     position: 'Asistente',
     company: 'OVUM 2026',
     email: '',

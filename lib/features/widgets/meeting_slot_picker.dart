@@ -85,6 +85,9 @@ class _MeetingTimeSheetState extends State<_MeetingTimeSheet> {
     if (widget.states[slot] == SlotState.taken) {
       return ('Ya tienes una reunión a esa hora.', true);
     }
+    if (widget.states[slot] == SlotState.otherBusy) {
+      return ('La otra persona no está libre a esa hora.', true);
+    }
     if (!_fits(slot)) {
       return (
         'Con ${widget.durationMinutes}′ también necesitas libre la media hora '
@@ -188,6 +191,8 @@ class _MeetingTimeSheetState extends State<_MeetingTimeSheet> {
       color = scheme.primary;
     } else if (widget.states[slot] == SlotState.tentative) {
       color = context.ovum.warning;
+    } else if (widget.states[slot] == SlotState.otherBusy) {
+      color = scheme.onSurfaceVariant.withValues(alpha: 0.5);
     } else {
       color = scheme.onSurface;
     }

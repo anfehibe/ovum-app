@@ -121,6 +121,26 @@ class NetworkingService {
     return _data(res)['favorito'] == true;
   }
 
+  /// Rejilla de horas del servidor para una fecha.
+  ///
+  /// Con [userId] el servidor marca además los huecos en los que **el otro**
+  /// asistente ya está ocupado, que es lo único que el cliente no puede deducir.
+  Future<MeetingAvailability> availability(
+    String date, {
+    int periodMinutes = 30,
+    String? userId,
+  }) async {
+    final data = await _api.get(
+      '${await _base()}/availability',
+      query: {
+        'fecha': date,
+        'periodo': '$periodMinutes',
+        if (userId != null && userId.isNotEmpty) 'user': userId,
+      },
+    );
+    return availabilityFromJson(data);
+  }
+
   Future<List<NetworkingMeeting>> meetings() async {
     final data = await _api.get('${await _base()}/meetings');
     final raw = data is Map ? data['data'] : data;

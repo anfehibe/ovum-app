@@ -1,19 +1,24 @@
 # Estado app ↔ API — OVUM 2026
 
 **Actualizado:** 17 de septiembre de 2026
-**Backend:** `main` @ `75a20a3` · **App:** rama `main` con cambios sin commitear
+**Backend:** `main` @ `e1cecb8` · **App:** rama `main` con cambios sin commitear
 **Entorno:** producción (`https://trivvo.events/api/v1`), tenant `anavi`, congreso `94`
+
+> 📱 **App Store (24 sep 2026):** lo que necesita el backend para la revisión de Apple está en
+> [`API-APP-STORE.md`](API-APP-STORE.md). Lo que bloquea es `DELETE /api/v1/me` y las cuentas demo.
 
 Tres secciones que no hay que confundir: lo que falta **en el API**, lo que falta **en la app**, y
 lo que falta **cargar en producción**. Al final, el historial de lo ya resuelto.
 
 > **Verificación:** no hay PHP ni acceso a la base en la máquina donde se revisa esto. **[comprobado]**
 > = visto fallar contra producción o leído directamente del código. **[hipótesis]** = deducción que
-> alguien debe confirmar ejecutándola. Los números de línea son los de `75a20a3`.
+> alguien debe confirmar ejecutándola. Los números de línea son los de `e1cecb8`.
 >
-> ⚠️ **Mergeado ≠ desplegado.** El repo va por delante de producción. Desplegado y verificado contra
-> prod: hasta `2723473`. **`75a20a3` (disponibilidad + validación estricta al solicitar) está en
-> revisión, sin aprobar ni desplegar** — todo lo que dependa de ese commit está marcado abajo.
+> ⚠️ **Mergeado ≠ desplegado** — el aviso sigue vigente como método, aunque hoy no haya desfase.
+> **Comprobado el 2026-09-24 con sondas sin token** (401 = la ruta existe; 404/405 = no desplegada;
+> control público `GET /sponsors` → 200): `availability`, `PUT /me` y `DELETE /me` responden **401**,
+> o sea que `75a20a3` y los commits de App Store **sí están en producción**. Antes de dar por vivo un
+> endpoint nuevo, repite la sonda; leer `routes/api.php` no prueba nada.
 
 ---
 
@@ -30,16 +35,19 @@ se entera. Conviene fijarla explícita.
 
 ### A2. Correo y push son síncronos dentro del request
 
-**[comprobado]** `Mail::...->send()` y `pushAUsuario()` bloquean el `POST /messages/{user}`. Lo
-correcto sería que ambos fueran a cola (`ShouldQueue`). No es urgente con el volumen actual, pero en
-los días del congreso se va a notar.
+**[comprobado 2026-09-24 — SIGUE ABIERTO]** `Mail::...->send()` y `pushAUsuario()` bloquean el
+`POST /messages/{user}`. Lo correcto sería que ambos fueran a cola (`ShouldQueue`).
 
-### A3. `POST /logout` y los tokens huérfanos
+⚠️ **Cuidado al verificarlo:** `app/Mail/MensajeMail.php` **importa** `ShouldQueue` pero la clase es
+`class MensajeMail extends Mailable` **a secas** — no lo implementa. El `use` viene del fork inicial
+(`a42382e`), así que un `grep ShouldQueue` da falso positivo. Comprueba la declaración de la clase, no
+el import.
 
-**[comprobado]** La app llama a `DELETE /me/device-token` antes de limpiar el Bearer, así que el
-camino feliz queda limpio. Pero si la app se desinstala o el logout falla a medias, el token queda
-huérfano. `FcmSender` ya purga los que FCM reporta como muertos, lo que mitiga el problema pero no
-lo cierra.
+### A3. ~~`POST /logout` y los tokens huérfanos~~ — ✅ RESUELTO
+
+**[comprobado 2026-09-24]** `AuthController@logout` ahora borra los device tokens del usuario junto
+con el `api_token`. Sumado a la purga de tokens muertos que ya hacía `FcmSender`, el problema queda
+cerrado.
 
 ### A4. Etiquetas de nivel de patrocinador sin normalizar
 
@@ -47,7 +55,28 @@ lo cierra.
 absorbe (`SponsorTier` normaliza, ordena y conserva la etiqueta desconocida en vez de descartarla),
 pero limpiarlo en origen evita que cada consumidor tenga que adivinar.
 
-### A5. Falta `PUT /me` — el perfil general no se puede guardar
+### A5. ~~Falta `PUT /me`~~ — ✅ RESUELTO, con tres trampas que la app esquiva
+
+> **Entregado en `c89d2b7` y desplegado** (sonda sin token → 401, 2026-09-24). Respeta lo que se
+> pidió: excluye `sector`/`intereses`, usa `updateOrCreate` sobre `perfiles`, y **añadió `bio` y
+> `linkedin` a `userPayload()`** — que era la objeción del review, porque sin eso la app no podría
+> leer lo que acaba de escribir.
+>
+> ✅ **La app ya lo usa desde el 2026-09-24**: "Editar perfil" vuelve a estar visible en Perfil y
+> guarda contra el servidor. `profileUpdateBody()` (pura y testeada) implementa las tres
+> protecciones de abajo.
+>
+> ⚠️ **Tres trampas, confirmadas contra el esquema** (detalle en
+> [`API-APP-STORE.md` §7](API-APP-STORE.md)). **No bloquean a la app: se protege ella**, pero conviene
+> cerrarlas en origen porque cualquier otro cliente tropezará:
+> 1. `users.nombre`, `users.apellido`, `perfiles.empresa` y `perfiles.cargo` son **NOT NULL** y
+>    `ConvertEmptyStringsToNull` está activo (`Kernel.php:20`): mandar `""` llega como `null` y
+>    revienta en **500**. → La app omite esas claves del body si quedan vacías.
+> 2. `bio` se valida `max:2000` contra una columna **`varchar(400)`**. → La app recorta a 400.
+> 3. `Perfil::updateOrCreate` con un usuario sin fila en `perfiles` intentaría crearla sin `empresa`
+>    ni `cargo`, que son NOT NULL sin default.
+>
+> Lo que sigue es el diagnóstico original, que explica por qué se pidió.
 
 **[comprobado]** No existe ningún endpoint para escribir el perfil del usuario. En `/me` solo hay
 `GET /me`, `POST /logout`, `GET /me/registrations` y el par `POST`/`DELETE /me/device-token`. El
@@ -90,11 +119,16 @@ toast de éxito. **Decisión pendiente del lado de la app.**
 
 ### B1. `GET /networking/availability` no se consume — el hueco con más impacto
 
-> 🚧 **Bloqueado por despliegue.** El endpoint existe en `75a20a3`, **en revisión y sin desplegar**.
-> Hasta que salga a producción, conectarlo desde la app no se puede ni probar. Lo que sigue describe
-> el trabajo que quedará listo para hacer en cuanto se apruebe.
+> ✅ **CONECTADO el 2026-09-24.** `75a20a3` está desplegado (sonda sin token → 401) y la app ya lo
+> consume: `availabilityFromJson` + `NetworkingService.availability()` +
+> `meetingAvailabilityProvider`, y `new_meeting_screen` pinta la rejilla del servidor. Un hueco que
+> el otro tiene ocupado sale deshabilitado con su motivo (`SlotState.otherBusy`, nuevo). **La rejilla
+> local sigue de respaldo**: si el endpoint falla se cae a ella con un aviso de que las horas son
+> orientativas, en vez de dejar la pantalla inservible.
+>
+> El diagnóstico original se conserva porque explica qué se ganó.
 
-**[comprobado en el código, NO en producción]** El backend expone
+**[comprobado en código y desplegado]** El backend expone
 `GET /events/{id}/networking/availability?fecha&periodo&user`
 (`API/V1/NetworkingController.php:214`), que devuelve `{fecha, periodo, origen, espacio_abierto,
 slots}` calculados contra los `horarios` y `mesas` reales del congreso — y con `?user={id}` incluye
@@ -111,9 +145,9 @@ Dos consecuencias reales:
 2. La rejilla no refleja los horarios ni las sedes que configuró el organizador. Si las filas de
    `horarios` no cubren 08:00–18:00, la app ofrece horas que no existen.
 
-**Trabajo (cuando se despliegue):** mapper + método en `NetworkingService`, y sustituir
+**Trabajo:** mapper + método en `NetworkingService`, y sustituir
 `meetingSlots()`/`slotStates()` por la respuesta del servidor, dejando la rejilla local como respaldo
-si el endpoint falla o devuelve 404 — que es exactamente lo que hará mientras no esté desplegado.
+si el endpoint falla, para no dejar la pantalla inservible sin red.
 
 **Compatibilidad ya comprobada:** ese mismo commit endurece la validación de `requestMeeting`
 (rejilla de 30 min por regex, `hora_fin > hora_inicio`, fecha dentro del congreso, y solapamiento del
@@ -204,12 +238,10 @@ Todo esto estaba en la versión anterior de este documento y el backend lo cerr�
 
 | Dónde | Asunto | Impacto |
 |---|---|---|
-| **Backend** | Aprobar y desplegar `75a20a3` | Desbloquea B1; hoy el endpoint no responde en prod |
-| **App** | B1 · conectar `availability` *(bloqueado)* | Se pueden pedir horas ocupadas del otro; la rejilla es inventada |
+| ~~**App** · B1 · conectar `availability`~~ | ✅ Hecho el 2026-09-24 |
 | **Prod** | Crear encuestas y activar `features.qa` | Dos funciones completas hoy invisibles |
 | **Prod** | Confirmar `horarios`/`mesas` | Sin ellas, ninguna reunión recibe mesa |
 | **App** | B4 · fallback mudo al mock | Puede mostrar datos de demo como reales |
-| **API** | **A5 · `PUT /me`** | Sin él, el editor de perfil general miente al usuario |
 | **API** | A1 · fijar `google/auth` | Si se cae, el push muere en silencio |
 | **App** | B2, B3 · código muerto | Sin impacto en usuario; deuda |
 | **API** | A2, A3, A4 | Sin impacto visible hoy |

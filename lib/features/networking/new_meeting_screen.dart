@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
+import '../../core/config/app_config.dart';
 import '../../core/constants/ovum_event.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/date_ext.dart';
 import '../../core/utils/meeting_slots.dart';
+import '../../data/models/networking_meeting.dart';
 import '../../core/widgets/initials_avatar.dart';
 import '../../data/providers/content_providers.dart';
 import '../../data/providers/networking_provider.dart';
@@ -15,9 +17,11 @@ import '../widgets/meeting_slot_picker.dart';
 /// Solicitud de reunión a otro asistente.
 ///
 /// El API solo acepta `mensaje`, `fecha`, `hora_inicio` y `hora_fin` — **no hay
-/// asunto ni lugar**, así que el mensaje es el campo principal. Todos son
-/// opcionales del lado servidor, y tampoco valida las horas: la rejilla de
-/// [MeetingHours] y la ocupación de la agenda propia solo existen aquí.
+/// asunto ni lugar**. Todos son opcionales del lado servidor, y tampoco valida
+/// las horas: la rejilla de [MeetingHours] y la ocupación de la agenda propia
+/// solo existen aquí. La nota (`mensaje`) va oculta mientras
+/// `AppConfig.userContent` esté apagado: es texto libre que lee el otro
+/// asistente (App Store 1.2), y vacía no se envía.
 class NewMeetingScreen extends ConsumerStatefulWidget {
   const NewMeetingScreen({super.key, required this.attendeeId});
 
@@ -100,6 +104,29 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
     }
   }
 
+  /// Traduce la respuesta del servidor al par `(slots, states)` que ya consumen
+  /// el picker y `slotFits`, para no cambiar su API por esto.
+  ///
+  /// El mapa solo lleva lo que **no** está libre: `slotStates` se comporta igual
+  /// y los consumidores hacen `states[slot] ?? free`.
+  (List<MeetingSlot>, Map<MeetingSlot, SlotState>) _fromServer(
+    MeetingAvailability a,
+  ) {
+    final slots = <MeetingSlot>[];
+    final states = <MeetingSlot, SlotState>{};
+    for (final s in a.slots) {
+      final slot = slotFromLabel(s.start);
+      if (slot == null) continue;
+      slots.add(slot);
+      if (s.busyOther == true) {
+        states[slot] = SlotState.otherBusy;
+      } else if (s.selfState != SlotState.free) {
+        states[slot] = s.selfState;
+      }
+    }
+    return (slots, states);
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = context.scheme;
@@ -107,18 +134,35 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
         .watch(networkingAttendeeProvider(widget.attendeeId))
         .valueOrNull;
 
-    // Se pinta desde el overlay (respuestas recién dadas ya aplicadas) para que
-    // rechazar una reunión libere su hora sin esperar al refetch. Pero es un
-    // Provider síncrono que devuelve `[]` mientras carga, así que hay que mirar
-    // también el AsyncValue: si no, durante la carga todo parecería libre.
-    final async = ref.watch(networkingMeetingsProvider);
-    final meetings = ref.watch(overlaidMeetingsProvider);
+    // Rejilla del servidor: es la única que sabe de `horarios`, de mesas y de si
+    // el OTRO está ocupado. Ver `availabilityFromJson`.
+    final availability = ref.watch(
+      meetingAvailabilityProvider((
+        date: apiDate(_date),
+        userId: widget.attendeeId,
+        period: _durationMin,
+      )),
+    );
 
-    final checking = async.isLoading && !async.hasValue;
-    final checkFailed = async.hasError && !async.hasValue;
+    // Respaldo: si el endpoint falla (sin red, 404 en un backend viejo), se sigue
+    // pudiendo pedir la reunión con la rejilla local en vez de dejar la pantalla
+    // inservible. Pierde la ocupación del otro, y por eso se avisa.
+    final overlaid = ref.watch(overlaidMeetingsProvider);
+    final meetingsAsync = ref.watch(networkingMeetingsProvider);
+    final usingFallback = availability.hasError;
 
-    final states = slotStates(meetings, _date);
-    final slots = meetingSlots(durationMinutes: _durationMin);
+    final (slots, states) = switch (availability.valueOrNull) {
+      final a? when a.slots.isNotEmpty => _fromServer(a),
+      _ => (
+        meetingSlots(durationMinutes: _durationMin),
+        slotStates(overlaid, _date),
+      ),
+    };
+
+    // Mientras no haya veredicto no se puede afirmar que algo esté libre.
+    final checking = availability.isLoading && !availability.hasValue ||
+        (usingFallback && meetingsAsync.isLoading && !meetingsAsync.hasValue);
+    final checkFailed = usingFallback && meetingsAsync.hasError && !meetingsAsync.hasValue;
     final noneFree = !slots.any((s) => slotFits(s, _durationMin, states));
 
     return Scaffold(
@@ -157,18 +201,20 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
               ),
             ),
           const SizedBox(height: 20),
-          _label(context, '¿De qué te gustaría hablar?'),
-          TextField(
-            controller: _messageCtrl,
-            minLines: 3,
-            maxLines: 6,
-            maxLength: 1000,
-            textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(
-              hintText: 'Cuéntale brevemente el motivo de la reunión',
+          if (AppConfig.userContent) ...[
+            _label(context, '¿De qué te gustaría hablar?'),
+            TextField(
+              controller: _messageCtrl,
+              minLines: 3,
+              maxLines: 6,
+              maxLength: 1000,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(
+                hintText: 'Cuéntale brevemente el motivo de la reunión',
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
+            const SizedBox(height: 8),
+          ],
           _label(context, 'Día propuesto'),
           Wrap(
             spacing: 8,
@@ -230,7 +276,14 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
             ],
           ),
           const SizedBox(height: 10),
-          _status(context, checking: checking, failed: checkFailed, noneFree: noneFree, states: states),
+          _status(
+            context,
+            checking: checking,
+            failed: checkFailed,
+            noneFree: noneFree,
+            states: states,
+            fallback: usingFallback,
+          ),
           const SizedBox(height: 24),
           FilledButton.icon(
             onPressed: (_sending || _slot == null || checking) ? null : _submit,
@@ -257,11 +310,22 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
     required bool failed,
     required bool noneFree,
     required Map<MeetingSlot, SlotState> states,
+    required bool fallback,
   }) {
     final scheme = context.scheme;
     final style = Theme.of(context).textTheme.labelMedium;
     Widget line(String text, Color color) =>
         Text(text, style: style?.copyWith(color: color));
+
+    // Sin la rejilla del servidor no se sabe si el otro está libre: decirlo es
+    // mejor que ofrecer horas con falsa confianza.
+    if (fallback && !checking) {
+      return line(
+        'No se pudo consultar la agenda del congreso: se muestran horas '
+        'orientativas y puede que la otra persona no esté libre.',
+        context.ovum.warning,
+      );
+    }
 
     if (checking) {
       return Row(

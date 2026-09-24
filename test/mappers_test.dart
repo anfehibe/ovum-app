@@ -1117,4 +1117,81 @@ void main() {
       expect(messageThreadFromJson(const {}).counterpart.id, '');
     });
   });
+
+  group('availabilityFromJson', () {
+    Map<String, dynamic> slot(String i, String f, {
+      bool disponible = true,
+      String estado = 'libre',
+      Object? ocupadoUsuario,
+      Object? mesas,
+    }) => {
+      'hora_inicio': i, 'hora_fin': f, 'disponible': disponible,
+      'estado': estado, 'ocupado': estado == 'ocupado',
+      'ocupado_usuario': ocupadoUsuario, 'mesas_libres': mesas,
+    };
+
+    test('mapea el shape completo y recorta las horas a HH:mm', () {
+      final a = availabilityFromJson({
+        'data': {
+          'fecha': '2026-11-11', 'periodo': 30,
+          'origen': 'horarios', 'espacio_abierto': false,
+          'slots': [
+            slot('10:00:00', '10:30:00', mesas: 3),
+            slot('10:30', '11:00', disponible: false, estado: 'ocupado'),
+          ],
+        },
+      });
+      expect(a.periodMinutes, 30);
+      expect(a.fromSchedule, isTrue);
+      expect(a.openSpace, isFalse);
+      expect(a.slots.first.start, '10:00');
+      expect(a.slots.first.end, '10:30');
+      expect(a.slots.first.available, isTrue);
+      expect(a.slots.first.freeTables, 3);
+      expect(a.slots[1].selfState, SlotState.taken);
+      expect(a.slots[1].available, isFalse);
+    });
+
+    test('ocupado_usuario null NO es lo mismo que libre', () {
+      // Sin `user` el servidor manda null: no se puede afirmar que esté libre.
+      final sin = availabilityFromJson({'data': {'slots': [slot('09:00', '09:30')]}});
+      expect(sin.slots.single.busyOther, isNull);
+
+      final con = availabilityFromJson({
+        'data': {'slots': [slot('09:00', '09:30', ocupadoUsuario: true)]},
+      });
+      expect(con.slots.single.busyOther, isTrue);
+      expect(con.slots.single.blockedReason, isNull); // available sigue true
+    });
+
+    test('origen "abierta" significa que no hay rejilla cargada', () {
+      final a = availabilityFromJson({
+        'data': {'origen': 'abierta', 'espacio_abierto': true, 'slots': []},
+      });
+      expect(a.fromSchedule, isFalse);
+      expect(a.openSpace, isTrue);
+      expect(a.isEmpty, isTrue);
+    });
+
+    test('shapes rotos no lanzan', () {
+      expect(availabilityFromJson({'data': null}).slots, isEmpty);
+      expect(availabilityFromJson(const []).slots, isEmpty);
+      expect(availabilityFromJson({'data': {'slots': 'no-es-lista'}}).slots, isEmpty);
+      // Un slot sin hora de inicio no se puede ofrecer: se descarta.
+      expect(
+        availabilityFromJson({'data': {'slots': [{'hora_fin': '10:30'}]}}).slots,
+        isEmpty,
+      );
+      expect(availabilityFromJson({'data': {}}).periodMinutes, 30);
+    });
+
+    test('el motivo de bloqueo distingue quién está ocupado', () {
+      const mio = AvailabilitySlot(
+        start: '10:00', end: '10:30', selfState: SlotState.taken);
+      const otro = AvailabilitySlot(
+        start: '10:00', end: '10:30', busyOther: true);
+      expect(mio.blockedReason, contains('Ya tienes'));
+      expect(otro.blockedReason, contains('otra persona'));
+    });
+  });
 }
