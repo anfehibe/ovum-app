@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -226,6 +227,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               controller: _emailCtrl,
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.next,
+              // Un correo no lleva espacios: se descartan al escribir o pegar
+              // (también el que agrega iOS al elegir la sugerencia del teclado).
+              inputFormatters: [FilteringTextInputFormatter.deny(RegExp(r'\s'))],
               decoration: const InputDecoration(
                 labelText: 'Correo electrónico',
                 hintText: 'tu@correo.com',

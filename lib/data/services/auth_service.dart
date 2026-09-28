@@ -13,10 +13,15 @@ class AuthService {
 
   final ApiClient _api;
 
+  /// Correo y contraseña se envían sin espacios en los extremos: uno de más (al
+  /// pegar, o tecleado sin querer) daba 401 con la clave correcta. Los de en
+  /// medio se respetan. Por aquí pasan el formulario, el acceso rápido y la
+  /// reautenticación de Perfil. Coste asumido: el backend no recorta
+  /// `password`, así que una clave que de verdad termine en espacio no entra.
   Future<AuthResult> login(String email, String password) async {
     final data = await _api.post(
       '/login',
-      body: {'email': email, 'password': password},
+      body: {'email': email.trim(), 'password': password.trim()},
     );
     final map = (data as Map).cast<String, dynamic>();
     final token = map['token'] as String;
@@ -44,7 +49,8 @@ class AuthService {
   Future<void> logout() => _api.post('/logout');
 
   /// Elimina la cuenta. El backend pide la contraseña como confirmación y
-  /// responde 422 si no coincide. Ver `docs/API-APP-STORE.md` §1.
+  /// responde 422 si no coincide. Ver `docs/API-APP-STORE.md` §1. Se recorta
+  /// igual que en [login], o no coincidiría con la que sirvió para entrar.
   Future<void> deleteAccount(String password) =>
-      _api.delete('/me', body: {'password': password});
+      _api.delete('/me', body: {'password': password.trim()});
 }
