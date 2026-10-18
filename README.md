@@ -44,6 +44,52 @@ Cómo obtenerlas: [`docs/MAPS-API-KEY.md`](docs/MAPS-API-KEY.md).
 
 ## Compilar
 
+### Producción, las dos plataformas de una vez
+
+El comando que se usa para preparar una entrega a las tiendas, con el mapa encendido:
+
+```bash
+flutter build appbundle --release --dart-define=OVUM_EMBEDDED_MAP=true && \
+flutter build ios --release --dart-define=OVUM_EMBEDDED_MAP=true
+```
+
+Deja los artefactos en:
+
+```
+build/app/outputs/bundle/release/app-release.aab   → se sube a Google Play tal cual
+build/ios/iphoneos/Runner.app                      → NO es subible: ver abajo
+```
+
+**El paso de iOS no termina ahí.** `flutter build ios` deja un `.app`, no un paquete que App Store
+Connect acepte. Para subir:
+
+```bash
+open ios/Runner.xcworkspace
+# Product → Archive → Distribute App
+```
+
+Si prefieres un `.ipa` listo para subir sin pasar por la interfaz de Xcode, cambia ese segundo
+comando por `flutter build ipa --release --dart-define=OVUM_EMBEDDED_MAP=true`, que hace el
+archivado y la exportación de una vez y lo deja en `build/ios/ipa/`.
+
+Versión con comprobaciones previas, para no descubrir en la tienda algo que un test ya sabía:
+
+```bash
+flutter analyze && flutter test && \
+flutter build appbundle --release --dart-define=OVUM_EMBEDDED_MAP=true && \
+flutter build ios --release --dart-define=OVUM_EMBEDDED_MAP=true
+```
+
+Notas sobre este encadenado:
+
+- **`&&` es secuencial, no paralelo.** No se pueden lanzar los dos builds a la vez con `&` en el
+  mismo directorio: compiten por `.dart_tool/` y `build/` y el resultado es irreproducible. El
+  orden es Android primero porque tarda menos: si algo falla, se sabe antes.
+- **El build de iOS firma de verdad.** Necesita el certificado de distribución en el llavero y el
+  equipo configurado en Xcode. Si falla por firma, el `&&` corta — pero el `.aab` ya está hecho, así
+  que Android no se pierde.
+- Para comprobar solo que iOS compila, sin firmar: añade `--no-codesign`.
+
 ### Desarrollo
 
 ```bash
