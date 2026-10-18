@@ -1,17 +1,158 @@
-# ovum
+# OVUM 2026
 
-OVUM 2026 - XXIX Congreso Latinoamericano de Avicultura
+App del **XXIX Congreso Latinoamericano de Avicultura** (Ciudad de Guatemala, 11–13 nov 2026).
 
-## Getting Started
+| | |
+|---|---|
+| Flutter | **3.44.8** · Dart `^3.12.2` |
+| App id | `com.trivvo.ovum` (iOS y Android) |
+| Versión | ver `version:` en `pubspec.yaml` |
+| Backend | API TRIVVO v1 · `https://trivvo.events/api/v1` |
 
-This project is a starting point for a Flutter application.
+---
 
-A few resources to get you started if this is your first Flutter project:
+## Antes de compilar por primera vez
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+```bash
+flutter pub get
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Secretos (no están en el repo)
+
+Dos archivos **gitignored** que hay que crear a partir de su plantilla. Sin ellos la app compila
+y arranca igual; lo único que pasa es que el mapa embebido sale sin teselas.
+
+```bash
+cp ios/Flutter/Secrets.example.xcconfig ios/Flutter/Secrets.xcconfig
+cp android/local.properties.example android/local.properties   # si no existe ya
+```
+
+Luego rellena la clave de Google Maps en cada uno:
+
+| Archivo | Clave | Formato |
+|---|---|---|
+| `ios/Flutter/Secrets.xcconfig` | `GMS_API_KEY` | `GMS_API_KEY = AIza…` (los espacios valen) |
+| `android/local.properties` | `MAPS_API_KEY` | `MAPS_API_KEY=AIza…` (**sin espacios**: Gradle los conserva) |
+
+Cómo obtenerlas: [`docs/MAPS-API-KEY.md`](docs/MAPS-API-KEY.md).
+
+> ⚠️ **iOS usa CocoaPods desde que entró Google Maps.** A partir de ahora se abre
+> `ios/Runner.xcworkspace`, **nunca** `ios/Runner.xcodeproj`: abriendo el `.xcodeproj` se compila
+> sin los Pods y falla de formas confusas. Contexto en [`docs/SPIKE-IOS-MAPS.md`](docs/SPIKE-IOS-MAPS.md).
+
+---
+
+## Compilar
+
+### Desarrollo
+
+```bash
+flutter run
+```
+
+Con el mapa embebido encendido (necesita las claves de arriba):
+
+```bash
+flutter run --dart-define=OVUM_EMBEDDED_MAP=true
+```
+
+### Android
+
+```bash
+# APK de depuración
+flutter build apk --debug
+
+# APK firmado (pruebas de release en un dispositivo)
+flutter build apk --release
+
+# App Bundle para Google Play  ← lo que se sube a la tienda
+flutter build appbundle --release
+```
+
+Con el mapa embebido:
+
+```bash
+flutter build appbundle --release --dart-define=OVUM_EMBEDDED_MAP=true
+```
+
+La firma de release sale de `android/key.properties` (gitignored), que apunta al keystore de
+subida. Si falta, el build de release falla.
+
+### iOS
+
+```bash
+# Simulador
+flutter build ios --simulator --debug
+
+# Dispositivo, sin firmar (comprobación de que compila)
+flutter build ios --release --no-codesign
+
+# Para subir a App Store: archivar desde Xcode
+open ios/Runner.xcworkspace
+# Product → Archive → Distribute App
+```
+
+> `flutter build ios --simulator --release` **no existe**: el simulador no admite modo release.
+> Para probar AOT en iOS hay que ir a un dispositivo físico.
+
+---
+
+## Flags de compilación
+
+Todos son `--dart-define`. Definidos en [`lib/core/config/app_config.dart`](lib/core/config/app_config.dart),
+donde cada uno lleva su explicación.
+
+### Los que importan al publicar
+
+| Flag | Por defecto | Qué hace |
+|---|---|---|
+| `OVUM_EMBEDDED_MAP` | `false` | Mapa de Google dentro de la app. **Encenderlo exige la clave nativa**: sin ella, en iOS la app se cierra al abrir una pantalla con mapa |
+| `OVUM_USER_CONTENT` | `false` | Chat, notas de reunión y bio de asistentes. Apagado hasta que el API tenga reportar y bloquear (App Store 1.2) |
+| `OVUM_TRANSPORT` | `true` | Acceso a Transporte desde el inicio. Apagarlo lo oculta aunque el API responda |
+| `OVUM_PUSH` | `true` | Notificaciones push (FCM) |
+| `OVUM_CRASHLYTICS` | `true` | Reporte de cierres inesperados |
+| `OVUM_CRASH_TEST` | `false` | **Cierra la app a propósito.** Nunca en una build que se publique |
+
+### Entorno
+
+| Flag | Por defecto |
+|---|---|
+| `OVUM_API_BASE` | `https://trivvo.events/api/v1` |
+| `OVUM_TENANT` | `anavi` |
+| `OVUM_EVENT_CODE` | `OVUM 2026` |
+
+Hay además un flag `OVUM_API_*` por cada fuente de datos (agenda, ponentes, hoteles, transporte…),
+todos en `true`. Poner uno en `false` hace que esa sección lea de `assets/mock/` en vez del API:
+sirve para trabajar sin backend o para reproducir un fallo con datos fijos.
+
+---
+
+## Pruebas
+
+```bash
+flutter test            # suite completa
+flutter analyze         # análisis estático
+```
+
+---
+
+## Antes de publicar
+
+- [ ] `flutter test` y `flutter analyze` en verde
+- [ ] `OVUM_CRASH_TEST` **apagado**
+- [ ] Subir la versión en `pubspec.yaml` (`version: x.y.z+build`)
+- [ ] Si se publica con `OVUM_EMBEDDED_MAP=true`: tener registradas en la clave de Maps Android
+      las huellas **SHA-1 de la clave de firma de Play** (y de la clave rotada anterior). Sin
+      ellas el mapa sale gris **solo para quien descargue de la tienda** — en desarrollo se ve
+      bien, así que el fallo se descubre tarde. Ver [`docs/MAPS-API-KEY.md`](docs/MAPS-API-KEY.md) §4
+
+---
+
+## Documentación
+
+| | |
+|---|---|
+| [`docs/MAPS-API-KEY.md`](docs/MAPS-API-KEY.md) | Cómo obtener y restringir las claves de Google Maps |
+| [`docs/SPIKE-IOS-MAPS.md`](docs/SPIKE-IOS-MAPS.md) | Por qué iOS usa CocoaPods y qué pasa sin clave |
+| [`docs/API-PENDIENTES.md`](docs/API-PENDIENTES.md) | Estado del contrato con el backend |
+| [`docs/API-APP-STORE.md`](docs/API-APP-STORE.md) | Requisitos de las tiendas pendientes del API |
