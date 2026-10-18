@@ -102,6 +102,20 @@ abstract final class AppConfig {
   static const bool useBiometricLogin =
       bool.fromEnvironment('OVUM_BIOMETRIC', defaultValue: true);
 
+  // ── Diagnóstico ────────────────────────────────────────────────────────────
+
+  /// Crashlytics: cierres inesperados y errores no capturados, en el mismo
+  /// proyecto Firebase que el push. Solo **envía** fuera de debug (ver
+  /// `crash_reporting.dart`). Apagarlo deja de inicializar Firebase si además
+  /// el push está apagado.
+  static const bool useCrashlytics =
+      bool.fromEnvironment('OVUM_CRASHLYTICS', defaultValue: true);
+
+  /// Prueba de punta a punta de Crashlytics: la app se cierra a propósito al
+  /// abrir (una vez sí, una no). **Nunca en una build que se publique.**
+  static const bool crashTest =
+      bool.fromEnvironment('OVUM_CRASH_TEST', defaultValue: false);
+
   // ── Notificaciones ─────────────────────────────────────────────────────────
 
   /// Push (FCM). Apagarlo evita inicializar Firebase Messaging por completo.

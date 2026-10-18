@@ -163,6 +163,7 @@
 				97C146EC1CF9000F007C117D /* Resources */,
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
+				C7A5F1E92E9F4B0000A1B2C3 /* Upload Crashlytics dSYMs */,
 			);
 			buildRules = (
 			);
@@ -271,6 +272,26 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" build";
+		};
+		C7A5F1E92E9F4B0000A1B2C3 /* Upload Crashlytics dSYMs */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}",
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${PRODUCT_NAME}",
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Info.plist",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/GoogleService-Info.plist",
+				"$(TARGET_BUILD_DIR)/$(EXECUTABLE_PATH)",
+			);
+			name = "Upload Crashlytics dSYMs";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Sube los simbolos (dSYM) a Crashlytics para que los cierres de iOS se lean\n# con nombres de funcion. Solo hay dSYM en Release/Profile.\n[ \"${DEBUG_INFORMATION_FORMAT}\" = \"dwarf-with-dsym\" ] || exit 0\n# Con Swift Package Manager el SDK queda en DerivedData. BUILD_DIR no sirve:\n# Flutter lo apunta a build/ios del proyecto; BUILD_ROOT si lleva a DerivedData.\nDERIVED_DATA=\"$(echo \"${BUILD_ROOT}\" | sed -E 's|(.*)/Build/Products|\\1|')\"\nRUN=\"${DERIVED_DATA}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\"\nif [ ! -x \"${RUN}\" ]; then\n  echo \"warning: no se encontro ${RUN}; los dSYM no se subieron a Crashlytics.\"\n  exit 0\nfi\n\"${RUN}\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

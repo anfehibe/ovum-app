@@ -54,6 +54,9 @@ dependencies:
   timezone: ^0.11.1          # tz.TZDateTime para programar recordatorios
   flutter_timezone: ^5.1.0   # zona horaria del dispositivo en runtime
 
+  # Errores y cierres inesperados en Firebase (mismo proyecto que el push)
+  firebase_crashlytics: ^5.4.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

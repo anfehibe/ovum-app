@@ -11,6 +11,7 @@ import 'package:timezone/timezone.dart' as tz;
 
 import '../../firebase_options.dart';
 import '../config/app_config.dart';
+import '../utils/crash_reporting.dart';
 import 'notification_routes.dart';
 
 /// Handler de los mensajes que llegan con la app en segundo plano o cerrada.
@@ -134,9 +135,9 @@ class NotificationService {
     try {
       final info = await FlutterTimezone.getLocalTimezone();
       tz.setLocalLocation(tz.getLocation(info.identifier));
-    } catch (e) {
+    } catch (e, s) {
       // Identificador desconocido o plugin no disponible: UTC como respaldo.
-      debugPrint('Zona horaria local no resuelta ($e); se usa UTC.');
+      reportError(e, s, reason: 'Zona horaria local no resuelta; se usa UTC');
       tz.setLocalLocation(tz.getLocation('UTC'));
     }
   }

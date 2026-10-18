@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../storage/secure_storage.dart';
+import '../utils/crash_reporting.dart';
 
 /// Credenciales guardadas para el acceso rápido.
 typedef BiometricCredentials = ({String email, String password});
@@ -27,8 +27,8 @@ class BiometricCredentialsStore {
     try {
       await _storage.write(key: _kEmail, value: email);
       await _storage.write(key: _kPassword, value: password);
-    } catch (e) {
-      debugPrint('No se pudieron guardar las credenciales: $e');
+    } catch (e, s) {
+      reportError(e, s, reason: 'No se pudieron guardar las credenciales');
       rethrow;
     }
   }
@@ -42,8 +42,8 @@ class BiometricCredentialsStore {
       if (email == null || email.isEmpty) return null;
       if (password == null || password.isEmpty) return null;
       return (email: email, password: password);
-    } catch (e) {
-      debugPrint('No se pudieron leer las credenciales: $e');
+    } catch (e, s) {
+      reportError(e, s, reason: 'No se pudieron leer las credenciales');
       return null;
     }
   }
@@ -52,8 +52,8 @@ class BiometricCredentialsStore {
     try {
       await _storage.delete(key: _kEmail);
       await _storage.delete(key: _kPassword);
-    } catch (e) {
-      debugPrint('No se pudieron borrar las credenciales: $e');
+    } catch (e, s) {
+      reportError(e, s, reason: 'No se pudieron borrar las credenciales');
     }
   }
 }

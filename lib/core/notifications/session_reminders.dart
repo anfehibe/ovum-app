@@ -1,11 +1,11 @@
 import 'dart:io' show Platform;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 import '../../data/models/session.dart';
 import '../router/route_paths.dart';
+import '../utils/crash_reporting.dart';
 import '../utils/date_ext.dart';
 import 'notification_service.dart';
 
@@ -89,8 +89,8 @@ class SessionReminders {
             : AndroidScheduleMode.inexactAllowWhileIdle,
         payload: R.session(session.id),
       );
-    } catch (e) {
-      debugPrint('No se pudo programar el recordatorio de ${session.id}: $e');
+    } catch (e, s) {
+      reportError(e, s, reason: 'No se pudo programar el recordatorio de ${session.id}');
     }
   }
 

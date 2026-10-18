@@ -10,6 +10,7 @@ import 'app.dart';
 import 'core/config/app_config.dart';
 import 'core/network/auth_token_store.dart';
 import 'core/notifications/notification_service.dart';
+import 'core/utils/crash_reporting.dart';
 import 'data/providers/content_providers.dart';
 import 'data/providers/preferences.dart';
 import 'firebase_options.dart';
@@ -24,8 +25,13 @@ Future<void> main() async {
   // Firebase debe estar listo antes de cualquier uso de Messaging, incluido el
   // registro del handler de segundo plano. El resto de la configuración de
   // notificaciones vive en `notificationsInitProvider` (necesita Riverpod).
-  if (AppConfig.usePush) {
+  // Crashlytics también lo necesita, así que ya no depende solo del push.
+  if (AppConfig.usePush || AppConfig.useCrashlytics) {
     await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  }
+  // Lo antes posible: un error en el resto del arranque también debe llegar.
+  if (AppConfig.useCrashlytics) await setUpCrashReporting();
+  if (AppConfig.usePush) {
     FirebaseMessaging.onBackgroundMessage(ovumBackgroundHandler);
   }
 

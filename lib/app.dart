@@ -8,12 +8,20 @@ import 'core/config/app_config.dart';
 import 'core/notifications/notification_routes.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/utils/crash_reporting.dart';
 import 'data/providers/content_providers.dart';
 import 'data/providers/favorites_provider.dart';
 import 'data/providers/messages_provider.dart';
 import 'data/providers/networking_provider.dart';
 import 'data/providers/notifications_provider.dart';
 import 'data/providers/user_provider.dart';
+
+/// Mantiene el id del asistente en los reportes de Crashlytics. Su valor es
+/// siempre `null`, así que observarlo no reconstruye la app al cambiar de
+/// cuenta; solo vuelve a correr el efecto.
+final _crashUserProvider = Provider<void>((ref) {
+  setCrashUser(ref.watch(sessionUserIdProvider));
+});
 
 class OvumApp extends ConsumerWidget {
   const OvumApp({super.key});
@@ -22,6 +30,7 @@ class OvumApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(themeModeProvider);
+    ref.watch(_crashUserProvider);
 
     return NotificationsBootstrap(
       child: MaterialApp.router(
