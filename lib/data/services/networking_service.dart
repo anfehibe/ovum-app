@@ -214,7 +214,7 @@ class NetworkingService {
         'fecha': date,
         'hora_inicio': startTime,
         'hora_fin': endTime,
-        // `null` no viaja: con el campo oculto (App Store 1.2) la nota que ya
+        // `null` no viaja: con el campo oculto la nota que ya
         // tenía se conserva en vez de borrarse.
         'mensaje': ?message,
       },

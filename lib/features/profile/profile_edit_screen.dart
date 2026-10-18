@@ -97,9 +97,8 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
           _field('Móvil', _mobile, keyboard: TextInputType.phone),
           _field('Ciudad', _city),
           _field('LinkedIn', _linkedin, keyboard: TextInputType.url),
-          // La bio la leen otros asistentes: con el contenido de usuario apagado
-          // (App Store 1.2) nadie puede verla, así que editarla no tendría
-          // sentido. Ver `AppConfig.userContent`.
+          // La bio la leen otros asistentes: se edita solo cuando esas fichas
+          // la muestran. Ver `AppConfig.userContent`.
           if (AppConfig.userContent)
             _field('Biografía', _bio, maxLines: 4, maxLength: bioMaxLength),
           const SizedBox(height: 8),

@@ -22,9 +22,8 @@ import '../widgets/meeting_slot_picker.dart';
 /// El API solo acepta `mensaje`, `fecha`, `hora_inicio` y `hora_fin` — **no hay
 /// asunto ni lugar**. Todos son opcionales del lado servidor, y tampoco valida
 /// las horas: la rejilla de [MeetingHours] y la ocupación de la agenda propia
-/// solo existen aquí. La nota (`mensaje`) va oculta mientras
-/// `AppConfig.userContent` esté apagado: es texto libre que lee el otro
-/// asistente (App Store 1.2), y vacía no se envía.
+/// solo existen aquí. La nota (`mensaje`) depende de `AppConfig.userContent` y
+/// vacía no se envía.
 ///
 /// **Al editar** se precarga el horario actual y la reunión deja de ocupar su
 /// propio hueco. Si estaba confirmada y cambia la hora, el backend la devuelve a

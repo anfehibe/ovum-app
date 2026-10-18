@@ -246,7 +246,7 @@ class _MeetingCardState extends ConsumerState<MeetingCard> {
               ],
             ),
             // Nota y respuesta son texto libre del otro asistente (pueden llegar
-            // desde la web): se ocultan con el chat (App Store 1.2).
+            // desde la web): dependen de `AppConfig.userContent`.
             if (AppConfig.userContent && _m.message.isNotEmpty) ...[
               const SizedBox(height: 12),
               Text(_m.message, style: Theme.of(context).textTheme.bodyMedium),

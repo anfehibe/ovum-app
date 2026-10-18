@@ -42,6 +42,25 @@ lo que falta **cargar en producción**. Al final, el historial de lo ya resuelto
 verificados; A3, A4 y A5 ya estaban cerrados. **No reenviar nada salvo A1** y las dos observaciones
 menores de la revisión de A6 (ver A6).
 
+### A0. 🔴 Reportar y bloquear — lo pide App Store y no existe
+
+**[comprobado 2026-10-18 en `1e25e43`]** No hay ninguna ruta ni ninguna tabla de reportar o bloquear
+en el backend.
+
+**Por qué pasa a ser lo primero:** ese mismo día se reactivó el contenido de usuarios en la app
+(`OVUM_USER_CONTENT` → `true` por defecto), así que vuelven el chat 1 a 1, la nota y la respuesta de
+las reuniones, y la bio de los asistentes. **App Store (guideline 1.2) exige reportar y bloquear en
+cualquier app con contenido de usuarios**, y la próxima entrega a las tiendas reabre ese punto — con
+el congreso el 11 de noviembre y cuatro rondas de Apple consumidas.
+
+El alcance completo está en [`API-APP-STORE.md` §5](API-APP-STORE.md): reportar, bloquear
+bidireccional (que excluya en directorio, ficha, favoritos, reuniones y conversaciones, y responda
+403 al escribir **también en la web**), filtro de palabras, y moderación en menos de 24 h — más una
+decisión que no es técnica: **quién modera**, si ANAVI, TRIVVO o ambos.
+
+**Vuelta atrás si Apple lo exige:** compilar con `--dart-define=OVUM_USER_CONTENT=false`. El gating
+sigue en el código; no hace falta revertir nada.
+
 ### A1. `google/auth` no está declarada en `composer.json`
 
 **[re-comprobado 2026-10-16 @ `fd5d24a` — SIGUE ABIERTO]** `FcmSender` hace `use Google\Auth\Credentials\ServiceAccountCredentials` y funciona
@@ -454,6 +473,7 @@ Todo esto estaba en la versión anterior de este documento y el backend lo cerr�
 | **App** | A6 · confirmar push/correo de cancelación y editar una confirmada | Aceptar con mesa y cancelar ya se probaron punta a punta |
 | 🟠 **Prod** | Crear encuestas y activar `features.qa` | Dos funciones completas hoy invisibles |
 | **App** | B4 · fallback mudo al mock | Puede mostrar datos de demo como reales |
+| 🔴 **API** | A0 · reportar y bloquear | La app ya envía contenido de usuarios; lo exige App Store 1.2 |
 | **API** | A1 · fijar `google/auth` | Si se cae, el push muere en silencio |
 | **App** | B2, B3 · código muerto | Sin impacto en usuario; deuda |
 | **API** | Montar el worker de cola (`QUEUE_CONNECTION`) | A2 ya está en código; hasta entonces sale inline |

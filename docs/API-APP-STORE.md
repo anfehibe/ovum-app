@@ -280,9 +280,18 @@ tres cosas:
 
 ---
 
-## 5. Qué hará falta para reactivar el chat (siguiente versión, no bloquea)
+## 5. Moderación de contenido de usuarios — PENDIENTE Y AHORA SÍ URGENTE
 
-Queda escrito para planificarlo. Nada de esto se pide ahora.
+> 🔴 **Cambio de estado el 2026-10-18.** El chat, la nota y la respuesta de las reuniones y la bio de
+> los asistentes **se reactivaron** (`OVUM_USER_CONTENT` pasó a `true` por defecto). La app ya envía
+> y muestra contenido de usuarios **sin** ninguno de los mecanismos de abajo.
+>
+> **Lo que esto implica:** App Store (guideline 1.2) exige reportar y bloquear en cualquier app con
+> contenido de usuarios. La próxima entrega a las tiendas reabre ese punto, con el congreso el 11 de
+> noviembre y cuatro rondas de Apple ya consumidas. La vuelta atrás, si Apple lo exige, es compilar
+> con `--dart-define=OVUM_USER_CONTENT=false`: no hace falta tocar código.
+>
+> Lo que sigue deja de ser "para planificar" y pasa a ser el trabajo pendiente del backend.
 
 - **Términos con "cero tolerancia" explícita** al contenido ofensivo y a los usuarios abusivos,
   aceptados antes de entrar a Networking. Hoy §5 prohíbe el contenido ofensivo, pero no dice "cero
@@ -305,9 +314,14 @@ Queda escrito para planificarlo. Nada de esto se pide ahora.
   - El aviso puede ir a `congresos.emails` (el organizador) y a `soporte@trivvo.events`, como hace
     `Web/ComentarioController.php:34`.
   - Falta decidir quién modera: ANAVI, TRIVVO o ambos.
-- **Bug a corregir de paso:** `sendMessage` responde 422 *"El congreso ya finalizó."* **durante el
-  último día** del congreso. `fecha_hasta` vale 00:00 y se compara con `isPast()`, mientras que la
-  compuerta `networkingAbierto()` (`app/Congreso.php:97-106`) usa `endOfDay`.
+- ✅ **Corte por fin de congreso — corregido el 2026-10-18.** `sendMessage` comparaba
+  `fecha_hasta` (que vale 00:00) con `isPast()`, así que el chat habría devuelto 422 *"El congreso ya
+  finalizó."* **durante todo el 13 de noviembre**, el último día, mientras el resto del networking
+  seguía abierto. Ahora usa `$congreso->networkingAbierto()`, el mismo criterio que la compuerta
+  (`app/Congreso.php:101-108`, que sí aplica `endOfDay`). Editado en el árbol de trabajo de `trivvo`,
+  **sin commitear**.
+- ⚠️ **El mismo defecto sigue vivo en la web**, que no se tocó: `Web/MensajeController` (L147, L235,
+  L333) y `Web/ReunionController` (L154, L793) comparan igual. Mismo arreglo.
 
 ---
 

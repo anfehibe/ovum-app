@@ -153,7 +153,7 @@ donde cada uno lleva su explicación.
 | Flag | Por defecto | Qué hace |
 |---|---|---|
 | `OVUM_EMBEDDED_MAP` | `false` | Mapa de Google dentro de la app. **Encenderlo exige la clave nativa**: sin ella, en iOS la app se cierra al abrir una pantalla con mapa |
-| `OVUM_USER_CONTENT` | `false` | Chat, notas de reunión y bio de asistentes. Apagado hasta que el API tenga reportar y bloquear (App Store 1.2) |
+| `OVUM_USER_CONTENT` | `true` | Chat 1 a 1, nota y respuesta de las solicitudes de reunión, y bio de los asistentes. Apagarlo deja esas pantallas y sus rutas fuera del binario |
 | `OVUM_TRANSPORT` | `true` | Acceso a Transporte desde el inicio. Apagarlo lo oculta aunque el API responda |
 | `OVUM_PUSH` | `true` | Notificaciones push (FCM) |
 | `OVUM_CRASHLYTICS` | `true` | Reporte de cierres inesperados |

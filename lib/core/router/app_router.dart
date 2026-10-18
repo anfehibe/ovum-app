@@ -128,8 +128,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '${R.attendeeDetail}/:id',
         builder: (_, state) => AttendeeDetailScreen(attendeeId: state.pathParameters['id']!),
       ),
-      // El chat solo existe con el flag (App Store 1.2): sin él no hay ruta a la
-      // que llegar, ni desde un botón ni desde una push.
+      // Las rutas del chat solo se registran con el flag: sin ellas no hay
+      // destino al que llegar, ni desde un botón ni desde una push.
       if (AppConfig.userContent) ...[
         GoRoute(path: R.chats, builder: (_, _) => const ChatListScreen()),
         GoRoute(

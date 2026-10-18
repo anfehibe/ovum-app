@@ -112,15 +112,14 @@ abstract final class AppConfig {
 
   // ── Contenido de usuarios ──────────────────────────────────────────────────
 
-  /// Chat 1 a 1, nota de las solicitudes de reunión y bio ("Sobre") de los
-  /// asistentes: todo el texto libre que un usuario escribe y otro lee.
+  /// Texto libre que un asistente escribe y otro lee: el chat 1 a 1, la nota y
+  /// la respuesta de las solicitudes de reunión, y la bio ("Sobre") de las
+  /// fichas.
   ///
-  /// **Apagado hasta tener reportar y bloquear.** Con contenido de usuarios, App
-  /// Store (guideline 1.2) exige ambos mecanismos y el API todavía no los tiene
-  /// (ver `docs/API-APP-STORE.md` §5). Al ser `const`, el código del chat queda
-  /// fuera del binario de release.
+  /// Al ser `const`, el gating se resuelve en compilación: con el flag apagado
+  /// esas pantallas y sus rutas quedan fuera del binario.
   static const bool userContent =
-      bool.fromEnvironment('OVUM_USER_CONTENT', defaultValue: false);
+      bool.fromEnvironment('OVUM_USER_CONTENT', defaultValue: true);
 
   // ── Legal ──────────────────────────────────────────────────────────────────
 

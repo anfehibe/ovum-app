@@ -107,7 +107,7 @@ class NetworkingAttendeeScreen extends ConsumerWidget {
             ),
           ],
         ),
-        // La bio es texto libre del usuario: se oculta con el chat (App Store 1.2).
+        // La bio es texto libre del usuario (`AppConfig.userContent`).
         if (AppConfig.userContent && card.bio.isNotEmpty) ...[
           const SizedBox(height: 22),
           Text('Sobre', style: Theme.of(context).textTheme.titleMedium),

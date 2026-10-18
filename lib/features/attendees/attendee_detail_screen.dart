@@ -90,7 +90,8 @@ class AttendeeDetailScreen extends ConsumerWidget {
                   _metaRow(context, PhosphorIconsRegular.briefcase, attendee.sector),
                 if (location.isNotEmpty)
                   _metaRow(context, PhosphorIconsRegular.mapPin, location),
-                // Texto libre del usuario: se oculta con el chat (App Store 1.2).
+                // Texto libre del usuario: acompaña al resto del contenido de
+                // asistentes (`AppConfig.userContent`).
                 if (AppConfig.userContent && attendee.bio.isNotEmpty) ...[
                   const SizedBox(height: 18),
                   Text('Biografía', style: Theme.of(context).textTheme.titleMedium),

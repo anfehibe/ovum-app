@@ -30,8 +30,8 @@ String? resolveNotificationRoute(Map<String, dynamic> data) {
   if (tipo == null || id == null || id.isEmpty) return null;
 
   // Para un chat el `id` es el del **remitente**, no el del mensaje: el hilo se
-  // direcciona por interlocutor (`GET /messages/{userId}`). Con el chat oculto
-  // (`AppConfig.userContent`) la ruta no existe, así que la push solo abre la app.
+  // direcciona por interlocutor (`GET /messages/{userId}`). Sin
+  // `AppConfig.userContent` la ruta no está registrada y la push solo abre la app.
   if (_tiposChat.contains(tipo)) {
     return AppConfig.userContent ? R.chatWith(id) : null;
   }
