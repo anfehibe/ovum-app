@@ -1,3 +1,4 @@
+import '../../core/utils/date_ext.dart';
 import 'networking_card.dart';
 
 /// Estados de una reunión (`reuniones.estatus` del backend).
@@ -24,10 +25,11 @@ enum MeetingState {
   }
 }
 
-/// Resultado de responder una reunión (`POST .../meetings/{id}/respond`).
+/// Resultado de responder una reunión (`POST .../meetings/{id}/respond`) o de
+/// cancelarla (`POST .../meetings/{id}/cancel`).
 ///
 /// Al **aceptar**, el backend auto-asigna mesa y devuelve dónde quedó; al
-/// rechazar no manda `lugar` ni `mesa`.
+/// rechazar o cancelar no manda `lugar` ni `mesa`.
 typedef MeetingOutcome = ({
   String id,
   MeetingState state,
@@ -40,6 +42,34 @@ typedef MeetingOutcome = ({
 String? outcomePlaceLabel(MeetingOutcome o) {
   if (o.place == null || o.place!.isEmpty) return null;
   return o.table > 0 ? 'Mesa ${o.table} · ${o.place}' : o.place;
+}
+
+/// Quién canceló una reunión **que ya estaba confirmada**, y cuándo
+/// (`cancelacion` del listado). El backend solo lo registra en ese caso: una
+/// pendiente cancelada llega sin este dato, y la tarjeta dice solo "Cancelada".
+class MeetingCancellation {
+  final String byId;
+  final String byName;
+
+  /// Instante de la cancelación, ya en hora **local** (ver el mapper).
+  final DateTime? at;
+
+  const MeetingCancellation({required this.byId, this.byName = '', this.at});
+}
+
+/// "Cancelada por Ana Pérez el 10 nov a las 08:00".
+///
+/// [myId] convierte el nombre en "ti"; [now] existe para los tests.
+String cancellationLabel(MeetingCancellation c, {String? myId, DateTime? now}) {
+  final who = myId != null && c.byId == myId
+      ? 'ti'
+      : (c.byName.isEmpty ? 'la otra persona' : c.byName);
+  final at = c.at;
+  if (at == null) return 'Cancelada por $who';
+  final day = at.sameDay(now ?? DateTime.now())
+      ? 'hoy'
+      : 'el ${at.monthDayShort}';
+  return 'Cancelada por $who $day a las ${at.hm}';
 }
 
 /// Reunión de networking (`GET /networking/meetings`).
@@ -63,14 +93,16 @@ class NetworkingMeeting {
   final String? startTime;
   final String? endTime;
 
-  /// Sala asignada. **El listado de reuniones todavía NO la devuelve** (solo la
-  /// respuesta de aceptar), así que normalmente llega `null`; se lee igual para
-  /// que el día que el backend la agregue al listado funcione sin tocar código.
+  /// Sala asignada (`lugar`). La mandan tanto el listado (desde `2723473`) como
+  /// la respuesta de aceptar; `null` mientras no se haya asignado.
   final String? place;
 
   /// Mesa asignada. `0` significa "sin mesa numerada" (espacio abierto) o
   /// "pendiente de asignar" — se distingue por si hay [place].
   final int table;
+
+  /// Quién la canceló y cuándo. Solo viene si estaba confirmada al cancelarla.
+  final MeetingCancellation? cancellation;
 
   const NetworkingMeeting({
     required this.id,
@@ -85,6 +117,7 @@ class NetworkingMeeting {
     this.endTime,
     this.place,
     this.table = 0,
+    this.cancellation,
   });
 
   bool get hasSchedule => date != null || (startTime?.isNotEmpty ?? false);
@@ -96,6 +129,36 @@ class NetworkingMeeting {
     if (place == null || place!.isEmpty) return null;
     return table > 0 ? 'Mesa $table · $place' : place;
   }
+
+  /// Pendiente o confirmada: las únicas que todavía se pueden tocar.
+  bool get isActive =>
+      state == MeetingState.pending || state == MeetingState.confirmed;
+
+  /// El día de la reunión ya pasó. Es a nivel de **día** a propósito: la hora
+  /// exacta la valida el backend (422 "ya pasó"), y comparar horas aquí obligaría
+  /// a resolver la zona del congreso contra la del dispositivo.
+  bool isPastOn(DateTime today) {
+    final d = date;
+    if (d == null) return false;
+    return DateTime(
+      d.year,
+      d.month,
+      d.day,
+    ).isBefore(DateTime(today.year, today.month, today.day));
+  }
+
+  /// Solo quien la envió puede cambiarla, mientras siga viva.
+  bool canEditOn(DateTime today) => !isIncoming && isActive && !isPastOn(today);
+
+  /// Quien la envió puede retirarla pendiente o confirmada; quien la recibió,
+  /// solo una vez aceptada (la pendiente se **rechaza**, no se cancela).
+  bool canCancelOn(DateTime today) =>
+      isActive &&
+      !isPastOn(today) &&
+      (!isIncoming || state == MeetingState.confirmed);
+
+  bool get canEdit => canEditOn(DateTime.now());
+  bool get canCancel => canCancelOn(DateTime.now());
 
   NetworkingMeeting applyOutcome(MeetingOutcome outcome) => NetworkingMeeting(
     id: id,
@@ -110,6 +173,7 @@ class NetworkingMeeting {
     endTime: endTime,
     place: outcome.place ?? place,
     table: outcome.table,
+    cancellation: cancellation,
   );
 }
 

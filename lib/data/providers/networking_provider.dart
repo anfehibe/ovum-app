@@ -361,17 +361,25 @@ final networkingMeetingsProvider = FutureProvider<List<NetworkingMeeting>>(
   (ref) => ref.watch(networkingServiceProvider).meetings(),
 );
 
-/// Respuestas que el usuario acaba de dar, superpuestas al listado.
+/// Respuestas y cancelaciones que el usuario acaba de hacer, superpuestas al
+/// listado **solo hasta que llega el refetch**.
 ///
 /// Va en un mapa aparte y **no** derivado del future de reuniones: si `build()`
 /// dependiera de él, invalidar la lista tras responder borraría el overlay antes
 /// de que llegue el refetch, y la tarjeta parpadearía al estado anterior.
-/// (El listado **sí** trae ya `lugar`/`mesa` desde `2723473`; antes no, y ese era
-/// el motivo original de este mapa.)
+///
+/// Se vacía en cuanto llega una lista nueva del servidor. Antes vivía toda la
+/// sesión, y con la edición eso es un bug: si acepto y luego el otro cambia la
+/// hora, el servidor la devuelve a pendiente pero el overlay seguiría pintando
+/// "Confirmada". Como el listado ya trae `lugar`/`mesa` (desde `2723473`), el
+/// servidor siempre manda más fresco que este mapa.
 class MeetingResponsesNotifier extends Notifier<Map<String, MeetingOutcome>> {
   @override
   Map<String, MeetingOutcome> build() {
     ref.watch(sessionUserIdProvider); // las respuestas son de una cuenta
+    ref.listen(networkingMeetingsProvider, (_, next) {
+      if (!next.isLoading && next.hasValue && !next.hasError) state = const {};
+    });
     return const {};
   }
 
@@ -388,7 +396,14 @@ final meetingResponsesProvider =
 ///
 /// `autoDispose`: cambiar de día o de duración no debe dejar vivas las combinaciones
 /// anteriores. La clave es un record para que Riverpod compare por valor.
-typedef AvailabilityKey = ({String date, String userId, int period});
+///
+/// `exclude` es la reunión que se está editando: no debe ocupar su propio hueco.
+typedef AvailabilityKey = ({
+  String date,
+  String userId,
+  int period,
+  String? exclude,
+});
 
 final meetingAvailabilityProvider = FutureProvider.autoDispose
     .family<MeetingAvailability, AvailabilityKey>((ref, key) {
@@ -398,6 +413,7 @@ final meetingAvailabilityProvider = FutureProvider.autoDispose
             key.date,
             periodMinutes: key.period,
             userId: key.userId,
+            excludeMeetingId: key.exclude,
           );
     });
 
@@ -423,7 +439,11 @@ typedef MeetingCounts = ({
 });
 
 final meetingCountsProvider = Provider<MeetingCounts>((ref) {
-  final list = ref.watch(overlaidMeetingsProvider);
+  // Una cancelada se sigue viendo en la lista, pero ya no es una reunión.
+  final list = ref
+      .watch(overlaidMeetingsProvider)
+      .where((m) => m.state != MeetingState.deleted)
+      .toList();
   return (
     received: list.where((m) => m.isIncoming).length,
     sent: list.where((m) => !m.isIncoming).length,

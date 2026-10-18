@@ -10,11 +10,14 @@ import '../../core/utils/date_ext.dart';
 import '../../core/utils/meeting_slots.dart';
 import '../../data/models/networking_meeting.dart';
 import '../../core/widgets/initials_avatar.dart';
+import '../../core/widgets/states.dart';
 import '../../data/providers/content_providers.dart';
 import '../../data/providers/networking_provider.dart';
+import '../widgets/meeting_card.dart' show meetingChangeErrorText;
 import '../widgets/meeting_slot_picker.dart';
 
-/// Solicitud de reunión a otro asistente.
+/// Solicitud de reunión a otro asistente, o edición de una que ya envié
+/// ([editing]).
 ///
 /// El API solo acepta `mensaje`, `fecha`, `hora_inicio` y `hora_fin` — **no hay
 /// asunto ni lugar**. Todos son opcionales del lado servidor, y tampoco valida
@@ -22,13 +25,53 @@ import '../widgets/meeting_slot_picker.dart';
 /// solo existen aquí. La nota (`mensaje`) va oculta mientras
 /// `AppConfig.userContent` esté apagado: es texto libre que lee el otro
 /// asistente (App Store 1.2), y vacía no se envía.
+///
+/// **Al editar** se precarga el horario actual y la reunión deja de ocupar su
+/// propio hueco. Si estaba confirmada y cambia la hora, el backend la devuelve a
+/// pendiente y libera la mesa (ver `docs/API-PENDIENTES.md` §A6).
 class NewMeetingScreen extends ConsumerStatefulWidget {
-  const NewMeetingScreen({super.key, required this.attendeeId});
+  const NewMeetingScreen({super.key, required this.attendeeId, this.editing});
 
   final String attendeeId;
 
+  /// La reunión que se está editando, o `null` para una solicitud nueva.
+  final NetworkingMeeting? editing;
+
   @override
   ConsumerState<NewMeetingScreen> createState() => _NewMeetingScreenState();
+}
+
+/// Ruta de edición: busca la reunión en el listado y abre [NewMeetingScreen] en
+/// modo edición. Solo se llega desde su tarjeta, así que el listado ya está
+/// cargado; si no aparece es que dejó de existir (o la canceló el otro).
+class EditMeetingScreen extends ConsumerWidget {
+  const EditMeetingScreen({super.key, required this.meetingId});
+
+  final String meetingId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(networkingMeetingsProvider);
+    final meeting = ref
+        .watch(overlaidMeetingsProvider)
+        .where((m) => m.id == meetingId)
+        .firstOrNull;
+    if (meeting != null && meeting.canEdit) {
+      return NewMeetingScreen(
+        attendeeId: meeting.counterpart.id,
+        editing: meeting,
+      );
+    }
+    return Scaffold(
+      appBar: AppBar(title: const Text('Editar reunión')),
+      body: async.isLoading && !async.hasValue
+          ? const LoadingView()
+          : const EmptyState(
+              icon: PhosphorIconsRegular.calendarX,
+              message: 'Esta reunión ya no se puede editar.',
+            ),
+    );
+  }
 }
 
 class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
@@ -40,9 +83,70 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
   bool _sending = false;
 
   @override
+  void initState() {
+    super.initState();
+    final m = widget.editing;
+    if (m == null) return;
+    final day = m.date;
+    if (day != null) {
+      for (final d in OvumEvent.agendaDays) {
+        if (d.sameDay(day)) _date = d;
+      }
+    }
+    final start = m.startTime;
+    _slot = start == null ? null : slotFromLabel(start);
+    final span = minutesBetween(m.startTime, m.endTime);
+    if (span != null && MeetingHours.durations.contains(span)) {
+      _durationMin = span;
+    }
+    if (AppConfig.userContent) {
+      _messageCtrl.text = m.message;
+      // Solo para reevaluar "Guardar cambios" al escribir.
+      _messageCtrl.addListener(_onMessageChanged);
+    }
+  }
+
+  @override
   void dispose() {
+    _messageCtrl.removeListener(_onMessageChanged);
     _messageCtrl.dispose();
     super.dispose();
+  }
+
+  void _onMessageChanged() => setState(() {});
+
+  /// El horario elegido difiere del que tenía la reunión que se edita.
+  bool get _scheduleChanged {
+    final m = widget.editing;
+    final slot = _slot;
+    if (m == null || slot == null) return true;
+    final sameDay = m.date?.sameDay(_date) ?? false;
+    return !sameDay ||
+        slot.label != m.startTime ||
+        endLabel(slot, _durationMin) != m.endTime;
+  }
+
+  /// Hay algo que guardar. Una solicitud nueva siempre lo tiene.
+  bool get _hasChanges {
+    final m = widget.editing;
+    if (m == null) return true;
+    return _scheduleChanged ||
+        (AppConfig.userContent && _messageCtrl.text.trim() != m.message);
+  }
+
+  /// Minutos `[desde, hasta)` que ocupa la reunión que se edita en el día
+  /// elegido, o `null` si no aplica. Misma normalización que `slotStates`.
+  (int, int)? _editedSpan() {
+    final m = widget.editing;
+    final day = m?.date;
+    if (m == null || day == null || !day.sameDay(_date)) return null;
+    final start = minuteOfDayOf(m.startTime);
+    if (start == null) return null;
+    final span = minutesBetween(m.startTime, m.endTime) ?? 0;
+    return (
+      start - start % MeetingHours.stepMinutes,
+      start + (span > 0 ? span : MeetingHours.stepMinutes),
+    );
   }
 
   Future<void> _pickTime(
@@ -65,38 +169,67 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
     setState(() => _sending = true);
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
+    final service = ref.read(networkingServiceProvider);
+    final editing = widget.editing;
     try {
-      final message = await ref
-          .read(networkingServiceProvider)
-          .requestMeeting(
-            widget.attendeeId,
-            message: _messageCtrl.text.trim(),
-            date: apiDate(_date),
-            startTime: slot.label,
-            endTime: endLabel(slot, _durationMin),
-          );
-      // Refresca la ocupación: la reunión recién creada debe salir tomada.
+      final String message;
+      if (editing == null) {
+        message = await service.requestMeeting(
+          widget.attendeeId,
+          message: _messageCtrl.text.trim(),
+          date: apiDate(_date),
+          startTime: slot.label,
+          endTime: endLabel(slot, _durationMin),
+        );
+      } else {
+        final res = await service.updateMeeting(
+          editing.id,
+          date: apiDate(_date),
+          startTime: slot.label,
+          endTime: endLabel(slot, _durationMin),
+          // Con la nota oculta no se manda: el backend conserva la que había.
+          message: AppConfig.userContent ? _messageCtrl.text.trim() : null,
+        );
+        message = res.message;
+      }
+      // Refresca la ocupación: la reunión recién creada (o movida) debe salir
+      // tomada en su hora nueva.
       ref.invalidate(networkingMeetingsProvider);
       if (!mounted) return;
       messenger.showSnackBar(SnackBar(content: Text(message)));
       navigator.pop();
     } on ApiException catch (e) {
       if (!mounted) return;
-      // 422 cubre la auto-solicitud; el backend ya manda el texto en español.
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            e.isNotFound
-                ? 'Ese asistente ya no está disponible para reuniones.'
-                : e.message,
+      if (editing != null) {
+        // 422 ("ya no se puede editar", "ya pasó") o 404: la lista que trajo
+        // hasta aquí está desactualizada.
+        if (!e.isForbidden) ref.invalidate(networkingMeetingsProvider);
+        messenger.showSnackBar(
+          SnackBar(content: Text(meetingChangeErrorText(e))),
+        );
+      } else {
+        // 422 cubre la auto-solicitud; el backend ya manda el texto en español.
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              e.isNotFound
+                  ? 'Ese asistente ya no está disponible para reuniones.'
+                  : e.message,
+            ),
           ),
-        ),
-      );
+        );
+      }
       if (e.isForbidden) navigator.pop();
     } catch (_) {
       if (mounted) {
         messenger.showSnackBar(
-          const SnackBar(content: Text('No se pudo enviar la solicitud.')),
+          SnackBar(
+            content: Text(
+              editing == null
+                  ? 'No se pudo enviar la solicitud.'
+                  : 'No se pudieron guardar los cambios.',
+            ),
+          ),
         );
       }
     } finally {
@@ -109,18 +242,28 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
   ///
   /// El mapa solo lleva lo que **no** está libre: `slotStates` se comporta igual
   /// y los consumidores hacen `states[slot] ?? free`.
+  ///
+  /// Al editar, la reunión no puede ocupar su propio hueco. Un backend con
+  /// `exclude` ya no la cuenta; uno sin él sí, y aquí se compensa: se libera mi
+  /// agenda en ese tramo y, **solo si estaba confirmada**, también la del otro
+  /// (para él solo cuentan las confirmadas; si no, su "ocupado" es de verdad).
   (List<MeetingSlot>, Map<MeetingSlot, SlotState>) _fromServer(
     MeetingAvailability a,
   ) {
+    final edited = _editedSpan();
+    final editedWasConfirmed = widget.editing?.state == MeetingState.confirmed;
     final slots = <MeetingSlot>[];
     final states = <MeetingSlot, SlotState>{};
     for (final s in a.slots) {
       final slot = slotFromLabel(s.start);
       if (slot == null) continue;
       slots.add(slot);
-      if (s.busyOther == true) {
+      final from = slot.minuteOfDay;
+      final to = minuteOfDayOf(s.end) ?? from + _durationMin;
+      final own = edited != null && from < edited.$2 && to > edited.$1;
+      if (s.busyOther == true && !(own && editedWasConfirmed)) {
         states[slot] = SlotState.otherBusy;
-      } else if (s.selfState != SlotState.free) {
+      } else if (s.selfState != SlotState.free && !own) {
         states[slot] = s.selfState;
       }
     }
@@ -130,9 +273,12 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = context.scheme;
-    final card = ref
-        .watch(networkingAttendeeProvider(widget.attendeeId))
-        .valueOrNull;
+    final editing = widget.editing;
+    // Al editar ya se tiene la ficha, y su id puede venir vacío (invitación
+    // solo por correo): no hay que pedirla.
+    final card = editing != null
+        ? editing.counterpart
+        : ref.watch(networkingAttendeeProvider(widget.attendeeId)).valueOrNull;
 
     // Rejilla del servidor: es la única que sabe de `horarios`, de mesas y de si
     // el OTRO está ocupado. Ver `availabilityFromJson`.
@@ -141,6 +287,7 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
         date: apiDate(_date),
         userId: widget.attendeeId,
         period: _durationMin,
+        exclude: editing?.id,
       )),
     );
 
@@ -155,7 +302,7 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
       final a? when a.slots.isNotEmpty => _fromServer(a),
       _ => (
         meetingSlots(durationMinutes: _durationMin),
-        slotStates(overlaid, _date),
+        slotStates(overlaid, _date, excludeMeetingId: editing?.id),
       ),
     };
 
@@ -166,7 +313,9 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
     final noneFree = !slots.any((s) => slotFits(s, _durationMin, states));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Solicitar reunión')),
+      appBar: AppBar(
+        title: Text(editing == null ? 'Solicitar reunión' : 'Editar reunión'),
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
         children: [
@@ -286,15 +435,24 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
           ),
           const SizedBox(height: 24),
           FilledButton.icon(
-            onPressed: (_sending || _slot == null || checking) ? null : _submit,
+            onPressed: (_sending || _slot == null || checking || !_hasChanges)
+                ? null
+                : _submit,
             icon: _sending
                 ? const SizedBox(
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(PhosphorIconsRegular.handshake, size: 18),
-            label: const Text('Enviar solicitud'),
+                : Icon(
+                    editing == null
+                        ? PhosphorIconsRegular.handshake
+                        : PhosphorIconsRegular.check,
+                    size: 18,
+                  ),
+            label: Text(
+              editing == null ? 'Enviar solicitud' : 'Guardar cambios',
+            ),
             style: FilledButton.styleFrom(minimumSize: const Size(0, 48)),
           ),
         ],
@@ -371,14 +529,29 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
       return line('Elige una hora de inicio.', scheme.onSurfaceVariant);
     }
 
+    final editing = widget.editing;
+    final ends = 'Termina a las ${endLabel(slot, _durationMin)}';
+    final name = editing == null || editing.counterpart.name.isEmpty
+        ? 'La otra persona'
+        : editing.counterpart.name;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         line(
-          'Termina a las ${endLabel(slot, _durationMin)} · le llegará la '
-              'solicitud para aceptarla o rechazarla.',
+          editing == null
+              ? '$ends · le llegará la solicitud para aceptarla o rechazarla.'
+              : '$ends · le avisaremos del cambio.',
           scheme.onSurfaceVariant,
         ),
+        // Lo que cuesta mover una confirmada: el otro tiene que volver a decir
+        // que sí, y la mesa que tenía queda libre para cualquiera.
+        if (editing?.state == MeetingState.confirmed && _scheduleChanged) ...[
+          const SizedBox(height: 4),
+          line(
+            '$name tendrá que confirmarla de nuevo y se liberará la mesa.',
+            context.ovum.warning,
+          ),
+        ],
         if (states[slot] == SlotState.tentative) ...[
           const SizedBox(height: 4),
           line(

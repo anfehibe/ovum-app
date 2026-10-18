@@ -35,15 +35,23 @@ class MeetingsTab extends ConsumerWidget {
     List<NetworkingMeeting> meetings,
   ) {
     final counts = ref.watch(meetingCountsProvider);
+    // Lo accionable primero: una solicitud pendiente no debe quedar debajo de
+    // reuniones ya resueltas, y las canceladas, que ya no son nada, al final.
+    // `sort` es estable en Dart: dentro de cada grupo se respeta el orden del
+    // servidor (la más reciente primero).
+    int rank(NetworkingMeeting m) => switch (m.state) {
+      MeetingState.pending => 0,
+      MeetingState.deleted => 2,
+      _ => 1,
+    };
     final received = meetings.where((m) => m.isIncoming).toList()
-      // Lo accionable primero: una solicitud pendiente no debe quedar debajo de
-      // reuniones ya resueltas.
-      ..sort((a, b) {
-        final pa = a.state == MeetingState.pending ? 0 : 1;
-        final pb = b.state == MeetingState.pending ? 0 : 1;
-        return pa.compareTo(pb);
-      });
-    final sent = meetings.where((m) => !m.isIncoming).toList();
+      ..sort((a, b) => rank(a).compareTo(rank(b)));
+    final sent = meetings.where((m) => !m.isIncoming).toList()
+      ..sort(
+        (a, b) => (a.state == MeetingState.deleted ? 1 : 0).compareTo(
+          b.state == MeetingState.deleted ? 1 : 0,
+        ),
+      );
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),

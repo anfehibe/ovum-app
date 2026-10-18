@@ -3,6 +3,8 @@ import 'package:local_auth/local_auth.dart';
 import 'package:local_auth_android/local_auth_android.dart';
 import 'package:local_auth_darwin/local_auth_darwin.dart';
 
+import '../utils/crash_reporting.dart';
+
 /// Tipo de biometría disponible. Solo se usa para elegir el texto del botón.
 enum BiometricKind { faceId, touchId, fingerprint, none }
 
@@ -54,8 +56,8 @@ class BiometricService {
   Future<bool> isAvailable() async {
     try {
       return await _auth.isDeviceSupported();
-    } catch (e) {
-      debugPrint('No se pudo consultar el soporte biométrico: $e');
+    } catch (e, s) {
+      reportError(e, s, reason: 'No se pudo consultar el soporte biométrico');
       return false;
     }
   }
@@ -74,8 +76,8 @@ class BiometricService {
       }
       if (tipos.isNotEmpty) return BiometricKind.fingerprint;
       return BiometricKind.none;
-    } catch (e) {
-      debugPrint('No se pudo consultar la biometría enrolada: $e');
+    } catch (e, s) {
+      reportError(e, s, reason: 'No se pudo consultar la biometría enrolada');
       return BiometricKind.none;
     }
   }
@@ -112,8 +114,8 @@ class BiometricService {
             );
     } on LocalAuthException catch (e) {
       return _traducir(e);
-    } catch (e) {
-      debugPrint('Fallo inesperado en local_auth: $e');
+    } catch (e, s) {
+      reportError(e, s, reason: 'Fallo inesperado en local_auth');
       return const BiometricResult(
         BiometricOutcome.error,
         message: 'No se pudo usar el desbloqueo del dispositivo.',
@@ -169,14 +171,14 @@ class BiometricService {
       case LocalAuthExceptionCode.uiUnavailable:
         // En Android esto casi siempre significa que MainActivity no es un
         // FlutterFragmentActivity. Útil dejarlo en el log.
-        debugPrint('local_auth no pudo mostrar la UI: ${e.description}');
+        reportError(e, StackTrace.current, reason: 'local_auth no pudo mostrar la UI');
         return const BiometricResult(
           BiometricOutcome.error,
           message: 'No se pudo mostrar la verificación.',
         );
 
       default:
-        debugPrint('local_auth ${e.code.name}: ${e.description}');
+        reportError(e, StackTrace.current, reason: 'local_auth ${e.code.name}');
         return const BiometricResult(
           BiometricOutcome.error,
           message: 'No se pudo verificar tu identidad. Ingresa tu contraseña.',

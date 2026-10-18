@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../storage/secure_storage.dart';
+import '../utils/crash_reporting.dart';
 
 /// Guarda el token Bearer en el Keychain (iOS) / KeyStore (Android), con una
 /// copia en memoria para lectura síncrona.
@@ -37,8 +37,8 @@ class AuthTokenStore {
     String? token;
     try {
       token = await _storage.read(key: _key);
-    } catch (e) {
-      debugPrint('No se pudo leer el token del almacén seguro: $e');
+    } catch (e, s) {
+      reportError(e, s, reason: 'No se pudo leer el token del almacén seguro');
     }
 
     final legacy = _prefs.getString(_key);
@@ -50,10 +50,10 @@ class AuthTokenStore {
       try {
         await _storage.write(key: _key, value: legacy);
         await _prefs.remove(_key); // solo si la escritura funcionó
-      } catch (e) {
+      } catch (e, s) {
         // Se deja en SharedPreferences y se reintenta el próximo arranque:
         // borrarlo aquí desconectaría al usuario sin necesidad.
-        debugPrint('No se pudo migrar el token al almacén seguro: $e');
+        reportError(e, s, reason: 'No se pudo migrar el token al almacén seguro');
       }
     }
 
@@ -78,11 +78,11 @@ class AuthTokenStore {
     _cached = token; // primero la RAM: el interceptor ya puede usarlo
     try {
       await _storage.write(key: _key, value: token);
-    } catch (e) {
+    } catch (e, s) {
       // No se propaga: el backend ya emitió el token y la sesión funciona en
       // este arranque. Fallar aquí haría ver un login correcto como error y
       // además abortaría el registro del token FCM.
-      debugPrint('No se pudo persistir el token: $e');
+      reportError(e, s, reason: 'No se pudo persistir el token');
     }
   }
 
@@ -91,8 +91,8 @@ class AuthTokenStore {
     _cached = null;
     try {
       await _storage.delete(key: _key);
-    } catch (e) {
-      debugPrint('No se pudo borrar el token del almacén seguro: $e');
+    } catch (e, s) {
+      reportError(e, s, reason: 'No se pudo borrar el token del almacén seguro');
     }
     await _prefs.remove(_key); // defensivo: por si quedó de una versión previa
   }

@@ -64,6 +64,13 @@ abstract final class AppConfig {
   static const int messagePollSeconds =
       int.fromEnvironment('OVUM_MESSAGE_POLL', defaultValue: 15);
 
+  /// Editar y cancelar reuniones (`PUT .../meetings/{id}` y
+  /// `POST .../meetings/{id}/cancel`, `docs/API-PENDIENTES.md` §A6, en
+  /// producción desde el 2026-10-16). Queda como interruptor: con `=false` los
+  /// botones desaparecen sin tocar el resto de la tarjeta.
+  static const bool meetingEdits =
+      bool.fromEnvironment('OVUM_MEETING_EDITS', defaultValue: true);
+
   // ── Contenido de usuarios ──────────────────────────────────────────────────
 
   /// Chat 1 a 1, nota de las solicitudes de reunión y bio ("Sobre") de los
@@ -94,6 +101,20 @@ abstract final class AppConfig {
   /// Acceso rápido con huella / Face ID en la pantalla de login.
   static const bool useBiometricLogin =
       bool.fromEnvironment('OVUM_BIOMETRIC', defaultValue: true);
+
+  // ── Diagnóstico ────────────────────────────────────────────────────────────
+
+  /// Crashlytics: cierres inesperados y errores no capturados, en el mismo
+  /// proyecto Firebase que el push. Solo **envía** fuera de debug (ver
+  /// `crash_reporting.dart`). Apagarlo deja de inicializar Firebase si además
+  /// el push está apagado.
+  static const bool useCrashlytics =
+      bool.fromEnvironment('OVUM_CRASHLYTICS', defaultValue: true);
+
+  /// Prueba de punta a punta de Crashlytics: la app se cierra a propósito al
+  /// abrir (una vez sí, una no). **Nunca en una build que se publique.**
+  static const bool crashTest =
+      bool.fromEnvironment('OVUM_CRASH_TEST', defaultValue: false);
 
   // ── Notificaciones ─────────────────────────────────────────────────────────
 

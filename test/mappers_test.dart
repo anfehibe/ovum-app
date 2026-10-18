@@ -983,6 +983,43 @@ void main() {
           {'id': 5, 'estatus': 2, 'lugar': 'Salón A', 'mesa': 0});
       expect(abierto.placeLabel, 'Salón A');
     });
+
+    test('sin `cancelacion` (o null) → cancellation null', () {
+      expect(networkingMeetingFromJson({'id': 6, 'estatus': 0}).cancellation, isNull);
+      expect(
+        networkingMeetingFromJson({'id': 6, 'estatus': 0, 'cancelacion': null}).cancellation,
+        isNull,
+      );
+    });
+
+    test('`cancelacion` trae quién y cuándo, pasado a hora local', () {
+      final m = networkingMeetingFromJson({
+        'id': 7,
+        'estatus': 0,
+        'estado': 'Eliminada',
+        'cancelacion': {
+          'por': {'id': 45, 'nombre': 'Andres Higuera'},
+          'fecha': '2026-11-10T08:00:00-05:00',
+        },
+      });
+      final c = m.cancellation!;
+      expect(c.byId, '45');
+      expect(c.byName, 'Andres Higuera');
+      // Es un instante: 08:00 en Bogotá son las 13:00 UTC, se vea donde se vea.
+      expect(c.at!.toUtc(), DateTime.utc(2026, 11, 10, 13));
+      expect(c.at!.isUtc, isFalse);
+    });
+
+    test('`cancelacion` sin `por` ni fecha no lanza', () {
+      final c = networkingMeetingFromJson({
+        'id': 8,
+        'estatus': 0,
+        'cancelacion': {'fecha': 'basura'},
+      }).cancellation!;
+      expect(c.byId, '');
+      expect(c.byName, '');
+      expect(c.at, isNull);
+    });
   });
 
   group('meetingOutcomeFromJson', () {
