@@ -131,6 +131,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state) => NewMeetingScreen(attendeeId: state.pathParameters['id']!),
       ),
       GoRoute(
+        path: '${R.editMeeting}/:id',
+        builder: (_, state) => EditMeetingScreen(meetingId: state.pathParameters['id']!),
+      ),
+      GoRoute(
         path: '${R.liveQuestions}/:id',
         builder: (_, state) => LiveQuestionsScreen(sessionId: state.pathParameters['id']!),
       ),

@@ -64,6 +64,13 @@ abstract final class AppConfig {
   static const int messagePollSeconds =
       int.fromEnvironment('OVUM_MESSAGE_POLL', defaultValue: 15);
 
+  /// Editar y cancelar reuniones (`PUT .../meetings/{id}` y
+  /// `POST .../meetings/{id}/cancel`, `docs/API-PENDIENTES.md` §A6, en
+  /// producción desde el 2026-10-16). Queda como interruptor: con `=false` los
+  /// botones desaparecen sin tocar el resto de la tarjeta.
+  static const bool meetingEdits =
+      bool.fromEnvironment('OVUM_MEETING_EDITS', defaultValue: true);
+
   // ── Contenido de usuarios ──────────────────────────────────────────────────
 
   /// Chat 1 a 1, nota de las solicitudes de reunión y bio ("Sobre") de los

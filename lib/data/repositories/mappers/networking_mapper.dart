@@ -130,7 +130,8 @@ Map<String, dynamic> networkingProfileBody({
 // ── Reuniones ───────────────────────────────────────────────────────────────
 
 /// `{id, estatus, estado, soy, con{card}, mensaje, respuesta, fecha, hora_inicio,
-/// hora_fin}`. Un `estatus` no previsto cae a [MeetingState.unknown] sin lanzar.
+/// hora_fin, lugar, mesa, cancelacion}`. Un `estatus` no previsto cae a
+/// [MeetingState.unknown] sin lanzar.
 NetworkingMeeting networkingMeetingFromJson(Map<String, dynamic> j) {
   final con = j['con'];
   return NetworkingMeeting(
@@ -146,14 +147,31 @@ NetworkingMeeting networkingMeetingFromJson(Map<String, dynamic> j) {
     date: DateTime.tryParse(_text(j['fecha'])),
     startTime: _hm(j['hora_inicio']),
     endTime: _hm(j['hora_fin']),
-    // Hoy el listado no los manda; se leen para cuando el backend los agregue.
     place: _textOrNull(j['lugar']),
     table: _int(j['mesa']),
+    cancellation: _cancellationFromJson(j['cancelacion']),
   );
 }
 
-/// `{id, estatus, estado, lugar?, mesa?}` de `POST .../meetings/{id}/respond`.
-/// Al rechazar no vienen `lugar`/`mesa`.
+/// `cancelacion: {por:{id, nombre}, fecha}` o `null`. Solo llega cuando la
+/// reunión estaba confirmada al cancelarla.
+///
+/// La fecha es un **instante** (como la de un mensaje), así que se pasa a local;
+/// no es una hora del programa, que es lo que se muestra con `wallClock`.
+MeetingCancellation? _cancellationFromJson(dynamic raw) {
+  if (raw is! Map) return null;
+  final por = raw['por'];
+  final who = por is Map ? por : const {};
+  return MeetingCancellation(
+    byId: who['id'] == null ? '' : '${who['id']}',
+    byName: _text(who['nombre']),
+    at: DateTime.tryParse(_text(raw['fecha']))?.toLocal(),
+  );
+}
+
+/// `{id, estatus, estado, lugar?, mesa?}` de `POST .../meetings/{id}/respond` y
+/// de `POST .../meetings/{id}/cancel`. Al rechazar o cancelar no vienen
+/// `lugar`/`mesa`.
 MeetingOutcome meetingOutcomeFromJson(Map<String, dynamic> j) => (
   id: '${j['id']}',
   state: MeetingState.fromCode(j['estatus']),

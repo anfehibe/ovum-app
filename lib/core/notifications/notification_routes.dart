@@ -5,6 +5,10 @@ import '../router/route_paths.dart';
 /// que el resolver de rutas y `chatCounterpartId` no se desincronicen.
 const _tiposChat = {'chat', 'mensaje', 'message'};
 
+/// Igual que [_tiposChat], para las reuniones (solicitud, respuesta, cambio y
+/// cancelación usan el mismo `tipo`).
+const _tiposReunion = {'reunion', 'reunión', 'meeting'};
+
 /// Traduce el `data` de una notificación a una ruta de go_router.
 ///
 /// **Hoy devuelve `null` casi siempre**: el único emisor del backend
@@ -43,9 +47,17 @@ String? resolveNotificationRoute(Map<String, dynamic> data) {
     // No hay ruta por reunión: la pestaña Reuniones vive dentro de /networking
     // y su TabController no está expuesto. Aterriza en Networking; abrir la
     // pestaña correcta pediría un parámetro en la ruta.
-    'reunion' || 'reunión' || 'meeting' => R.networking,
+    _ when _tiposReunion.contains(tipo) => R.networking,
     _ => null,
   };
+}
+
+/// `true` si la notificación es de una reunión: alguien la pidió, la respondió,
+/// la cambió o la canceló. Sirve para refrescar el listado sin esperar a que el
+/// usuario lo arrastre.
+bool isMeetingNotification(Map<String, dynamic> data) {
+  final tipo = (data['tipo'] ?? data['type'])?.toString().toLowerCase();
+  return tipo != null && _tiposReunion.contains(tipo);
 }
 
 /// Id del interlocutor si la notificación anuncia un **mensaje nuevo**; `null`

@@ -18,6 +18,7 @@ abstract final class PhosphorIconsRegular {
   static const IconData calendarDots = Icons.calendar_month_outlined;
   static const IconData calendarPlus = Icons.event_available_outlined;
   static const IconData calendarStar = Icons.event_rounded;
+  static const IconData calendarX = Icons.event_busy_outlined;
   static const IconData caretLeft = Icons.arrow_back_ios_new_rounded;
   static const IconData caretRight = Icons.chevron_right_rounded;
   static const IconData chartBar = Icons.bar_chart_rounded;

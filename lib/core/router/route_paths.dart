@@ -35,6 +35,7 @@ abstract final class R {
 
   // Interactivos
   static const newMeeting = '/new-meeting'; // /new-meeting/:attendeeId
+  static const editMeeting = '/edit-meeting'; // /edit-meeting/:meetingId
   static const chats = '/chats';
   static const chat = '/chat'; // /chat/:attendeeId
   static const liveQuestions = '/live-questions'; // /live-questions/:sessionId
@@ -48,6 +49,7 @@ abstract final class R {
   static String networkingAttendee(String id) => '$networkingAttendeeDetail/$id';
   static String session(String id) => '$sessionDetail/$id';
   static String meetingWith(String attendeeId) => '$newMeeting/$attendeeId';
+  static String editMeetingFor(String meetingId) => '$editMeeting/$meetingId';
   static String chatWith(String attendeeId) => '$chat/$attendeeId';
   static String liveQuestionsFor(String sessionId) => '$liveQuestions/$sessionId';
   static String pollsFor(String sessionId) => '$polls/$sessionId';

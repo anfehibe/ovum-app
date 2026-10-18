@@ -11,6 +11,7 @@ import 'core/theme/app_theme.dart';
 import 'data/providers/content_providers.dart';
 import 'data/providers/favorites_provider.dart';
 import 'data/providers/messages_provider.dart';
+import 'data/providers/networking_provider.dart';
 import 'data/providers/notifications_provider.dart';
 import 'data/providers/user_provider.dart';
 
@@ -76,9 +77,16 @@ class _NotificationsBootstrapState
     // basta: `conversationsProvider` es autoDispose, así que si nadie la mira
     // esto no cuesta una petición — se recargará al abrir "Mis chats".
     // El hilo abierto no se toca aquí; lo refresca `ChatScreen` por su cuenta.
+    //
+    // Lo mismo con las reuniones: si el otro cambia o cancela una, la tarjeta
+    // debe enterarse aunque esté a la vista (el listado no es autoDispose, así
+    // que esto sí refetchea; es una sola petición por push).
     _pushSub = service.onDataMessage.listen((data) {
       if (AppConfig.userContent && chatCounterpartId(data) != null) {
         ref.invalidate(conversationsProvider);
+      }
+      if (isMeetingNotification(data)) {
+        ref.invalidate(networkingMeetingsProvider);
       }
     });
   }

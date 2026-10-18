@@ -125,10 +125,13 @@ class NetworkingService {
   ///
   /// Con [userId] el servidor marca además los huecos en los que **el otro**
   /// asistente ya está ocupado, que es lo único que el cliente no puede deducir.
+  /// Con [excludeMeetingId] (al editar) esa reunión no ocupa su propio hueco; un
+  /// backend sin §A6 ignora el parámetro y la pantalla lo compensa.
   Future<MeetingAvailability> availability(
     String date, {
     int periodMinutes = 30,
     String? userId,
+    String? excludeMeetingId,
   }) async {
     final data = await _api.get(
       '${await _base()}/availability',
@@ -136,6 +139,8 @@ class NetworkingService {
         'fecha': date,
         'periodo': '$periodMinutes',
         if (userId != null && userId.isNotEmpty) 'user': userId,
+        if (excludeMeetingId != null && excludeMeetingId.isNotEmpty)
+          'exclude': excludeMeetingId,
       },
     );
     return availabilityFromJson(data);
@@ -187,6 +192,49 @@ class NetworkingService {
     return (
       outcome: meetingOutcomeFromJson(_data(res)),
       message: _message(res, accept ? 'Reunión confirmada.' : 'Reunión rechazada.'),
+    );
+  }
+
+  /// Cambia el horario (y la nota) de una reunión que **yo** envié. Si estaba
+  /// confirmada y cambia la hora, el backend la devuelve a pendiente y libera la
+  /// mesa. Devuelve la reunión tal como quedó.
+  ///
+  /// 403 si no soy el remitente; 422 si ya no está viva, ya pasó o choca con mi
+  /// agenda. Ver `docs/API-PENDIENTES.md` §A6.
+  Future<({NetworkingMeeting meeting, String message})> updateMeeting(
+    String meetingId, {
+    required String date,
+    required String startTime,
+    required String endTime,
+    String? message,
+  }) async {
+    final res = await _api.put(
+      '${await _base()}/meetings/$meetingId',
+      body: {
+        'fecha': date,
+        'hora_inicio': startTime,
+        'hora_fin': endTime,
+        // `null` no viaja: con el campo oculto (App Store 1.2) la nota que ya
+        // tenía se conserva en vez de borrarse.
+        'mensaje': ?message,
+      },
+    );
+    return (
+      meeting: networkingMeetingFromJson(_data(res)),
+      message: _message(res, 'Reunión actualizada.'),
+    );
+  }
+
+  /// Cancela una reunión. La puede cancelar quien la envió (pendiente o
+  /// confirmada) y quien la recibió una vez aceptada. Si estaba confirmada, el
+  /// backend registra quién y cuándo, y avisa a la otra persona.
+  Future<({MeetingOutcome outcome, String message})> cancelMeeting(
+    String meetingId,
+  ) async {
+    final res = await _api.post('${await _base()}/meetings/$meetingId/cancel');
+    return (
+      outcome: meetingOutcomeFromJson(_data(res)),
+      message: _message(res, 'Reunión cancelada.'),
     );
   }
 

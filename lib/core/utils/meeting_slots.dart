@@ -58,7 +58,7 @@ List<MeetingSlot> meetingSlots({
 ///
 /// Solo mira la agenda propia: el API no expone la del destinatario (ver
 /// `docs/API-PENDIENTES.md`). [excludeMeetingId] libera la reunión que se está
-/// editando; hoy nadie lo usa, lo necesitará el día que haya reprogramación.
+/// editando (`NewMeetingScreen` en modo edición, cuando cae a la rejilla local).
 Map<MeetingSlot, SlotState> slotStates(
   List<NetworkingMeeting> meetings,
   DateTime day, {
