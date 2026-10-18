@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
+import '../../core/config/app_config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/date_ext.dart';
 import '../../core/utils/launchers.dart';
@@ -9,6 +10,7 @@ import '../../core/widgets/states.dart';
 import '../../data/models/bus_route.dart';
 import '../../data/providers/transport_providers.dart';
 import 'transport_shared.dart';
+import 'widgets/route_map.dart';
 import 'widgets/route_stop_timeline.dart';
 
 /// Detalle de una ruta: recorrido, horarios y accesos al mapa.
@@ -56,6 +58,13 @@ class BusRouteDetailScreen extends ConsumerWidget {
             const _NoServiceCard(),
           ],
           const SizedBox(height: 20),
+          // Mapa embebido. Se construye solo si AppConfig.useEmbeddedMap está
+          // encendido Y la ruta tiene paradas ubicables; si no, desaparece sin
+          // dejar hueco y quedan los botones de abajo, que dan tráfico y tiempo
+          // reales abriendo Google Maps.
+          RouteMap(route: route, color: color),
+          if (AppConfig.useEmbeddedMap && route.mappableStops.isNotEmpty)
+            const SizedBox(height: 14),
           _MapActions(route: route),
           const SizedBox(height: 24),
           _SectionTitle(
@@ -308,7 +317,11 @@ class _MapActions extends StatelessWidget {
             child: OutlinedButton.icon(
               onPressed: () => openRouteOnMaps(route),
               icon: const Icon(PhosphorIconsRegular.mapTrifold, size: 18),
-              label: const Text('Ver el recorrido en el mapa'),
+              label: Text(
+                AppConfig.useEmbeddedMap
+                    ? 'Abrir el recorrido en Google Maps'
+                    : 'Ver el recorrido en el mapa',
+              ),
             ),
           ),
         ],

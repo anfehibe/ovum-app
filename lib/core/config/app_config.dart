@@ -57,6 +57,33 @@ abstract final class AppConfig {
   static const bool useApiTransport =
       bool.fromEnvironment('OVUM_API_TRANSPORT', defaultValue: true);
 
+  /// Mapa **embebido** en la pantalla de ruta (`google_maps_flutter`).
+  ///
+  /// Apagado por defecto, y es deliberado: si el SDK nativo de Google Maps no
+  /// recibe su clave (`GMSServices.provideAPIKey`), **aborta la app** en cuanto
+  /// se monta el primer `GoogleMap` — verificado en el spike, no es teórico:
+  ///
+  /// ```
+  /// +[GMSServices checkServicePreconditions]  → NSException
+  /// -[FGMGoogleMapFactory createWithFrame:…]
+  /// ```
+  ///
+  /// Una guarda en `AppDelegate.swift` no basta: solo evita llamar a
+  /// `provideAPIKey` con una clave vacía, que es precisamente lo que provoca el
+  /// cierre. La protección que sí funciona es esta: con el flag apagado el
+  /// widget `GoogleMap` **nunca se construye**, así que el SDK no se inicializa
+  /// y no hay forma de que la app se caiga, esté como esté el proyecto nativo.
+  ///
+  /// Encenderlo exige las dos cosas a la vez:
+  ///   1. `ios/Flutter/Secrets.xcconfig` con `GMS_API_KEY` válida (y el
+  ///      equivalente en Android), con facturación activa en Google Cloud.
+  ///   2. `--dart-define=OVUM_EMBEDDED_MAP=true`.
+  ///
+  /// Con clave inválida no se cae, pero el mapa sale sin teselas (marco, logo y
+  /// marcador sobre fondo vacío). Ver `docs/SPIKE-IOS-MAPS.md`.
+  static const bool useEmbeddedMap =
+      bool.fromEnvironment('OVUM_EMBEDDED_MAP', defaultValue: false);
+
   /// Sección de Transporte en la app. Interruptor independiente del origen de
   /// datos: con `=false` desaparece el acceso del home aunque el API responda.
   /// Sirve para publicar la build antes de que el organizador cargue las rutas.

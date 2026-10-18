@@ -24,6 +24,11 @@ dependencies:
   flutter_animate: ^4.5.2
   flutter_svg: ^2.3.0
   cached_network_image: ^3.4.1
+  # Mapa embebido del transporte (spike: ver docs/SPIKE-IOS-MAPS.md).
+  # OJO iOS: google_maps_flutter_ios NO soporta Swift Package Manager (solo
+  # trae .podspec), así que añadir esto reintroduce CocoaPods en un proyecto
+  # que hoy es SPM puro. Es el motivo de que esto viva en una rama de spike.
+  google_maps_flutter: ^2.18.0
   url_launcher: ^6.3.2
   share_plus: ^13.3.0
   add_2_calendar: ^3.1.1
