@@ -51,6 +51,18 @@ abstract final class AppConfig {
   static const bool useApiQuestions =
       bool.fromEnvironment('OVUM_API_QUESTIONS', defaultValue: true);
 
+  /// Transporte: rutas de bus hotel ↔ sede
+  /// (`GET /events/{id}/transport/routes`, en producción desde el 2026-10-18).
+  /// Con `=false` la sección cae al mock y sigue siendo navegable sin backend.
+  static const bool useApiTransport =
+      bool.fromEnvironment('OVUM_API_TRANSPORT', defaultValue: true);
+
+  /// Sección de Transporte en la app. Interruptor independiente del origen de
+  /// datos: con `=false` desaparece el acceso del home aunque el API responda.
+  /// Sirve para publicar la build antes de que el organizador cargue las rutas.
+  static const bool showTransport =
+      bool.fromEnvironment('OVUM_TRANSPORT', defaultValue: true);
+
   /// Networking (`/events/{id}/networking/*`): directorio, perfil, favoritos y
   /// reuniones. Apagarlo cae al **mismo camino degradado que un 403** del backend
   /// (banner + roster de solo lectura), así que sirve para probar ese estado.

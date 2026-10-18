@@ -1,0 +1,75 @@
+[
+  {
+    "id": 1,
+    "nombre": "Ruta A · Zona Viva",
+    "codigo": "A",
+    "color": "#E8991C",
+    "sentido": "hotel_sede",
+    "descripcion": "Recoge en los hoteles de Zona 10 y deja en el Parque de la Industria.",
+    "aviso": "Última salida 22:30",
+    "frecuencia_min": 30,
+    "trazado": null,
+    "buses": [],
+    "paradas": [
+      {
+        "id": 1, "orden": 1, "tipo": "hotel",
+        "nombre": "Hotel Real InterContinental",
+        "direccion": "14 Calle 2-51, Zona 10, Ciudad de Guatemala",
+        "lat": 14.599421, "lng": -90.514233,
+        "hotel_id": null, "sede_id": null, "minutos": 0, "es_final": false
+      },
+      {
+        "id": 2, "orden": 2, "tipo": "hotel",
+        "nombre": "Hotel Westin Camino Real",
+        "direccion": "14 Calle 0-20, Zona 10, Ciudad de Guatemala",
+        "lat": 14.597, "lng": -90.5105,
+        "hotel_id": null, "sede_id": null, "minutos": 8, "es_final": false
+      },
+      {
+        "id": 3, "orden": 3, "tipo": "sede",
+        "nombre": "Parque de la Industria (COPEREX)",
+        "direccion": "Calzada Atanasio Tzul 22-00, Zona 12, Ciudad de Guatemala",
+        "lat": 14.61, "lng": -90.52,
+        "hotel_id": null, "sede_id": null, "minutos": 25, "es_final": true
+      }
+    ],
+    "horarios": [
+      { "id": 1, "fecha": null, "hora_salida": "07:00", "hora_llegada": "07:35", "nota": null, "parada_id": 1 },
+      { "id": 2, "fecha": null, "hora_salida": "08:00", "hora_llegada": "08:35", "nota": null, "parada_id": 1 },
+      { "id": 3, "fecha": null, "hora_salida": "09:00", "hora_llegada": "09:35", "nota": null, "parada_id": 1 },
+      { "id": 4, "fecha": "2026-11-12", "hora_salida": "22:30", "hora_llegada": null, "nota": "Cena de gala", "parada_id": 3 }
+    ]
+  },
+  {
+    "id": 2,
+    "nombre": "Ruta B · Zona 9",
+    "codigo": "B",
+    "color": "#2E7D6B",
+    "sentido": "hotel_sede",
+    "descripcion": "Hoteles de la Zona 9 hacia el recinto.",
+    "aviso": "",
+    "frecuencia_min": null,
+    "trazado": null,
+    "buses": [],
+    "paradas": [
+      {
+        "id": 4, "orden": 1, "tipo": "hotel",
+        "nombre": "Hotel Barceló Guatemala City",
+        "direccion": "7a Avenida 15-45, Zona 9, Ciudad de Guatemala",
+        "lat": 14.6044, "lng": -90.5219,
+        "hotel_id": null, "sede_id": null, "minutos": 0, "es_final": false
+      },
+      {
+        "id": 5, "orden": 2, "tipo": "sede",
+        "nombre": "Parque de la Industria (COPEREX)",
+        "direccion": "Calzada Atanasio Tzul 22-00, Zona 12, Ciudad de Guatemala",
+        "lat": 14.61, "lng": -90.52,
+        "hotel_id": null, "sede_id": null, "minutos": 18, "es_final": true
+      }
+    ],
+    "horarios": [
+      { "id": 5, "fecha": null, "hora_salida": "07:15", "hora_llegada": "07:33", "nota": null, "parada_id": 4 },
+      { "id": 6, "fecha": null, "hora_salida": "08:15", "hora_llegada": "08:33", "nota": null, "parada_id": 4 }
+    ]
+  }
+]

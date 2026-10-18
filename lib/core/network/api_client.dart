@@ -9,14 +9,26 @@ import 'auth_token_store.dart';
 /// `X-Tenant` y `Authorization: Bearer` cuando hay token) y normaliza los
 /// errores del backend a [ApiException].
 class ApiClient {
-  ApiClient(this._tokens, {Dio? dio, String? baseUrl, String? tenantSlug})
-    : _dio = dio ?? Dio() {
+  ApiClient(
+    this._tokens, {
+    Dio? dio,
+    String? baseUrl,
+    String? tenantSlug,
+    String? deviceId,
+  }) : _dio = dio ?? Dio() {
     _dio.options
       ..baseUrl = baseUrl ?? AppConfig.baseUrl
       ..connectTimeout = const Duration(seconds: 15)
       ..receiveTimeout = const Duration(seconds: 20)
       ..headers['Accept'] = 'application/json'
       ..headers['X-Tenant'] = tenantSlug ?? AppConfig.tenantSlug;
+    // Identificador de instalación. Los endpoints de transporte limitan por
+    // dispositivo en vez de por IP, porque en el WiFi del recinto todos los
+    // asistentes comparten la misma IP pública (ver `device_id.dart`). El resto
+    // de endpoints lo ignoran.
+    if (deviceId != null && deviceId.isNotEmpty) {
+      _dio.options.headers['X-Device-Id'] = deviceId;
+    }
 
     _dio.interceptors.add(
       InterceptorsWrapper(

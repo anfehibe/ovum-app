@@ -62,6 +62,15 @@ void main() {
     test('una reunión aterriza en networking (no hay ruta por reunión)', () {
       expect(resolveNotificationRoute({'tipo': 'reunion', 'id': '5'}), R.networking);
     });
+
+    test('transporte abre el detalle de la ruta (el id es el de la RUTA)', () {
+      // El aviso "tu bus sale en 15 min" se publica en el topic de la ruta, así
+      // que el id que viaja en la push es el de la ruta, no el de la salida.
+      expect(resolveNotificationRoute({'tipo': 'transporte', 'id': '3'}), R.busRoute('3'));
+      expect(resolveNotificationRoute({'type': 'bus', 'id': 3}), R.busRoute('3'));
+      // El backend puede mandar la ruta ya construida para no acoplar despliegues.
+      expect(resolveNotificationRoute({'ruta': '/transport/route/3'}), R.busRoute('3'));
+    });
   });
 
   group('chatCounterpartId', () {

@@ -1,5 +1,6 @@
 import '../models/models.dart';
 import 'asset_loader.dart';
+import 'mappers/transport_mapper.dart';
 
 /// Fuente de datos del congreso. Hoy la implementa [MockOvumRepository]
 /// (JSON local); mañana podría implementarla un `ApiOvumRepository` sin
@@ -28,6 +29,8 @@ abstract interface class OvumRepository {
   /// Envía una pregunta a una sesión. Queda pendiente de moderación del organizador.
   Future<void> askQuestion(String sessionId, String question);
 
+  /// Rutas de bus del congreso, con paradas y horarios.
+  Future<List<BusRoute>> getBusRoutes();
 }
 
 /// Implementación que lee los datos simulados desde `assets/mock/*.json`.
@@ -68,6 +71,14 @@ class MockOvumRepository implements OvumRepository {
   Future<List<Venue>> getVenues() async {
     final rows = await loadJsonList('assets/mock/venues.json');
     return rows.map(Venue.fromJson).toList();
+  }
+
+  @override
+  Future<List<BusRoute>> getBusRoutes() async {
+    // El mock usa el MISMO shape que el API (claves en español), no el de los
+    // modelos: así el mapper se ejercita igual sin backend.
+    final rows = await loadJsonList('assets/mock/transport.json');
+    return busRoutesFromJson(rows);
   }
 
   @override

@@ -1,5 +1,6 @@
 export 'app_user.dart';
 export 'attendee.dart';
+export 'bus_route.dart';
 export 'event.dart';
 export 'exhibitor.dart';
 export 'hotel.dart';

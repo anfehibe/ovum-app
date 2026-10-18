@@ -23,6 +23,7 @@ abstract final class AppStrings {
   static const generalInfo = 'Información';
   static const hotels = 'Alojamiento';
   static const organizers = 'Organizadores';
+  static const transport = 'Transporte';
   static const favorites = 'Favoritos';
   static const meetings = 'Reuniones';
   static const chat = 'Chat';

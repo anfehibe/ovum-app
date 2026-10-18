@@ -44,6 +44,8 @@ String? resolveNotificationRoute(Map<String, dynamic> data) {
     'asistente' || 'attendee' => R.attendee(id),
     'encuesta' || 'poll' => R.pollsFor(id),
     'pregunta' || 'question' => R.liveQuestionsFor(id),
+    // Aviso de salida de bus: el `id` es el de la RUTA, no el de la salida.
+    'transporte' || 'transport' || 'ruta' || 'bus' => R.busRoute(id),
     // No hay ruta por reunión: la pestaña Reuniones vive dentro de /networking
     // y su TabController no está expuesto. Aterriza en Networking; abrir la
     // pestaña correcta pediría un parámetro en la ruta.

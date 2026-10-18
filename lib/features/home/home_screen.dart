@@ -326,6 +326,8 @@ class _QuickAccess extends ConsumerStatefulWidget {
     ),
     (PhosphorIconsRegular.mapTrifold, AppStrings.venue, R.venues),
     (PhosphorIconsRegular.bed, AppStrings.hotels, R.hotels),
+    if (AppConfig.showTransport)
+      (PhosphorIconsRegular.bus, AppStrings.transport, R.transport),
     (PhosphorIconsRegular.info, AppStrings.generalInfo, R.info),
     (PhosphorIconsRegular.buildings, AppStrings.organizers, R.organizers),
   ];

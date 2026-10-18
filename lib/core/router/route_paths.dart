@@ -27,6 +27,8 @@ abstract final class R {
   static const info = '/info';
   static const hotels = '/hotels';
   static const organizers = '/organizers';
+  static const transport = '/transport';
+  static const busRouteDetail = '/transport/route'; // /transport/route/:id
   static const favorites = '/favorites';
 
   // Networking (API por evento)
@@ -48,6 +50,7 @@ abstract final class R {
   static String attendee(String id) => '$attendeeDetail/$id';
   static String networkingAttendee(String id) => '$networkingAttendeeDetail/$id';
   static String session(String id) => '$sessionDetail/$id';
+  static String busRoute(String id) => '$busRouteDetail/$id';
   static String meetingWith(String attendeeId) => '$newMeeting/$attendeeId';
   static String editMeetingFor(String meetingId) => '$editMeeting/$meetingId';
   static String chatWith(String attendeeId) => '$chat/$attendeeId';

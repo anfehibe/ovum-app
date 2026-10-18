@@ -11,6 +11,7 @@ import 'mappers/session_mapper.dart';
 import 'mappers/speaker_mapper.dart';
 import 'mappers/splash_mapper.dart';
 import 'mappers/sponsor_mapper.dart';
+import 'mappers/transport_mapper.dart';
 import 'mappers/venue_mapper.dart';
 import 'ovum_repository.dart';
 
@@ -187,6 +188,15 @@ class ApiOvumRepository implements OvumRepository {
     // OJO: GET usa /program/{id} (singular); POST usa /programs/{id}/questions (plural).
     await _api.post('/events/$id/programs/$sessionId/questions',
         body: {'question': question});
+  }
+
+  @override
+  Future<List<BusRoute>> getBusRoutes() async {
+    if (!AppConfig.useApiTransport) return _mock.getBusRoutes();
+    final id = await _eventIdResolver();
+    if (id == null) return _mock.getBusRoutes();
+    final data = await _api.get('/events/$id/transport/routes');
+    return busRoutesFromJson(_listOf(data));
   }
 
   // Networking, reuniones y mensajería viven en `NetworkingService`: no tienen

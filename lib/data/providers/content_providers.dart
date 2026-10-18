@@ -4,6 +4,7 @@ import '../../core/config/app_config.dart';
 import '../../core/network/api_client.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/network/auth_token_store.dart';
+import '../../core/network/device_id.dart';
 import '../../core/utils/iterable_ext.dart';
 import '../models/models.dart';
 import '../repositories/api_ovum_repository.dart';
@@ -27,9 +28,13 @@ final authTokenStoreProvider = Provider<AuthTokenStore>(
   ),
 );
 
-/// Cliente HTTP con headers `X-Tenant` + `Bearer` y errores tipados.
+/// Cliente HTTP con headers `X-Tenant`, `X-Device-Id` + `Bearer` y errores
+/// tipados.
 final apiClientProvider = Provider<ApiClient>(
-  (ref) => ApiClient(ref.watch(authTokenStoreProvider)),
+  (ref) => ApiClient(
+    ref.watch(authTokenStoreProvider),
+    deviceId: deviceId(ref.watch(sharedPreferencesProvider)),
+  ),
 );
 
 /// Servicio de autenticación (`/login`, `/me`, `/logout`).
