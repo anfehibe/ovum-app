@@ -46,7 +46,8 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
   Widget build(BuildContext context) {
     final async = ref.watch(directoryProvider);
     final query = ref.watch(directoryQueryProvider);
-    final sectors = ref.watch(networkingCatalogProvider).valueOrNull?.sectors ?? const [];
+    final sectors =
+        ref.watch(networkingCatalogProvider).valueOrNull?.sectors ?? const [];
 
     return Column(
       children: [
@@ -115,6 +116,8 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
                 itemCount: state.items.length + 1,
                 separatorBuilder: (_, _) => const SizedBox(height: 10),
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
                 itemBuilder: (context, i) {
                   if (i == state.items.length) return _footer(state);
                   final card = state.items[i];
@@ -140,8 +143,9 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
         child: Center(
           child: Text(
             state.total == 1 ? '1 asistente' : '${state.total} asistentes',
-            style: Theme.of(context).textTheme.bodySmall
-                ?.copyWith(color: context.scheme.onSurfaceVariant),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: context.scheme.onSurfaceVariant,
+            ),
           ),
         ),
       );

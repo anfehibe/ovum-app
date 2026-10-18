@@ -36,12 +36,18 @@ class NetworkingCardTile extends ConsumerWidget {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
+            border: Border.all(
+              color: scheme.outlineVariant.withValues(alpha: 0.5),
+            ),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              InitialsAvatar(name: card.name, imageUrl: card.photoUrl, size: 46),
+              InitialsAvatar(
+                name: card.name,
+                imageUrl: card.photoUrl,
+                size: 46,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -51,15 +57,16 @@ class NetworkingCardTile extends ConsumerWidget {
                       card.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleSmall,
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
                     if (card.subtitle.isNotEmpty)
                       Text(
                         card.subtitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall
-                            ?.copyWith(color: scheme.onSurfaceVariant),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
                     if (sectors.isNotEmpty) ...[
                       const SizedBox(height: 8),
@@ -68,7 +75,10 @@ class NetworkingCardTile extends ConsumerWidget {
                         runSpacing: 6,
                         children: [
                           for (final s in sectors)
-                            CategoryChip(label: s, color: scheme.onSurfaceVariant),
+                            CategoryChip(
+                              label: s,
+                              color: scheme.onSurfaceVariant,
+                            ),
                         ],
                       ),
                     ],
