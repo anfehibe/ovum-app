@@ -6,6 +6,10 @@
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<!-- Clave del SDK de Google Maps. El valor llega de Flutter/Secrets.xcconfig
+	     (gitignored); aquí solo viaja la referencia, nunca la clave. -->
+	<key>GMSApiKey</key>
+	<string>$(GMS_API_KEY)</string>
 	<key>CFBundleDisplayName</key>
 	<string>OVUM 2026</string>
 	<key>CFBundleExecutable</key>

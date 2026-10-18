@@ -1,4 +1,5 @@
 import Flutter
+import GoogleMaps
 import UIKit
 import UserNotifications
 
@@ -19,6 +20,27 @@ import UserNotifications
     //
     // FirebaseApp.configure() NO va aquí: lo hace Firebase.initializeApp() desde Dart.
     UNUserNotificationCenter.current().delegate = self
+
+    // Google Maps. La clave viene de Flutter/Secrets.xcconfig vía Info.plist, no
+    // del código fuente.
+    //
+    // Medido en el spike (docs/SPIKE-IOS-MAPS.md), porque es contraintuitivo:
+    //
+    //   · provideAPIKey NUNCA se llama  → la app ABORTA al montar un GoogleMap
+    //     (+[GMSServices checkServicePreconditions] lanza NSException).
+    //   · provideAPIKey con clave INVÁLIDA → no se cae; el mapa monta su marco
+    //     (logo, marcador, botón) pero sin teselas.
+    //
+    // O sea: esta guarda NO protege de nada por sí sola — saltarse la llamada
+    // es justo lo que provoca el cierre. Lo que protege de verdad es que Dart
+    // no construya ningún GoogleMap si el mapa no está habilitado
+    // (AppConfig.useEmbeddedMap). Esta guarda solo evita pasarle al SDK una
+    // cadena vacía cuando el mapa está apagado y nadie va a montar uno.
+    if let key = Bundle.main.object(forInfoDictionaryKey: "GMSApiKey") as? String,
+       !key.isEmpty {
+      GMSServices.provideAPIKey(key)
+    }
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 

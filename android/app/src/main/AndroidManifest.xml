@@ -66,6 +66,14 @@
             </intent-filter>
         </receiver>
 
+        <!-- Google Maps. El valor llega de android/local.properties (gitignored)
+             vía manifestPlaceholders; aquí solo viaja la referencia.
+             Vacío = el mapa se dibuja sin teselas. A diferencia de iOS, el SDK de
+             Android no tumba la app por falta de clave (ver docs/SPIKE-IOS-MAPS.md). -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${MAPS_API_KEY}" />
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

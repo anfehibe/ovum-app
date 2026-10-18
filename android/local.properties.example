@@ -1,0 +1,17 @@
+# Plantilla de `android/local.properties` (que está en .gitignore).
+#
+# Las tres primeras las genera Flutter solo al compilar; no hace falta tocarlas.
+# La que sí hay que rellenar a mano es MAPS_API_KEY.
+#
+#   sdk.dir=/Users/<tu-usuario>/Library/Android/sdk
+#   flutter.sdk=/ruta/a/flutter
+#
+# MAPS_API_KEY: clave del SDK de Google Maps para Android.
+#   - Proyecto de Google Cloud con FACTURACIÓN ACTIVA.
+#   - API habilitada: "Maps SDK for Android".
+#   - Restricción: apps Android → paquete `com.trivvo.ovum` + las huellas SHA-1
+#     (debug de cada equipo, clave de subida y la de firma de Play Console).
+#   - Vacío = la app compila y arranca, pero el mapa sale sin teselas.
+#
+# Pasos completos en docs/MAPS-API-KEY.md
+MAPS_API_KEY=

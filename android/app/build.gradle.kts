@@ -16,6 +16,23 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
+// Clave del SDK de Google Maps. Vive en android/local.properties (gitignored),
+// igual que la de iOS vive en ios/Flutter/Secrets.xcconfig: nunca en el repo.
+// En CI se pasa por variable de entorno.
+//
+// Si falta, el placeholder queda vacío y el mapa no carga teselas — pero NO
+// rompe el build: un manifiesto con `${MAPS_API_KEY}` sin valor sí lo rompería,
+// y quien clona el repo no tiene por qué tener la clave para compilar.
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
+}
+val mapsApiKey: String =
+    localProperties.getProperty("MAPS_API_KEY")
+        ?: System.getenv("MAPS_API_KEY")
+        ?: ""
+
 android {
     namespace = "com.trivvo.ovum"
     compileSdk = flutter.compileSdkVersion
@@ -35,10 +52,16 @@ android {
         applicationId = "com.trivvo.ovum"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // google_maps_flutter_android exige minSdk 24. Se fija explícito en vez
+        // de confiar en flutter.minSdkVersion: si una actualización de Flutter lo
+        // bajara, el fallo sería un error de merge de manifiestos difícil de leer.
+        minSdk = maxOf(24, flutter.minSdkVersion)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Lo consume el <meta-data com.google.android.geo.API_KEY> del manifest.
+        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
     }
 
     signingConfigs {
