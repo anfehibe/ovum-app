@@ -2,71 +2,47 @@ name: ovum
 description: "OVUM 2026 - XXIX Congreso Latinoamericano de Avicultura"
 publish_to: 'none'
 
-version: 1.0.0+12
+version: 1.0.1+13
 
 environment:
   sdk: ^3.12.2
 
 dependencies:
+  add_2_calendar: ^3.1.1
+  cached_network_image: ^3.4.1
+  cupertino_icons: ^1.0.8
+  dio: ^5.7.0
+  firebase_core: ^4.14.0
+  firebase_crashlytics: ^5.4.0
+  firebase_messaging: ^16.5.0
   flutter:
     sdk: flutter
+  flutter_animate: ^4.5.2
+  flutter_local_notifications: ^22.2.0
   flutter_localizations:
     sdk: flutter
-
-  cupertino_icons: ^1.0.8
-
-  # Estado y navegación
   flutter_riverpod: ^2.6.1
-  go_router: ^17.3.0
-
-  # UI / utilidades
-  google_fonts: ^8.2.0
-  flutter_animate: ^4.5.2
-  flutter_svg: ^2.3.0
-  cached_network_image: ^3.4.1
-  # Mapa embebido del transporte (spike: ver docs/SPIKE-IOS-MAPS.md).
-  # OJO iOS: google_maps_flutter_ios NO soporta Swift Package Manager (solo
-  # trae .podspec), así que añadir esto reintroduce CocoaPods en un proyecto
-  # que hoy es SPM puro. Es el motivo de que esto viva en una rama de spike.
-  google_maps_flutter: ^2.18.0
-  url_launcher: ^6.3.2
-  share_plus: ^13.3.0
-  add_2_calendar: ^3.1.1
-
-  # Red / API
-  dio: ^5.7.0
-
-  # Persistencia local + formato
-  shared_preferences: ^2.5.5
-  intl: ^0.20.2
-
-  # Seguridad: token Bearer + credenciales del acceso rápido (Keychain / KeyStore).
-  # La 11.x exige compileSdk 37 y la app está en 36; nos quedamos en la línea 10.x.
   flutter_secure_storage: ">=10.3.0 <11.0.0"
-
-  # Biometría / bloqueo del dispositivo
+  flutter_svg: ^2.3.0
+  flutter_timezone: ^5.1.0
+  go_router: ^17.3.0
+  google_fonts: ^8.2.0
+  google_maps_flutter: ^2.18.0
+  intl: ^0.20.2
   local_auth: ^3.0.2
-  # AndroidAuthMessages / IOSAuthMessages (los textos en español) no los
-  # reexporta `package:local_auth`; se declaran para importarlos sin disparar
-  # el lint depend_on_referenced_packages.
   local_auth_android: ^2.0.0
   local_auth_darwin: ^2.0.0
-
-  # Notificaciones (push FCM + locales)
-  firebase_core: ^4.14.0
-  firebase_messaging: ^16.5.0
-  flutter_local_notifications: ^22.2.0
-  timezone: ^0.11.1          # tz.TZDateTime para programar recordatorios
-  flutter_timezone: ^5.1.0   # zona horaria del dispositivo en runtime
-
-  # Errores y cierres inesperados en Firebase (mismo proyecto que el push)
-  firebase_crashlytics: ^5.4.0
+  package_info_plus: ^10.2.2
+  share_plus: ^13.3.0
+  shared_preferences: ^2.5.5
+  timezone: ^0.11.1
+  url_launcher: ^6.3.2
 
 dev_dependencies:
+  flutter_launcher_icons: ^0.14.4
+  flutter_lints: ^6.0.0
   flutter_test:
     sdk: flutter
-  flutter_lints: ^6.0.0
-  flutter_launcher_icons: ^0.14.4
 
 # path_provider_foundation 2.5+ adoptó "native code assets" (objective_c.dylib)
 # que rompe el build de iOS en Flutter 3.44. Se fija a la última versión previa.
@@ -74,16 +50,16 @@ dependency_overrides:
   path_provider_foundation: 2.4.1
 
 flutter_launcher_icons:
-  image_path: "assets/logo/icon.png"        # iOS + iconos legacy Android
+  image_path: "assets/logo/icon.png" # iOS + iconos legacy Android
   android: true
   ios: true
   remove_alpha_ios: true
-  background_color_ios: "#021D70"           # rellena las esquinas transparentes en iOS con el azul del arte
+  background_color_ios: "#021D70" # rellena las esquinas transparentes en iOS con el azul del arte
   min_sdk_android: 21
   # --- Adaptive icons (Android 8+) ---
-  adaptive_icon_background: "#021D70"        # fondo sólido = azul del diseño (los bordes recortados se funden)
+  adaptive_icon_background: "#021D70" # fondo sólido = azul del diseño (los bordes recortados se funden)
   adaptive_icon_foreground: "assets/logo/icon.png"
-  adaptive_icon_foreground_inset: 10         # % de margen; el logo se ve grande y el arte completo queda dentro de la máscara. Ajustable 6-20
+  adaptive_icon_foreground_inset: 10 # % de margen; el logo se ve grande y el arte completo queda dentro de la máscara. Ajustable 6-20
 
 flutter:
   uses-material-design: true

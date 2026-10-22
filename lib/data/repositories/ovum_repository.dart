@@ -13,7 +13,7 @@ abstract interface class OvumRepository {
   Future<List<Attendee>> getAttendees();
   Future<List<Venue>> getVenues();
   Future<List<Hotel>> getHotels();
-  Future<List<Organizer>> getOrganizers();
+  Future<OrganizersContent> getOrganizers();
   Future<List<InfoItem>> getInfoItems();
   Future<List<Poll>> getPolls();
 
@@ -88,9 +88,9 @@ class MockOvumRepository implements OvumRepository {
   }
 
   @override
-  Future<List<Organizer>> getOrganizers() async {
+  Future<OrganizersContent> getOrganizers() async {
     final rows = await loadJsonList('assets/mock/organizers.json');
-    return rows.map(Organizer.fromJson).toList();
+    return OrganizersContent(organizers: rows.map(Organizer.fromJson).toList());
   }
 
   @override

@@ -24,3 +24,12 @@ class Organizer {
     );
   }
 }
+
+/// Contenido de la pantalla de organizadores: la lista más un texto
+/// introductorio opcional que el API envía junto a ella (`texto`).
+class OrganizersContent {
+  final List<Organizer> organizers;
+  final String? texto;
+
+  const OrganizersContent({required this.organizers, this.texto});
+}

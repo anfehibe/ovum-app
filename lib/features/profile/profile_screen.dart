@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
 import '../../core/auth/biometric_service.dart';
@@ -16,6 +17,13 @@ import '../../data/providers/favorites_provider.dart';
 import '../../data/providers/notifications_provider.dart';
 import '../../data/providers/user_provider.dart';
 import '../auth/biometric_enroll_sheet.dart';
+
+/// Versión de la app leída del paquete nativo (ej. "1.0.0+3"), para no tener
+/// que actualizar un literal a mano en cada release.
+final appVersionProvider = FutureProvider<String>((ref) async {
+  final info = await PackageInfo.fromPlatform();
+  return '${info.version}+${info.buildNumber}';
+});
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -171,7 +179,11 @@ class ProfileScreen extends ConsumerWidget {
           _infoRow(context, l10n.profileEventLabel, OvumEvent.edition),
           _infoRow(context, l10n.venue, OvumEvent.mainVenue),
           _infoRow(context, l10n.profileOrganizedBy, OvumEvent.organizers),
-          _infoRow(context, l10n.profileVersionLabel, '1.0.0'),
+          _infoRow(
+            context,
+            l10n.profileVersionLabel,
+            ref.watch(appVersionProvider).valueOrNull ?? '…',
+          ),
           const SizedBox(height: 12),
           _tile(
             context,

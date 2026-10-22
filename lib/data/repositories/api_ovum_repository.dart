@@ -97,12 +97,16 @@ class ApiOvumRepository implements OvumRepository {
   }
 
   @override
-  Future<List<Organizer>> getOrganizers() async {
+  Future<OrganizersContent> getOrganizers() async {
     if (!AppConfig.useApiContent) return _mock.getOrganizers();
     final id = await _eventIdResolver();
     if (id == null) return _mock.getOrganizers();
     final data = await _api.get('/events/$id/content/organizers');
-    return _indexed(_listOf(data), organizerFromJson);
+    final texto = data is Map ? data['texto'] as String? : null;
+    return OrganizersContent(
+      organizers: _indexed(_listOf(data), organizerFromJson),
+      texto: texto,
+    );
   }
 
   @override

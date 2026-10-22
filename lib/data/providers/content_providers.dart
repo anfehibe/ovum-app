@@ -134,7 +134,7 @@ final hotelsProvider = FutureProvider<List<Hotel>>(
   (ref) => ref.watch(ovumRepositoryProvider).getHotels(),
 );
 
-final organizersProvider = FutureProvider<List<Organizer>>(
+final organizersProvider = FutureProvider<OrganizersContent>(
   (ref) => ref.watch(ovumRepositoryProvider).getOrganizers(),
 );
 
