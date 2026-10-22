@@ -1,4 +1,4 @@
-import '../../../core/constants/app_strings.dart';
+import '../../../core/constants/agenda_groups.dart';
 import '../../../core/utils/url_ext.dart';
 import '../../models/session.dart';
 
@@ -63,7 +63,7 @@ String _agendaGroupOf(Map venue) {
   final hasCoords = venue['lat'] != null || venue['lng'] != null;
   final planos = venue['planos'];
   final hasPlans = planos is List && planos.isNotEmpty;
-  if (address.isNotEmpty || hasCoords || hasPlans) return AppStrings.agendaGeneral;
+  if (address.isNotEmpty || hasCoords || hasPlans) return kAgendaGeneralGroup;
   return (venue['nombre'] as String?)?.trim() ?? '';
 }
 

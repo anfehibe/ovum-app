@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/router/route_paths.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/initials_avatar.dart';
@@ -42,17 +42,17 @@ class FavoritesScreen extends ConsumerWidget {
         favExhibitors.isEmpty;
 
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.favorites)),
+      appBar: AppBar(title: Text(context.l10n.favorites)),
       body: isEmpty
-          ? const EmptyState(
-              message: 'Aún no tienes favoritos.\nToca el corazón para guardar lo que te interese.',
+          ? EmptyState(
+              message: context.l10n.favoritesEmpty,
               icon: PhosphorIconsRegular.heart,
             )
           : ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
               children: [
                 if (favSessions.isNotEmpty) ...[
-                  _header(context, 'Sesiones'),
+                  _header(context, context.l10n.favoritesSessions),
                   for (final s in favSessions)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 10),
@@ -60,7 +60,7 @@ class FavoritesScreen extends ConsumerWidget {
                     ),
                 ],
                 if (favSpeakers.isNotEmpty) ...[
-                  _header(context, AppStrings.speakers),
+                  _header(context, context.l10n.speakers),
                   for (final s in favSpeakers)
                     _FavTile(
                       name: s.name,
@@ -70,7 +70,7 @@ class FavoritesScreen extends ConsumerWidget {
                     ),
                 ],
                 if (favSponsors.isNotEmpty) ...[
-                  _header(context, AppStrings.sponsors),
+                  _header(context, context.l10n.sponsors),
                   for (final s in favSponsors)
                     _FavTile(
                       name: s.name,
@@ -80,7 +80,7 @@ class FavoritesScreen extends ConsumerWidget {
                     ),
                 ],
                 if (favExhibitors.isNotEmpty) ...[
-                  _header(context, AppStrings.exhibitors),
+                  _header(context, context.l10n.exhibitors),
                   for (final e in favExhibitors)
                     _FavTile(
                       name: e.name,
@@ -90,7 +90,7 @@ class FavoritesScreen extends ConsumerWidget {
                     ),
                 ],
                 if (favAttendees.isNotEmpty) ...[
-                  _header(context, AppStrings.attendees),
+                  _header(context, context.l10n.attendees),
                   for (final a in favAttendees)
                     _FavTile(
                       name: a.name,

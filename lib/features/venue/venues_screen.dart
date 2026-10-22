@@ -1,11 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/launchers.dart';
+import '../../core/widgets/fullscreen_image_viewer.dart';
 import '../../core/widgets/states.dart';
 import '../../data/models/models.dart';
 import '../../data/providers/content_providers.dart';
@@ -17,7 +18,7 @@ class VenuesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(venuesProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.venue)),
+      appBar: AppBar(title: Text(context.l10n.venue)),
       body: async.when(
         loading: () => const LoadingView(),
         error: (_, _) => const ErrorView(),
@@ -67,7 +68,7 @@ class _VenueCard extends StatelessWidget {
                   children: [
                     Text(venue.name, style: Theme.of(context).textTheme.titleMedium),
                     if (venue.isPrimary)
-                      Text('Sede principal',
+                      Text(context.l10n.venueScreenPrimary,
                           style: Theme.of(context)
                               .textTheme
                               .labelSmall
@@ -100,7 +101,7 @@ class _VenueCard extends StatelessWidget {
           ],
           if (venue.plans.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Text('Planos del recinto',
+            Text(context.l10n.venueScreenPlans,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
             const SizedBox(height: 10),
             for (final plan in venue.plans)
@@ -114,7 +115,7 @@ class _VenueCard extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: () => openUrl(_mapUrl(venue)),
               icon: const Icon(PhosphorIconsRegular.mapTrifold, size: 18),
-              label: const Text('Ver en mapa'),
+              label: Text(context.l10n.venueScreenViewMap),
             ),
           ],
         ],
@@ -190,28 +191,5 @@ class _PlanThumb extends StatelessWidget {
 
 /// Visor de plano a pantalla completa con pinch-zoom.
 void _openPlanViewer(BuildContext context, VenuePlan plan) {
-  showDialog<void>(
-    context: context,
-    barrierColor: Colors.black,
-    builder: (ctx) => Stack(
-      children: [
-        Positioned.fill(
-          child: InteractiveViewer(
-            minScale: 0.5,
-            maxScale: 5,
-            child: Center(child: CachedNetworkImage(imageUrl: plan.imageUrl, fit: BoxFit.contain)),
-          ),
-        ),
-        Positioned(
-          top: MediaQuery.paddingOf(ctx).top + 8,
-          right: 8,
-          child: IconButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            icon: const Icon(PhosphorIconsRegular.x, color: Colors.white),
-            style: IconButton.styleFrom(backgroundColor: Colors.black54),
-          ),
-        ),
-      ],
-    ),
-  );
+  showFullscreenImage(context, plan.imageUrl);
 }

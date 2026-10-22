@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
@@ -57,8 +58,7 @@ class _NetworkingProfileScreenState
         SnackBar(
           content: Text(
             silentlyDropped
-                ? 'Tu perfil del congreso está incompleto: completa tu registro '
-                      'para poder guardar sectores e intereses.'
+                ? context.l10n.networkingProfileIncomplete
                 : message,
           ),
         ),
@@ -71,7 +71,7 @@ class _NetworkingProfileScreenState
     } catch (_) {
       if (mounted) {
         messenger.showSnackBar(
-          const SnackBar(content: Text('No se pudo guardar el perfil.')),
+          SnackBar(content: Text(context.l10n.networkingProfileSaveError)),
         );
       }
     } finally {
@@ -95,7 +95,7 @@ class _NetworkingProfileScreenState
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mi perfil de networking')),
+      appBar: AppBar(title: Text(context.l10n.networkingMyProfile)),
       body: catalogAsync.when(
         loading: () => const LoadingView(),
         error: (e, _) => ErrorView(message: e is ApiException ? e.message : null),
@@ -103,39 +103,39 @@ class _NetworkingProfileScreenState
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
           children: [
             Text(
-              'Esto ayuda a que otros asistentes te encuentren en el directorio.',
+              context.l10n.networkingProfileHelp,
               style: Theme.of(context).textTheme.bodyMedium
                   ?.copyWith(color: context.scheme.onSurfaceVariant),
             ),
             const SizedBox(height: 20),
             _group(
-              title: 'Mi sector',
+              title: context.l10n.networkingMySector,
               options: catalog.sectors,
               selected: _sectors,
               max: catalog.maxSectors,
               onChanged: (v) => setState(() => _sectors = v),
             ),
             _group(
-              title: 'Mis intereses',
+              title: context.l10n.networkingMyInterests,
               options: catalog.interests,
               selected: _interests,
               max: catalog.maxInterests,
               onChanged: (v) => setState(() => _interests = v),
             ),
             _group(
-              title: 'Estoy buscando',
+              title: context.l10n.networkingImSeeking,
               options: catalog.seeking,
               selected: _seeking,
               onChanged: (v) => setState(() => _seeking = v),
             ),
             _group(
-              title: 'Ofrezco soluciones de',
+              title: context.l10n.networkingIOffer,
               options: catalog.solutions,
               selected: _solutions,
               onChanged: (v) => setState(() => _solutions = v),
             ),
             _group(
-              title: 'Regiones de interés',
+              title: context.l10n.networkingRegionsOfInterest,
               options: catalog.regions,
               selected: _regions,
               onChanged: (v) => setState(() => _regions = v),
@@ -150,7 +150,7 @@ class _NetworkingProfileScreenState
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Guardar'),
+                  : Text(context.l10n.save),
             ),
           ],
         ),

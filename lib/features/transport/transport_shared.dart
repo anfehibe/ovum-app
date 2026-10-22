@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/launchers.dart';
@@ -26,10 +27,10 @@ Color? _parseHex(String raw) {
 }
 
 /// Etiqueta del sentido del recorrido, para la tarjeta y la cabecera.
-String directionLabel(RouteDirection d) => switch (d) {
-  RouteDirection.hotelToVenue => 'Del hotel a la sede',
-  RouteDirection.venueToHotel => 'De la sede al hotel',
-  RouteDirection.circular => 'Circular',
+String directionLabel(AppLocalizations l10n, RouteDirection d) => switch (d) {
+  RouteDirection.hotelToVenue => l10n.transportDirHotelToVenue,
+  RouteDirection.venueToHotel => l10n.transportDirVenueToHotel,
+  RouteDirection.circular => l10n.transportDirCircular,
 };
 
 /// Abre Google Maps con **indicaciones** hasta [stop] desde donde esté el
@@ -85,15 +86,17 @@ int? minutesUntil(DateTime at, DateTime now) {
 }
 
 /// "en 12 min", "en 1 h 20 min", "mañana 07:00".
-String countdownLabel(DateTime at, DateTime now) {
+String countdownLabel(AppLocalizations l10n, DateTime at, DateTime now) {
   final minutes = minutesUntil(at, now);
   if (minutes == null) return '';
-  if (minutes < 1) return 'saliendo';
-  if (minutes < 60) return 'en $minutes min';
+  if (minutes < 1) return l10n.transportLeavingNow;
+  if (minutes < 60) return l10n.transportInMinutes(minutes);
   final hours = minutes ~/ 60;
   final rest = minutes % 60;
   if (hours < 12) {
-    return rest == 0 ? 'en $hours h' : 'en $hours h $rest min';
+    return rest == 0
+        ? l10n.transportInHours(hours)
+        : l10n.transportInHoursMinutes(hours, rest);
   }
   return '';
 }

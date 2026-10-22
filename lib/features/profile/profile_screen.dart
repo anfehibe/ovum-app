@@ -5,8 +5,8 @@ import 'package:ovum/core/ui/app_icons.dart';
 
 import '../../core/auth/biometric_service.dart';
 import '../../core/config/app_config.dart';
-import '../../core/constants/app_strings.dart';
 import '../../core/constants/ovum_event.dart';
+import '../../core/l10n/l10n.dart';
 import '../../core/router/route_paths.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/launchers.dart';
@@ -24,6 +24,11 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
     final themeMode = ref.watch(themeModeProvider);
+    final l10n = context.l10n;
+    // Idioma efectivo para marcar el selector: la elección guardada, o el que
+    // resolvió `MaterialApp` a partir del dispositivo cuando no hay elección.
+    final currentLang =
+        ref.watch(localeProvider)?.languageCode ?? Localizations.localeOf(context).languageCode;
     final favCount = ref.watch(favoritesProvider).length;
     final notif = ref.watch(notificationPrefsProvider);
     final bio = ref.watch(biometricPrefsProvider);
@@ -34,11 +39,11 @@ class ProfileScreen extends ConsumerWidget {
     final scheme = context.scheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.navProfile)),
+      appBar: AppBar(title: Text(l10n.navProfile)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
         children: [
-          _userCard(context, user?.name ?? 'Invitado', user?.position ?? '', user?.company ?? '',
+          _userCard(context, user?.name ?? l10n.profileGuest, user?.position ?? '', user?.company ?? '',
               user?.email ?? '', user?.photoUrl),
           // Vuelve a estar: `PUT /me` existe y está desplegado desde el
           // 2026-09-24, así que ahora guarda de verdad en el servidor.
@@ -48,7 +53,7 @@ class ProfileScreen extends ConsumerWidget {
             OutlinedButton.icon(
               onPressed: () => context.push(R.profileEdit),
               icon: const Icon(PhosphorIconsRegular.pencilSimple, size: 18),
-              label: const Text('Editar perfil'),
+              label: Text(l10n.profileEditProfile),
               style: OutlinedButton.styleFrom(minimumSize: const Size(0, 44)),
             ),
           ],
@@ -56,8 +61,8 @@ class ProfileScreen extends ConsumerWidget {
           _tile(
             context,
             icon: PhosphorIconsRegular.heart,
-            title: AppStrings.favorites,
-            subtitle: favCount == 0 ? 'Sin favoritos aún' : '$favCount guardados',
+            title: l10n.favorites,
+            subtitle: favCount == 0 ? l10n.profileNoFavoritesYet : l10n.profileSavedCount(favCount),
             onTap: () => context.push(R.favorites),
           ),
           if (!(user?.isGuest ?? true)) ...[
@@ -65,13 +70,13 @@ class ProfileScreen extends ConsumerWidget {
             _tile(
               context,
               icon: PhosphorIconsRegular.identificationCard,
-              title: 'Mi perfil de networking',
-              subtitle: 'Sectores e intereses para que te encuentren',
+              title: l10n.profileMyNetworkingProfile,
+              subtitle: l10n.profileNetworkingSubtitle,
               onTap: () => context.push(R.networkingProfile),
             ),
           ],
           const SizedBox(height: 24),
-          Text('Notificaciones', style: Theme.of(context).textTheme.titleMedium),
+          Text(l10n.profileNotifications, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 4),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
@@ -79,8 +84,8 @@ class ProfileScreen extends ConsumerWidget {
             onChanged: (v) =>
                 ref.read(notificationPrefsProvider.notifier).setPush(v),
             secondary: const Icon(PhosphorIconsRegular.bellRinging),
-            title: const Text('Avisos del congreso'),
-            subtitle: const Text('Cambios de agenda y anuncios del organizador'),
+            title: Text(l10n.profileCongressAlerts),
+            subtitle: Text(l10n.profileCongressAlertsSubtitle),
           ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
@@ -88,13 +93,13 @@ class ProfileScreen extends ConsumerWidget {
             onChanged: (v) =>
                 ref.read(notificationPrefsProvider.notifier).setReminders(v),
             secondary: const Icon(PhosphorIconsRegular.clockCountdown),
-            title: const Text('Recordar mis sesiones'),
-            subtitle: const Text('Aviso antes de las sesiones que guardaste'),
+            title: Text(l10n.profileRememberSessions),
+            subtitle: Text(l10n.profileRememberSessionsSubtitle),
           ),
           if (notif.remindersEnabled) ...[
             const SizedBox(height: 8),
             Text(
-              'Avisarme con antelación de',
+              l10n.profileRemindMeAhead,
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 8),
@@ -114,7 +119,7 @@ class ProfileScreen extends ConsumerWidget {
           // contraseña que guardar) y en un dispositivo capaz de verificar.
           if (!(user?.isGuest ?? true) && bioDisponible) ...[
             const SizedBox(height: 28),
-            Text('Seguridad', style: Theme.of(context).textTheme.titleMedium),
+            Text(l10n.profileSecurity, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 4),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
@@ -128,54 +133,66 @@ class ProfileScreen extends ConsumerWidget {
                     )
                   : _desactivarAccesoRapido(context, ref),
               secondary: Icon(biometricIcon(bioKind)),
-              title: Text('Entrar con ${biometricLabel(bioKind)}'),
+              title: Text(l10n.authLoginWith(biometricLabel(l10n, bioKind))),
               subtitle: Text(
                 bio.enabled
-                    ? 'Activado para ${bio.email}'
-                    : 'Entra sin escribir tu contraseña',
+                    ? l10n.profileEnabledFor(bio.email)
+                    : l10n.profileLoginWithoutPassword,
               ),
             ),
           ],
           const SizedBox(height: 28),
-          Text('Apariencia', style: Theme.of(context).textTheme.titleMedium),
+          Text(l10n.appearance, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 12),
           SegmentedButton<ThemeMode>(
-            segments: const [
-              ButtonSegment(value: ThemeMode.system, icon: Icon(PhosphorIconsRegular.deviceMobile), label: Text('Auto')),
-              ButtonSegment(value: ThemeMode.light, icon: Icon(PhosphorIconsRegular.sun), label: Text('Claro')),
-              ButtonSegment(value: ThemeMode.dark, icon: Icon(PhosphorIconsRegular.moon), label: Text('Oscuro')),
+            segments: [
+              ButtonSegment(value: ThemeMode.system, icon: const Icon(PhosphorIconsRegular.deviceMobile), label: Text(l10n.themeAuto)),
+              ButtonSegment(value: ThemeMode.light, icon: const Icon(PhosphorIconsRegular.sun), label: Text(l10n.themeLight)),
+              ButtonSegment(value: ThemeMode.dark, icon: const Icon(PhosphorIconsRegular.moon), label: Text(l10n.themeDark)),
             ],
             selected: {themeMode},
             onSelectionChanged: (s) => ref.read(themeModeProvider.notifier).set(s.first),
           ),
+          const SizedBox(height: 16),
+          Text(l10n.language, style: Theme.of(context).textTheme.bodyMedium),
+          const SizedBox(height: 8),
+          SegmentedButton<String>(
+            segments: [
+              ButtonSegment(value: 'es', icon: const Icon(PhosphorIconsRegular.globe), label: Text(l10n.languageSpanish)),
+              ButtonSegment(value: 'en', icon: const Icon(PhosphorIconsRegular.globe), label: Text(l10n.languageEnglish)),
+            ],
+            selected: {currentLang == 'en' ? 'en' : 'es'},
+            onSelectionChanged: (s) =>
+                ref.read(localeProvider.notifier).set(Locale(s.first)),
+          ),
           const SizedBox(height: 28),
-          Text('Acerca de', style: Theme.of(context).textTheme.titleMedium),
+          Text(l10n.profileAbout, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 12),
-          _infoRow(context, 'Evento', OvumEvent.edition),
-          _infoRow(context, 'Sede', OvumEvent.mainVenue),
-          _infoRow(context, 'Organizan', OvumEvent.organizers),
-          _infoRow(context, 'Versión', '1.0.0'),
+          _infoRow(context, l10n.profileEventLabel, OvumEvent.edition),
+          _infoRow(context, l10n.venue, OvumEvent.mainVenue),
+          _infoRow(context, l10n.profileOrganizedBy, OvumEvent.organizers),
+          _infoRow(context, l10n.profileVersionLabel, '1.0.0'),
           const SizedBox(height: 12),
           _tile(
             context,
             icon: PhosphorIconsRegular.shieldCheck,
-            title: 'Política de privacidad',
-            subtitle: 'Qué datos usamos y cómo',
+            title: l10n.profilePrivacyPolicy,
+            subtitle: l10n.profilePrivacyPolicySubtitle,
             onTap: () => openUrl(AppConfig.privacyUrl),
           ),
           const SizedBox(height: 10),
           _tile(
             context,
             icon: PhosphorIconsRegular.fileText,
-            title: 'Términos y condiciones',
-            subtitle: 'Reglas de uso de la plataforma',
+            title: l10n.profileTerms,
+            subtitle: l10n.profileTermsSubtitle,
             onTap: () => openUrl(AppConfig.termsUrl),
           ),
           const SizedBox(height: 10),
           _tile(
             context,
             icon: PhosphorIconsRegular.envelopeSimple,
-            title: 'Contacto',
+            title: l10n.profileContact,
             subtitle: OvumEvent.contactEmail,
             onTap: () => openEmail(OvumEvent.contactEmail),
           ),
@@ -190,7 +207,7 @@ class ProfileScreen extends ConsumerWidget {
               if (context.mounted) context.go(R.login);
             },
             icon: const Icon(PhosphorIconsRegular.signOut, size: 18),
-            label: const Text(AppStrings.logout),
+            label: Text(l10n.logout),
             style: FilledButton.styleFrom(
               backgroundColor: scheme.errorContainer,
               foregroundColor: scheme.onErrorContainer,
@@ -203,7 +220,7 @@ class ProfileScreen extends ConsumerWidget {
             TextButton(
               onPressed: () => context.push(R.deleteAccount),
               style: TextButton.styleFrom(foregroundColor: scheme.error),
-              child: const Text('Eliminar mi cuenta'),
+              child: Text(l10n.profileDeleteMyAccount),
             ),
           ],
         ],
@@ -220,7 +237,7 @@ class ProfileScreen extends ConsumerWidget {
     await ref.read(biometricPrefsProvider.notifier).disable();
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Acceso rápido desactivado.')),
+      SnackBar(content: Text(context.l10n.profileQuickAccessDisabled)),
     );
   }
 
@@ -245,7 +262,7 @@ class ProfileScreen extends ConsumerWidget {
               shape: BoxShape.circle,
               border: Border.all(color: Colors.white, width: 2.5),
             ),
-            child: InitialsAvatar(name: name, imageUrl: photo, size: 64),
+            child: InitialsAvatar(name: name, imageUrl: photo, size: 64, zoomable: true),
           ),
           const SizedBox(width: 16),
           Expanded(

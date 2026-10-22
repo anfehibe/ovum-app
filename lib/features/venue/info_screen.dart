@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/icons.dart';
 import '../../core/utils/launchers.dart';
@@ -16,7 +16,7 @@ class InfoScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(infoItemsProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.generalInfo)),
+      appBar: AppBar(title: Text(context.l10n.generalInfo)),
       body: async.when(
         loading: () => const LoadingView(),
         error: (_, _) => const ErrorView(),

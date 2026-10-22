@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/utils/launchers.dart';
 
 /// Fila de botones de contacto (web / correo / teléfono) para sponsors y expositores.
@@ -18,11 +18,11 @@ class ContactButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     final buttons = <Widget>[
       if (_has(web))
-        _button(PhosphorIconsRegular.globe, AppStrings.website, () => openUrl(web!)),
+        _button(PhosphorIconsRegular.globe, context.l10n.website, () => openUrl(web!)),
       if (_has(email))
-        _button(PhosphorIconsRegular.envelopeSimple, AppStrings.email, () => openEmail(email!)),
+        _button(PhosphorIconsRegular.envelopeSimple, context.l10n.email, () => openEmail(email!)),
       if (_has(phone))
-        _button(PhosphorIconsRegular.phone, AppStrings.call, () => openPhone(phone!)),
+        _button(PhosphorIconsRegular.phone, context.l10n.call, () => openPhone(phone!)),
     ];
     if (buttons.isEmpty) return const SizedBox.shrink();
     return Row(

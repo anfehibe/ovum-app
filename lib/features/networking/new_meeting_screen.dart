@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
 import '../../core/config/app_config.dart';
@@ -62,12 +63,12 @@ class EditMeetingScreen extends ConsumerWidget {
       );
     }
     return Scaffold(
-      appBar: AppBar(title: const Text('Editar reunión')),
+      appBar: AppBar(title: Text(context.l10n.newMeetingEditTitle)),
       body: async.isLoading && !async.hasValue
           ? const LoadingView()
-          : const EmptyState(
+          : EmptyState(
               icon: PhosphorIconsRegular.calendarX,
-              message: 'Esta reunión ya no se puede editar.',
+              message: context.l10n.newMeetingCannotEdit,
             ),
     );
   }
@@ -204,7 +205,7 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
         // hasta aquí está desactualizada.
         if (!e.isForbidden) ref.invalidate(networkingMeetingsProvider);
         messenger.showSnackBar(
-          SnackBar(content: Text(meetingChangeErrorText(e))),
+          SnackBar(content: Text(meetingChangeErrorText(context.l10n, e))),
         );
       } else {
         // 422 cubre la auto-solicitud; el backend ya manda el texto en español.
@@ -212,7 +213,7 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
           SnackBar(
             content: Text(
               e.isNotFound
-                  ? 'Ese asistente ya no está disponible para reuniones.'
+                  ? context.l10n.newMeetingAttendeeUnavailable
                   : e.message,
             ),
           ),
@@ -225,8 +226,8 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
           SnackBar(
             content: Text(
               editing == null
-                  ? 'No se pudo enviar la solicitud.'
-                  : 'No se pudieron guardar los cambios.',
+                  ? context.l10n.newMeetingSendError
+                  : context.l10n.newMeetingSaveError,
             ),
           ),
         );
@@ -313,7 +314,11 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(editing == null ? 'Solicitar reunión' : 'Editar reunión'),
+        title: Text(
+          editing == null
+              ? context.l10n.newMeetingRequestTitle
+              : context.l10n.newMeetingEditTitle,
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
@@ -350,20 +355,20 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
             ),
           const SizedBox(height: 20),
           if (AppConfig.userContent) ...[
-            _label(context, '¿De qué te gustaría hablar?'),
+            _label(context, context.l10n.newMeetingTopicLabel),
             TextField(
               controller: _messageCtrl,
               minLines: 3,
               maxLines: 6,
               maxLength: 1000,
               textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(
-                hintText: 'Cuéntale brevemente el motivo de la reunión',
+              decoration: InputDecoration(
+                hintText: context.l10n.newMeetingMessageHint,
               ),
             ),
             const SizedBox(height: 8),
           ],
-          _label(context, 'Día propuesto'),
+          _label(context, context.l10n.newMeetingProposedDay),
           Wrap(
             spacing: 8,
             children: [
@@ -387,11 +392,11 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _label(context, 'Hora de inicio'),
+                    _label(context, context.l10n.newMeetingStartTime),
                     OutlinedButton.icon(
                       onPressed: checking ? null : () => _pickTime(slots, states),
                       icon: const Icon(PhosphorIconsRegular.clock, size: 18),
-                      label: Text(_slot?.label ?? 'Elegir hora'),
+                      label: Text(_slot?.label ?? context.l10n.newMeetingChooseTime),
                     ),
                   ],
                 ),
@@ -401,7 +406,7 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _label(context, 'Duración'),
+                    _label(context, context.l10n.newMeetingDuration),
                     SegmentedButton<int>(
                       segments: const [
                         ButtonSegment(value: 30, label: Text('30′')),
@@ -450,7 +455,9 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
                     size: 18,
                   ),
             label: Text(
-              editing == null ? 'Enviar solicitud' : 'Guardar cambios',
+              editing == null
+                  ? context.l10n.newMeetingSendRequest
+                  : context.l10n.newMeetingSaveChanges,
             ),
             style: FilledButton.styleFrom(minimumSize: const Size(0, 48)),
           ),
@@ -478,8 +485,7 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
     // mejor que ofrecer horas con falsa confianza.
     if (fallback && !checking) {
       return line(
-        'No se pudo consultar la agenda del congreso: se muestran horas '
-        'orientativas y puede que la otra persona no esté libre.',
+        context.l10n.newMeetingAgendaUnavailable,
         context.ovum.warning,
       );
     }
@@ -493,7 +499,7 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
           const SizedBox(width: 8),
-          line('Comprobando tus reuniones…', scheme.onSurfaceVariant),
+          line(context.l10n.newMeetingCheckingMeetings, scheme.onSurfaceVariant),
         ],
       );
     }
@@ -505,12 +511,12 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           line(
-            'No pudimos comprobar tus reuniones; revisa que no se te cruce.',
+            context.l10n.newMeetingCheckFailed,
             context.ovum.warning,
           ),
           TextButton(
             onPressed: () => ref.invalidate(networkingMeetingsProvider),
-            child: const Text('Reintentar'),
+            child: Text(context.l10n.networkingRetry),
           ),
         ],
       );
@@ -518,28 +524,28 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
 
     if (noneFree) {
       return line(
-        'No te queda ninguna hora libre ese día. Prueba con otro.',
+        context.l10n.newMeetingNoFreeTime,
         context.ovum.warning,
       );
     }
 
     final slot = _slot;
     if (slot == null) {
-      return line('Elige una hora de inicio.', scheme.onSurfaceVariant);
+      return line(context.l10n.newMeetingPickStartTime, scheme.onSurfaceVariant);
     }
 
     final editing = widget.editing;
-    final ends = 'Termina a las ${endLabel(slot, _durationMin)}';
+    final endsAt = endLabel(slot, _durationMin);
     final name = editing == null || editing.counterpart.name.isEmpty
-        ? 'La otra persona'
+        ? context.l10n.newMeetingOtherPerson
         : editing.counterpart.name;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         line(
           editing == null
-              ? '$ends · le llegará la solicitud para aceptarla o rechazarla.'
-              : '$ends · le avisaremos del cambio.',
+              ? context.l10n.newMeetingEndsAndRequest(endsAt)
+              : context.l10n.newMeetingEndsAndNotify(endsAt),
           scheme.onSurfaceVariant,
         ),
         // Lo que cuesta mover una confirmada: el otro tiene que volver a decir
@@ -547,14 +553,14 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
         if (editing?.state == MeetingState.confirmed && _scheduleChanged) ...[
           const SizedBox(height: 4),
           line(
-            '$name tendrá que confirmarla de nuevo y se liberará la mesa.',
+            context.l10n.newMeetingReconfirm(name),
             context.ovum.warning,
           ),
         ],
         if (states[slot] == SlotState.tentative) ...[
           const SizedBox(height: 4),
           line(
-            'Tienes una solicitud sin responder a esa hora.',
+            context.l10n.newMeetingPendingAtTime,
             context.ovum.warning,
           ),
         ],

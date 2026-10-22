@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
-
-import '../../core/constants/app_strings.dart';
 
 /// Contenedor con la barra de navegación inferior (4 pestañas).
 class HomeShell extends StatelessWidget {
@@ -24,26 +23,26 @@ class HomeShell extends StatelessWidget {
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: _onTap,
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(PhosphorIconsRegular.houseSimple),
-            selectedIcon: Icon(PhosphorIconsFill.houseSimple),
-            label: AppStrings.navHome,
+            icon: const Icon(PhosphorIconsRegular.houseSimple),
+            selectedIcon: const Icon(PhosphorIconsFill.houseSimple),
+            label: context.l10n.navHome,
           ),
           NavigationDestination(
-            icon: Icon(PhosphorIconsRegular.calendarDots),
-            selectedIcon: Icon(PhosphorIconsFill.calendarDots),
-            label: AppStrings.navAgenda,
+            icon: const Icon(PhosphorIconsRegular.calendarDots),
+            selectedIcon: const Icon(PhosphorIconsFill.calendarDots),
+            label: context.l10n.navAgenda,
           ),
           NavigationDestination(
-            icon: Icon(PhosphorIconsRegular.usersThree),
-            selectedIcon: Icon(PhosphorIconsFill.usersThree),
-            label: AppStrings.navNetworking,
+            icon: const Icon(PhosphorIconsRegular.usersThree),
+            selectedIcon: const Icon(PhosphorIconsFill.usersThree),
+            label: context.l10n.navNetworking,
           ),
           NavigationDestination(
-            icon: Icon(PhosphorIconsRegular.user),
-            selectedIcon: Icon(PhosphorIconsFill.user),
-            label: AppStrings.navProfile,
+            icon: const Icon(PhosphorIconsRegular.user),
+            selectedIcon: const Icon(PhosphorIconsFill.user),
+            label: context.l10n.navProfile,
           ),
         ],
       ),

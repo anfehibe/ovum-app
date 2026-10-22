@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
 import '../../core/config/app_config.dart';
@@ -113,7 +114,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       messenger.showSnackBar(
         SnackBar(
           content: Text(
-            e is ApiException ? e.message : 'No se pudo enviar el mensaje.',
+            e is ApiException ? e.message : context.l10n.chatSendError,
           ),
         ),
       );
@@ -125,7 +126,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   @override
   Widget build(BuildContext context) {
     return NetworkingGate(
-      signInMessage: 'Inicia sesión para escribirte con otros asistentes.',
+      signInMessage: context.l10n.chatSignInPrompt,
       builder: (context) => _thread(context),
     );
   }
@@ -168,7 +169,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    card?.name.isNotEmpty == true ? card!.name : 'Chat',
+                    card?.name.isNotEmpty == true ? card!.name : context.l10n.chat,
                     style: Theme.of(context).textTheme.titleSmall,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -192,8 +193,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           children: [
             Expanded(
               child: thread.messages.isEmpty
-                  ? const EmptyState(
-                      message: 'Escribe el primer mensaje',
+                  ? EmptyState(
+                      message: context.l10n.chatFirstMessage,
                       icon: PhosphorIconsRegular.chatCircleText,
                     )
                   : RefreshIndicator(
@@ -341,8 +342,8 @@ class _InputBar extends StatelessWidget {
                 maxLines: 4,
                 maxLength: 2000,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
-                  hintText: 'Mensaje…',
+                decoration: InputDecoration(
+                  hintText: context.l10n.chatMessageHint,
                   counterText: '', // el tope importa, el contador estorba
                 ),
                 onSubmitted: (_) => onSend(),

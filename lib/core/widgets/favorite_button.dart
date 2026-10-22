@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
 import '../../data/providers/favorites_provider.dart';
@@ -31,7 +32,7 @@ class FavoriteButton extends ConsumerWidget {
 
     final button = IconButton(
       onPressed: () => ref.read(favoritesProvider.notifier).toggle(kind, id),
-      tooltip: isFav ? 'Quitar de favoritos' : 'Añadir a favoritos',
+      tooltip: isFav ? context.l10n.widgetRemoveFavorite : context.l10n.widgetAddFavorite,
       icon: icon,
     );
 

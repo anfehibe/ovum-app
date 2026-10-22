@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/constants/ovum_event.dart';
 import '../../core/router/route_paths.dart';
 import '../../core/theme/app_colors.dart';
@@ -164,8 +164,8 @@ class _HeroHeader extends ConsumerWidget {
               Expanded(
                 child: Text(
                   firstName.isEmpty
-                      ? '${AppStrings.welcome} OVUM 2026'
-                      : '¡Hola, $firstName!',
+                      ? '${context.l10n.welcome} OVUM 2026'
+                      : context.l10n.homeGreeting(firstName),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
@@ -197,7 +197,7 @@ class _HeroHeader extends ConsumerWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            'Faltan $daysLeft días',
+            context.l10n.homeDaysLeft(daysLeft),
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
               color: scheme.primary,
               fontWeight: FontWeight.w700,
@@ -239,8 +239,8 @@ class _HeroHeader extends ConsumerWidget {
         children: [
           Text(
             firstName.isEmpty
-                ? '${AppStrings.welcome} OVUM 2026'
-                : '¡Hola, $firstName!',
+                ? '${context.l10n.welcome} OVUM 2026'
+                : context.l10n.homeGreeting(firstName),
             style: theme.textTheme.titleMedium?.copyWith(color: Colors.white),
           ),
           const SizedBox(height: 18),
@@ -268,12 +268,12 @@ class _HeroHeader extends ConsumerWidget {
               ),
               _HeroPill(
                 icon: PhosphorIconsRegular.mapPin,
-                label: 'Ciudad de Guatemala',
+                label: context.l10n.homeEventCity,
               ),
               if (daysLeft > 0)
                 _HeroPill(
                   icon: PhosphorIconsRegular.clockCountdown,
-                  label: 'Faltan $daysLeft días',
+                  label: context.l10n.homeDaysLeft(daysLeft),
                 ),
             ],
           ),
@@ -315,23 +315,6 @@ class _HeroPill extends StatelessWidget {
 }
 
 class _QuickAccess extends ConsumerStatefulWidget {
-  static const _items = [
-    (PhosphorIconsRegular.microphoneStage, AppStrings.speakers, R.speakers),
-    (PhosphorIconsRegular.storefront, AppStrings.exhibitors, R.exhibitors),
-    (PhosphorIconsRegular.medal, AppStrings.sponsors, R.sponsors),
-    (
-      PhosphorIconsRegular.confetti,
-      AppStrings.otherActivities,
-      R.otherActivities,
-    ),
-    (PhosphorIconsRegular.mapTrifold, AppStrings.venue, R.venues),
-    (PhosphorIconsRegular.bed, AppStrings.hotels, R.hotels),
-    if (AppConfig.showTransport)
-      (PhosphorIconsRegular.bus, AppStrings.transport, R.transport),
-    (PhosphorIconsRegular.info, AppStrings.generalInfo, R.info),
-    (PhosphorIconsRegular.buildings, AppStrings.organizers, R.organizers),
-  ];
-
   @override
   ConsumerState<_QuickAccess> createState() => _QuickAccessState();
 }
@@ -350,6 +333,19 @@ class _QuickAccessState extends ConsumerState<_QuickAccess> {
   static const _maxTile = 100.0;
 
   final _controller = ScrollController();
+
+  List<(IconData, String, String)> _items(AppLocalizations l10n) => [
+    (PhosphorIconsRegular.microphoneStage, l10n.speakers, R.speakers),
+    (PhosphorIconsRegular.storefront, l10n.exhibitors, R.exhibitors),
+    (PhosphorIconsRegular.medal, l10n.sponsors, R.sponsors),
+    (PhosphorIconsRegular.confetti, l10n.otherActivities, R.otherActivities),
+    (PhosphorIconsRegular.mapTrifold, l10n.venue, R.venues),
+    (PhosphorIconsRegular.bed, l10n.hotels, R.hotels),
+    if (AppConfig.showTransport)
+      (PhosphorIconsRegular.bus, l10n.transport, R.transport),
+    (PhosphorIconsRegular.info, l10n.generalInfo, R.info),
+    (PhosphorIconsRegular.buildings, l10n.organizers, R.organizers),
+  ];
 
   @override
   void initState() {
@@ -400,11 +396,11 @@ class _QuickAccessState extends ConsumerState<_QuickAccess> {
   }
 
   /// Ancho de tile que deja asomando [_peek] del siguiente en este viewport.
-  double _tileWidth(double maxWidth) {
+  double _tileWidth(double maxWidth, int count) {
     final usable = maxWidth - _sidePad;
     double tileFor(int n) => (usable - _gap * n) / (n + _peek);
     var visible = 3;
-    for (var n = 3; n <= _QuickAccess._items.length; n++) {
+    for (var n = 3; n <= count; n++) {
       if (tileFor(n) <= _maxTile) {
         visible = n;
         break;
@@ -416,13 +412,13 @@ class _QuickAccessState extends ConsumerState<_QuickAccess> {
   @override
   Widget build(BuildContext context) {
     final ovum = context.ovum;
-    final items = _QuickAccess._items;
+    final items = _items(context.l10n);
 
     return SizedBox(
       height: 122,
       child: LayoutBuilder(
         builder: (context, c) {
-          final tile = _tileWidth(c.maxWidth);
+          final tile = _tileWidth(c.maxWidth, items.length);
           final contentWidth =
               _sidePad * 2 + items.length * tile + _gap * (items.length - 1);
           final overflows = contentWidth > c.maxWidth;
@@ -518,7 +514,7 @@ class _AgendaHighlights extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(
-          title: 'Agenda destacada',
+          title: context.l10n.homeFeaturedAgenda,
           onAction: () => context.go(R.agenda),
         ),
         SizedBox(
@@ -626,7 +622,7 @@ class _KeynotesRow extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(
-          title: 'Conferencistas destacados',
+          title: context.l10n.homeFeaturedSpeakers,
           onAction: () => context.push(R.speakers),
         ),
         SizedBox(
@@ -678,7 +674,7 @@ class _SponsorsRow extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(
-          title: AppStrings.sponsors,
+          title: context.l10n.sponsors,
           onAction: () => context.push(R.sponsors),
         ),
         SizedBox(
@@ -727,7 +723,7 @@ class _HomeFooter extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            'Organizan',
+            context.l10n.homeOrganizedBy,
             style: Theme.of(
               context,
             ).textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),

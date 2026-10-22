@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
 import '../../core/config/app_config.dart';
@@ -24,21 +25,21 @@ class NetworkingAttendeeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(networkingAttendeeProvider(userId));
     return Scaffold(
-      appBar: AppBar(title: const Text('Asistente')),
+      appBar: AppBar(title: Text(context.l10n.networkingAttendee)),
       body: async.when(
         loading: () => const LoadingView(),
-        error: (e, _) => ErrorView(message: _errorMessage(e)),
+        error: (e, _) => ErrorView(message: _errorMessage(context, e)),
         data: (card) => _content(context, ref, card),
       ),
     );
   }
 
-  String _errorMessage(Object e) {
+  String _errorMessage(BuildContext context, Object e) {
     if (e is ApiException) {
-      if (e.isNotFound) return 'Ese asistente ya no participa en el networking.';
+      if (e.isNotFound) return context.l10n.networkingAttendeeNotFound;
       return e.message;
     }
-    return 'No se pudo cargar la ficha.';
+    return context.l10n.networkingLoadCardError;
   }
 
   Widget _content(BuildContext context, WidgetRef ref, NetworkingCard card) {
@@ -51,7 +52,7 @@ class NetworkingAttendeeScreen extends ConsumerWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            InitialsAvatar(name: card.name, imageUrl: card.photoUrl, size: 72),
+            InitialsAvatar(name: card.name, imageUrl: card.photoUrl, size: 72, zoomable: true),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -85,22 +86,23 @@ class NetworkingAttendeeScreen extends ConsumerWidget {
               ),
             ),
             IconButton(
-              tooltip: isFavorite ? 'Quitar de favoritos' : 'Guardar en favoritos',
+              tooltip: isFavorite
+                  ? context.l10n.networkingRemoveFavorite
+                  : context.l10n.networkingSaveFavorite,
               icon: Icon(
                 isFavorite ? PhosphorIconsFill.heart : PhosphorIconsRegular.heart,
                 color: isFavorite ? scheme.error : scheme.onSurfaceVariant,
               ),
               onPressed: () async {
                 final messenger = ScaffoldMessenger.of(context);
+                final errorText = context.l10n.networkingFavoriteError;
                 try {
                   await ref
                       .read(networkingFavoritesProvider.notifier)
                       .toggle(card.id, isFavorite);
                 } catch (_) {
                   messenger.showSnackBar(
-                    const SnackBar(
-                      content: Text('No se pudo actualizar el favorito.'),
-                    ),
+                    SnackBar(content: Text(errorText)),
                   );
                 }
               },
@@ -110,36 +112,36 @@ class NetworkingAttendeeScreen extends ConsumerWidget {
         // La bio es texto libre del usuario (`AppConfig.userContent`).
         if (AppConfig.userContent && card.bio.isNotEmpty) ...[
           const SizedBox(height: 22),
-          Text('Sobre', style: Theme.of(context).textTheme.titleMedium),
+          Text(context.l10n.networkingAbout, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           Text(card.bio, style: Theme.of(context).textTheme.bodyMedium),
         ],
-        _chips(context, 'Sectores', card.sectors),
-        _chips(context, 'Intereses', card.interests),
-        _chips(context, 'Busca', card.seeking),
-        _chips(context, 'Ofrece', card.solutions),
-        _chips(context, 'Regiones', card.regions),
+        _chips(context, context.l10n.networkingSectors, card.sectors),
+        _chips(context, context.l10n.networkingInterests, card.interests),
+        _chips(context, context.l10n.networkingSeeking, card.seeking),
+        _chips(context, context.l10n.networkingOffers, card.solutions),
+        _chips(context, context.l10n.networkingRegions, card.regions),
         const SizedBox(height: 26),
         // Sin chat, la reunión pasa a ser la acción principal.
         if (AppConfig.userContent) ...[
           FilledButton.icon(
             onPressed: () => context.push(R.chatWith(card.id)),
             icon: const Icon(PhosphorIconsRegular.chatCircleText, size: 18),
-            label: const Text('Enviar mensaje'),
+            label: Text(context.l10n.networkingSendMessage),
             style: FilledButton.styleFrom(minimumSize: const Size(0, 48)),
           ),
           const SizedBox(height: 10),
           OutlinedButton.icon(
             onPressed: () => context.push(R.meetingWith(card.id)),
             icon: const Icon(PhosphorIconsRegular.calendarPlus, size: 18),
-            label: const Text('Solicitar reunión'),
+            label: Text(context.l10n.networkingRequestMeeting),
             style: OutlinedButton.styleFrom(minimumSize: const Size(0, 48)),
           ),
         ] else
           FilledButton.icon(
             onPressed: () => context.push(R.meetingWith(card.id)),
             icon: const Icon(PhosphorIconsRegular.calendarPlus, size: 18),
-            label: const Text('Solicitar reunión'),
+            label: Text(context.l10n.networkingRequestMeeting),
             style: FilledButton.styleFrom(minimumSize: const Size(0, 48)),
           ),
         if (card.linkedin != null) ...[

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/router/route_paths.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/initials_avatar.dart';
@@ -28,15 +28,15 @@ class _AttendeesScreenState extends ConsumerState<AttendeesScreen> {
     // El networking requiere sesión real; el invitado ve un aviso para entrar.
     if (ref.watch(isGuestProvider)) {
       return Scaffold(
-        appBar: AppBar(title: const Text(AppStrings.attendees)),
-        body: const SignInPrompt(
-          message: 'Inicia sesión para ver a los asistentes y hacer networking.',
+        appBar: AppBar(title: Text(context.l10n.attendees)),
+        body: SignInPrompt(
+          message: context.l10n.attendeeSignInPrompt,
         ),
       );
     }
     final async = ref.watch(attendeesProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.attendees)),
+      appBar: AppBar(title: Text(context.l10n.attendees)),
       body: async.when(
         loading: () => const LoadingView(),
         error: (_, _) => const ErrorView(),
@@ -62,15 +62,15 @@ class _AttendeesScreenState extends ConsumerState<AttendeesScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                 child: TextField(
                   onChanged: (v) => setState(() => _query = v),
-                  decoration: const InputDecoration(
-                    hintText: 'Buscar por nombre, empresa o sector',
-                    prefixIcon: Icon(PhosphorIconsRegular.magnifyingGlass),
+                  decoration: InputDecoration(
+                    hintText: context.l10n.attendeeSearchHint,
+                    prefixIcon: const Icon(PhosphorIconsRegular.magnifyingGlass),
                   ),
                 ),
               ),
               Expanded(
                 child: filtered.isEmpty
-                    ? const EmptyState(message: 'Sin resultados')
+                    ? EmptyState(message: context.l10n.attendeeNoResults)
                     : ListView(
                         padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
                         children: [

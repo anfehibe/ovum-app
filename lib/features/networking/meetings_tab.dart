@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -59,29 +60,29 @@ class MeetingsTab extends ConsumerWidget {
         Row(
           children: [
             _StatTile(
-              label: 'Recibidas',
+              label: context.l10n.networkingMeetingsReceived,
               value: counts.received,
               color: context.scheme.primary,
             ),
             const SizedBox(width: 10),
             _StatTile(
-              label: 'Confirmadas',
+              label: context.l10n.networkingMeetingsConfirmed,
               value: counts.confirmed,
               color: context.ovum.success,
             ),
             const SizedBox(width: 10),
             _StatTile(
-              label: 'Pendientes',
+              label: context.l10n.networkingMeetingsPending,
               value: counts.pending,
               color: context.ovum.warning,
             ),
           ],
         ),
         const SizedBox(height: 24),
-        Text('Solicitudes recibidas', style: Theme.of(context).textTheme.titleMedium),
+        Text(context.l10n.networkingRequestsReceived, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 12),
         if (received.isEmpty)
-          _emptyHint(context, 'No tienes solicitudes recibidas')
+          _emptyHint(context, context.l10n.networkingNoRequestsReceived)
         else
           for (final m in received)
             Padding(
@@ -89,13 +90,10 @@ class MeetingsTab extends ConsumerWidget {
               child: MeetingCard(meeting: m),
             ),
         const SizedBox(height: 24),
-        Text('Enviadas por ti', style: Theme.of(context).textTheme.titleMedium),
+        Text(context.l10n.networkingSentByYou, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 12),
         if (sent.isEmpty)
-          _emptyHint(
-            context,
-            'Aún no has enviado solicitudes. Busca a alguien en el directorio.',
-          )
+          _emptyHint(context, context.l10n.networkingNoRequestsSent)
         else
           for (final m in sent)
             Padding(

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/launchers.dart';
 import '../../core/widgets/states.dart';
@@ -17,7 +17,7 @@ class HotelsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(hotelsProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.hotels)),
+      appBar: AppBar(title: Text(context.l10n.hotels)),
       body: async.when(
         loading: () => const LoadingView(),
         error: (_, _) => const ErrorView(),
@@ -74,15 +74,15 @@ class _HotelCard extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: hotel.soldOut
-                            ? _pill(context, 'AGOTADO', scheme.error, scheme.onError)
-                            : _pill(context, 'Hotel oficial',
+                            ? _pill(context, context.l10n.hotelsSoldOut, scheme.error, scheme.onError)
+                            : _pill(context, context.l10n.hotelsOfficial,
                                 scheme.primary.withValues(alpha: 0.14), scheme.primary),
                       ),
                   ],
                 ),
               ),
               if (hotel.priceFrom != null)
-                Text('Desde ${hotel.priceFrom!}',
+                Text(context.l10n.hotelsPriceFrom(hotel.priceFrom!),
                     style: Theme.of(context)
                         .textTheme
                         .labelMedium
@@ -97,7 +97,7 @@ class _HotelCard extends StatelessWidget {
           if (hotel.address.isNotEmpty) _row(context, PhosphorIconsRegular.mapPin, hotel.address),
           if (hotel.distance.isNotEmpty) _row(context, PhosphorIconsRegular.mapTrifold, hotel.distance),
           if (hotel.contact != null)
-            _row(context, PhosphorIconsRegular.user, 'Reservas: ${hotel.contact}'),
+            _row(context, PhosphorIconsRegular.user, context.l10n.hotelsReservations(hotel.contact!)),
           const SizedBox(height: 12),
           ContactButtons(web: hotel.web, email: hotel.email, phone: hotel.phone),
           if (hotel.bookingUrl != null && !hotel.soldOut) ...[
@@ -107,7 +107,7 @@ class _HotelCard extends StatelessWidget {
               child: FilledButton.icon(
                 onPressed: () => openUrl(hotel.bookingUrl!),
                 icon: const Icon(PhosphorIconsRegular.calendarPlus, size: 18),
-                label: const Text('Reservar'),
+                label: Text(context.l10n.hotelsBook),
               ),
             ),
           ],

@@ -38,6 +38,37 @@ class ThemeModeNotifier extends Notifier<ThemeMode> {
 final themeModeProvider =
     NotifierProvider<ThemeModeNotifier, ThemeMode>(ThemeModeNotifier.new);
 
+// ── Idioma (es / en), persistido ───────────────────────────────────────────
+
+/// Idioma de la UI. `null` = sin elección guardada: la app sigue el idioma del
+/// dispositivo (lo resuelve `MaterialApp` con `supportedLocales`, cayendo a
+/// español si no está soportado). Solo se traduce el texto propio de la app;
+/// el contenido del API (nombres, áreas, cargos, agenda) se muestra tal cual.
+class LocaleNotifier extends Notifier<Locale?> {
+  static const _key = 'locale';
+  static const supported = {'es', 'en'};
+
+  @override
+  Locale? build() {
+    final stored = ref.watch(sharedPreferencesProvider).getString(_key);
+    return (stored != null && supported.contains(stored)) ? Locale(stored) : null;
+  }
+
+  /// Fija el idioma y lo persiste. `null` vuelve a seguir el dispositivo.
+  void set(Locale? locale) {
+    final code = locale?.languageCode;
+    state = (code != null && supported.contains(code)) ? Locale(code) : null;
+    final prefs = ref.read(sharedPreferencesProvider);
+    if (state == null) {
+      prefs.remove(_key);
+    } else {
+      prefs.setString(_key, state!.languageCode);
+    }
+  }
+}
+
+final localeProvider = NotifierProvider<LocaleNotifier, Locale?>(LocaleNotifier.new);
+
 // ── Sesión de usuario ───────────────────────────────────────────────────────
 
 /// Controla el usuario logueado. `null` = sin sesión (se muestra el login).

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/data/providers/biometric_provider.dart';
 import 'package:ovum/data/providers/content_providers.dart';
 import 'package:ovum/data/providers/preferences.dart';
@@ -18,7 +19,12 @@ Future<void> _pumpLogin(WidgetTester tester) async {
         headerBannerProvider.overrideWithValue(null),
         biometricAvailableProvider.overrideWith((ref) async => false),
       ],
-      child: const MaterialApp(home: LoginScreen()),
+      child: MaterialApp(
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const LoginScreen(),
+      ),
     ),
   );
 }

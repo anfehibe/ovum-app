@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 
 import '../../core/config/app_config.dart';
-import '../../core/constants/app_strings.dart';
 import '../../core/network/api_exception.dart';
 import '../../data/models/models.dart';
 import '../../data/providers/user_provider.dart';
@@ -66,7 +66,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
       // El toast solo después de que el servidor lo confirme: antes decía
       // "Perfil actualizado" sin haber guardado nada.
       messenger.showSnackBar(
-        const SnackBar(content: Text('Perfil actualizado')),
+        SnackBar(content: Text(context.l10n.profileUpdated)),
       );
       navigator.pop();
     } catch (e) {
@@ -74,7 +74,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
       messenger.showSnackBar(
         SnackBar(
           content: Text(
-            e is ApiException ? e.message : 'No se pudo guardar el perfil.',
+            e is ApiException ? e.message : context.l10n.profileCouldNotSave,
           ),
         ),
       );
@@ -86,24 +86,24 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Editar perfil')),
+      appBar: AppBar(title: Text(context.l10n.profileEditProfile)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
         children: [
-          _field('Nombre', _firstName),
-          _field('Apellido', _lastName),
-          _field('Cargo', _position),
-          _field('Empresa', _company),
-          _field('Móvil', _mobile, keyboard: TextInputType.phone),
-          _field('Ciudad', _city),
+          _field(context.l10n.profileFirstName, _firstName),
+          _field(context.l10n.profileLastName, _lastName),
+          _field(context.l10n.profilePosition, _position),
+          _field(context.l10n.profileCompany, _company),
+          _field(context.l10n.profileMobile, _mobile, keyboard: TextInputType.phone),
+          _field(context.l10n.profileCity, _city),
           _field('LinkedIn', _linkedin, keyboard: TextInputType.url),
           // La bio la leen otros asistentes: se edita solo cuando esas fichas
           // la muestran. Ver `AppConfig.userContent`.
           if (AppConfig.userContent)
-            _field('Biografía', _bio, maxLines: 4, maxLength: bioMaxLength),
+            _field(context.l10n.profileBio, _bio, maxLines: 4, maxLength: bioMaxLength),
           const SizedBox(height: 8),
           Text(
-            'Tus sectores e intereses se editan en tu perfil de networking.',
+            context.l10n.profileSectorsEditedInNetworking,
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 20),
@@ -115,7 +115,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text(AppStrings.save),
+                : Text(context.l10n.save),
           ),
         ],
       ),

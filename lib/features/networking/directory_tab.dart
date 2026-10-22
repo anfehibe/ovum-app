@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
 import '../../core/router/route_paths.dart';
@@ -37,7 +38,7 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudieron cargar más asistentes.')),
+        SnackBar(content: Text(context.l10n.networkingLoadMoreError)),
       );
     }
   }
@@ -61,7 +62,7 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
               ref.read(directoryQueryProvider.notifier).setSearch(v);
             },
             decoration: InputDecoration(
-              hintText: 'Buscar por nombre, empresa o cargo',
+              hintText: context.l10n.networkingSearchHint,
               prefixIcon: const Icon(PhosphorIconsRegular.magnifyingGlass),
               suffixIcon: _searchCtrl.text.isEmpty
                   ? null
@@ -107,8 +108,8 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
             error: (e, _) => NetworkingTabError(error: e),
             data: (state) {
               if (state.items.isEmpty) {
-                return const EmptyState(
-                  message: 'Sin resultados',
+                return EmptyState(
+                  message: context.l10n.networkingNoResults,
                   icon: PhosphorIconsRegular.usersThree,
                 );
               }
@@ -142,7 +143,7 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
         padding: const EdgeInsets.only(top: 14),
         child: Center(
           child: Text(
-            state.total == 1 ? '1 asistente' : '${state.total} asistentes',
+            context.l10n.networkingAttendeeCount(state.total),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: context.scheme.onSurfaceVariant,
             ),

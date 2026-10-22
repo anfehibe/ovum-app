@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/launchers.dart';
 import '../../core/widgets/initials_avatar.dart';
@@ -17,7 +17,7 @@ class OrganizersScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(organizersProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.organizers)),
+      appBar: AppBar(title: Text(context.l10n.organizers)),
       body: async.when(
         loading: () => const LoadingView(),
         error: (_, _) => const ErrorView(),
@@ -51,7 +51,7 @@ class _OrganizerCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              InitialsAvatar(name: organizer.name, imageUrl: organizer.logoUrl, size: 52),
+              InitialsAvatar(name: organizer.name, imageUrl: organizer.logoUrl, size: 52, zoomable: true),
               const SizedBox(width: 14),
               Expanded(child: Text(organizer.name, style: Theme.of(context).textTheme.titleMedium)),
             ],
@@ -65,7 +65,7 @@ class _OrganizerCard extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: () => openUrl(organizer.web!),
               icon: const Icon(PhosphorIconsRegular.globe, size: 18),
-              label: const Text(AppStrings.website),
+              label: Text(context.l10n.website),
             ),
           ],
         ],

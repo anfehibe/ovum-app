@@ -6,6 +6,14 @@
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<!-- Idiomas que soporta la app (es/en). iOS usa esta lista para reportar el
+	     locale del dispositivo que la app puede atender; sin ella, un dispositivo
+	     en inglés podría no abrir la app en inglés. -->
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>es</string>
+		<string>en</string>
+	</array>
 	<!-- Clave del SDK de Google Maps. El valor llega de Flutter/Secrets.xcconfig
 	     (gitignored); aquí solo viaja la referencia, nunca la clave. -->
 	<key>GMSApiKey</key>

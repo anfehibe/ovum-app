@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
 import '../../core/config/app_config.dart';
@@ -29,9 +30,9 @@ class BusRouteDetailScreen extends ConsumerWidget {
     if (route == null) {
       return Scaffold(
         appBar: AppBar(),
-        body: const EmptyState(
+        body: EmptyState(
           icon: PhosphorIconsRegular.bus,
-          message: 'Esta ruta ya no está disponible.',
+          message: context.l10n.transportRouteUnavailable,
         ),
       );
     }
@@ -69,19 +70,19 @@ class BusRouteDetailScreen extends ConsumerWidget {
           const SizedBox(height: 24),
           _SectionTitle(
             icon: PhosphorIconsRegular.mapPin,
-            title: 'Recorrido',
+            title: context.l10n.transportItinerary,
           ),
           const SizedBox(height: 12),
           RouteStopTimeline(route: route, color: color),
           const SizedBox(height: 24),
           _SectionTitle(
             icon: PhosphorIconsRegular.clock,
-            title: 'Horarios de salida',
+            title: context.l10n.transportDepartureTimes,
           ),
           const SizedBox(height: 12),
           if (days.isEmpty)
             Text(
-              'Todavía no hay horarios publicados para esta ruta.',
+              context.l10n.transportNoSchedules,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: context.scheme.onSurfaceVariant,
               ),
@@ -132,7 +133,7 @@ class _Header extends StatelessWidget {
                 ),
               ),
             Text(
-              directionLabel(route.direction),
+              directionLabel(context.l10n, route.direction),
               style: Theme.of(
                 context,
               ).textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
@@ -185,7 +186,7 @@ class _NextDepartureCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.scheme;
     final sameDay = at.sameDay(now);
-    final countdown = sameDay ? countdownLabel(at, now) : '';
+    final countdown = sameDay ? countdownLabel(context.l10n, at, now) : '';
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -199,7 +200,7 @@ class _NextDepartureCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Próxima salida',
+                context.l10n.transportNextDepartureLabel,
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
                   color: scheme.onPrimaryContainer,
                 ),
@@ -215,7 +216,7 @@ class _NextDepartureCard extends StatelessWidget {
               ),
               Text(
                 sameDay
-                    ? (countdown.isEmpty ? 'hoy' : countdown)
+                    ? (countdown.isEmpty ? context.l10n.transportToday : countdown)
                     : at.fullDate,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: scheme.onPrimaryContainer,
@@ -229,7 +230,7 @@ class _NextDepartureCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  'Llegada',
+                  context.l10n.transportArrival,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: scheme.onPrimaryContainer,
                   ),
@@ -273,7 +274,7 @@ class _NoServiceCard extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'No quedan salidas programadas. Consulta los horarios de abajo.',
+              context.l10n.transportNoDeparturesLeft,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: scheme.onSurfaceVariant,
               ),
@@ -307,7 +308,7 @@ class _MapActions extends StatelessWidget {
             child: FilledButton.icon(
               onPressed: () => openDirectionsToStop(origin),
               icon: const Icon(PhosphorIconsRegular.mapPin, size: 18),
-              label: Text('Cómo llegar a ${origin.name}'),
+              label: Text(context.l10n.transportDirectionsTo(origin.name)),
             ),
           ),
         if (route.mappableStops.length >= 2) ...[
@@ -319,8 +320,8 @@ class _MapActions extends StatelessWidget {
               icon: const Icon(PhosphorIconsRegular.mapTrifold, size: 18),
               label: Text(
                 AppConfig.useEmbeddedMap
-                    ? 'Abrir el recorrido en Google Maps'
-                    : 'Ver el recorrido en el mapa',
+                    ? context.l10n.transportOpenRouteInGoogleMaps
+                    : context.l10n.transportViewRouteOnMap,
               ),
             ),
           ),
@@ -373,7 +374,7 @@ class _DaySchedule extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          isToday ? 'Hoy · ${day.monthDay}' : day.fullDate,
+          isToday ? context.l10n.transportTodayDate(day.monthDay) : day.fullDate,
           style: Theme.of(context).textTheme.labelLarge?.copyWith(
             fontWeight: FontWeight.w700,
             color: isToday ? scheme.primary : scheme.onSurfaceVariant,
@@ -487,7 +488,7 @@ class _DepartureChip extends StatelessWidget {
       _ => at.add(const Duration(hours: 1)),
     };
     await addToCalendar(
-      title: '${route.name} — salida del bus',
+      title: context.l10n.transportBusDepartureTitle(route.name),
       description: route.description,
       location: origin?.searchQuery ?? '',
       start: at,
@@ -495,7 +496,7 @@ class _DepartureChip extends StatelessWidget {
     );
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Abriendo tu calendario…')),
+        SnackBar(content: Text(context.l10n.transportOpeningCalendar)),
       );
     }
   }

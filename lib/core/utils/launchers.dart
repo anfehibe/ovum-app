@@ -9,8 +9,12 @@ Future<void> shareText(String text) async {
 }
 
 Future<void> openUrl(String url) async {
-  if (url.isEmpty) return;
-  final uri = Uri.parse(url);
+  final raw = url.trim();
+  if (raw.isEmpty) return;
+  // Algunos enlaces del API llegan sin esquema (p. ej. "www.linkedin.com/..."),
+  // lo que hace fallar canLaunchUrl. Les anteponemos https://.
+  final normalized = raw.contains('://') ? raw : 'https://$raw';
+  final uri = Uri.parse(normalized);
   if (await canLaunchUrl(uri)) {
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }

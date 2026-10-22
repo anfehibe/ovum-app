@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ovum/core/constants/agenda_groups.dart';
 import 'package:ovum/data/models/info_item.dart';
 import 'package:ovum/data/models/networking_catalog.dart';
 import 'package:ovum/data/models/networking_meeting.dart';
@@ -112,7 +113,7 @@ void main() {
     // El API no tiene campo para separar el programa científico de la agenda
     // general: reutiliza el agrupamiento de `data[]` (sedes) para eso.
     test('una sede con dirección/coords es la agenda general', () {
-      expect(sessionsFromAgendaJson(venues).first.agendaGroup, 'Agenda general');
+      expect(sessionsFromAgendaJson(venues).first.agendaGroup, kAgendaGeneralGroup);
     });
 
     test('una sede sin dirección, coords ni planos se etiqueta con su nombre', () {
@@ -155,7 +156,7 @@ void main() {
           ],
         },
       ];
-      expect(sessionsFromAgendaJson(conPlano).first.agendaGroup, 'Agenda general');
+      expect(sessionsFromAgendaJson(conPlano).first.agendaGroup, kAgendaGeneralGroup);
     });
 
     test('una sede sin nombre ni datos de sede deja el grupo vacío', () {

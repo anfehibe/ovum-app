@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -28,26 +29,26 @@ class NetworkingGate extends ConsumerWidget {
     final access = ref.watch(networkingAccessProvider);
     return access.when(
       loading: () => const LoadingView(),
-      error: (_, _) => _retry(ref, null),
+      error: (_, _) => _retry(context, ref, null),
       data: (a) {
         if (a.isOpen) return builder(context);
         return switch (a.block!) {
           NetworkingBlock.signInRequired => SignInPrompt(message: signInMessage),
-          NetworkingBlock.failed => _retry(ref, a.message),
+          NetworkingBlock.failed => _retry(context, ref, a.message),
           NetworkingBlock.closed || NetworkingBlock.disabled => _closed(context, a.message),
         };
       },
     );
   }
 
-  Widget _retry(WidgetRef ref, String? message) => Column(
+  Widget _retry(BuildContext context, WidgetRef ref, String? message) => Column(
     mainAxisAlignment: MainAxisAlignment.center,
     children: [
       ErrorView(message: message),
       const SizedBox(height: 12),
       FilledButton.tonal(
         onPressed: () => ref.invalidate(networkingAccessProvider),
-        child: const Text('Reintentar'),
+        child: Text(context.l10n.networkingRetry),
       ),
     ],
   );
@@ -70,7 +71,7 @@ class NetworkingGate extends ConsumerWidget {
             const SizedBox(height: 12),
             Text(
               message.isEmpty
-                  ? 'La mensajería no está disponible para este evento.'
+                  ? context.l10n.networkingMessagingUnavailable
                   : message,
               textAlign: TextAlign.center,
               style: Theme.of(

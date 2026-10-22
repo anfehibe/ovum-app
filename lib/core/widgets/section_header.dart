@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import '../constants/app_strings.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 
 /// Encabezado de sección con título y acción opcional ("Ver todo").
 class SectionHeader extends StatelessWidget {
@@ -30,7 +29,7 @@ class SectionHeader extends StatelessWidget {
           if (onAction != null)
             TextButton(
               onPressed: onAction,
-              child: Text(actionLabel ?? AppStrings.seeAll),
+              child: Text(actionLabel ?? context.l10n.seeAll),
             ),
         ],
       ),

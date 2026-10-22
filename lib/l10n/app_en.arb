@@ -1,0 +1,660 @@
+{
+  "@@locale": "en",
+  "navHome": "Home",
+  "@navHome": {
+    "description": "Bottom nav: home tab"
+  },
+  "navAgenda": "Agenda",
+  "navNetworking": "Networking",
+  "navProfile": "Profile",
+  "agendaGeneral": "General agenda",
+  "@agendaGeneral": {
+    "description": "Label for the group of sessions held at a physical venue"
+  },
+  "agendaNoGroupSelected": "Select at least one program",
+  "speakers": "Speakers",
+  "sponsors": "Sponsors",
+  "exhibitors": "Exhibitors",
+  "attendees": "Attendees",
+  "otherActivities": "Other activities",
+  "venue": "Venues",
+  "generalInfo": "Information",
+  "hotels": "Accommodation",
+  "organizers": "Organizers",
+  "transport": "Transport",
+  "favorites": "Favorites",
+  "meetings": "Meetings",
+  "chat": "Chat",
+  "liveQuestions": "Live questions",
+  "polls": "Polls",
+  "seeAll": "See all",
+  "search": "Search",
+  "send": "Send",
+  "save": "Save",
+  "cancel": "Cancel",
+  "accept": "Accept",
+  "decline": "Decline",
+  "message": "Message",
+  "meeting": "Meeting",
+  "addToCalendar": "Add to calendar",
+  "website": "Website",
+  "email": "Email",
+  "call": "Call",
+  "login": "Log in",
+  "enterAsGuest": "Enter as guest",
+  "logout": "Log out",
+  "emptyGeneric": "Nothing to show",
+  "loading": "Loading…",
+  "welcome": "Welcome to",
+  "close": "Close",
+  "@close": {
+    "description": "Tooltip for the close (X) button of the fullscreen image viewer"
+  },
+  "zoomPhoto": "Zoom photo",
+  "@zoomPhoto": {
+    "description": "Accessibility label for a tappable avatar that opens the photo full screen"
+  },
+  "appearance": "Appearance",
+  "@appearance": {
+    "description": "Profile section title for theme and language settings"
+  },
+  "language": "Language",
+  "@language": {
+    "description": "Label for the language selector"
+  },
+  "languageSpanish": "Spanish",
+  "languageEnglish": "English",
+  "themeAuto": "Auto",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "networkingLoadMoreError": "Couldn't load more attendees.",
+  "networkingSearchHint": "Search by name, company or role",
+  "networkingNoResults": "No results",
+  "networkingFavoritesEmpty": "You haven't saved anyone yet.\nTap the heart in the directory.",
+  "networkingMeetingsReceived": "Received",
+  "networkingMeetingsConfirmed": "Confirmed",
+  "networkingMeetingsPending": "Pending",
+  "networkingRequestsReceived": "Requests received",
+  "networkingNoRequestsReceived": "You have no meeting requests.",
+  "networkingSentByYou": "Sent by you",
+  "networkingNoRequestsSent": "You haven't sent any requests yet. Find someone in the directory.",
+  "networkingAttendee": "Attendee",
+  "networkingRemoveFavorite": "Remove from favorites",
+  "networkingSaveFavorite": "Save to favorites",
+  "networkingFavoriteError": "Couldn't update favorite.",
+  "networkingAbout": "About",
+  "networkingSectors": "Sectors",
+  "networkingInterests": "Interests",
+  "networkingSeeking": "Looking for",
+  "networkingOffers": "Offers",
+  "networkingRegions": "Regions",
+  "networkingSendMessage": "Send message",
+  "networkingRequestMeeting": "Request meeting",
+  "networkingMessagingUnavailable": "Messaging isn't available for this event.",
+  "networkingProfileIncomplete": "Your congress profile is incomplete: complete your registration to be able to save sectors and interests.",
+  "networkingProfileSaveError": "Couldn't save profile.",
+  "networkingMyProfile": "My networking profile",
+  "networkingProfileHelp": "This helps other attendees find you in the directory.",
+  "networkingMySector": "My sector",
+  "networkingMyInterests": "My interests",
+  "networkingImSeeking": "I'm looking for",
+  "networkingIOffer": "I offer solutions in",
+  "networkingRegionsOfInterest": "Regions of interest",
+  "networkingSignInPrompt": "Sign in to network with other attendees.",
+  "networkingRetry": "Retry",
+  "networkingDirectory": "Directory",
+  "networkingUnavailable": "Networking isn't available for this event.",
+  "networkingNoAttendeesPublished": "No attendees published yet.",
+  "chatMyChats": "My chats",
+  "chatSignInPrompt": "Sign in to message other attendees.",
+  "chatSendError": "Couldn't send the message.",
+  "chatFirstMessage": "Write the first message",
+  "chatMessageHint": "Message…",
+  "meetingCardOtherPerson": "the other person",
+  "meetingCardDeclineTitle": "Decline this request?",
+  "meetingCardDeclineBody": "The person who sent it will be notified by email.",
+  "meetingCardTableByOrganizer": "The organizer will assign the table.",
+  "meetingCardRespondError": "Couldn't respond to the meeting.",
+  "meetingCardNotFound": "This meeting no longer exists.",
+  "meetingCardCancelTitle": "Cancel this meeting?",
+  "meetingCardBack": "Back",
+  "meetingCardCancelMeeting": "Cancel meeting",
+  "meetingCardCancelError": "Couldn't cancel the meeting.",
+  "meetingCardCancelled": "Cancelled",
+  "meetingCardTablePending": "Table to be assigned",
+  "meetingCardEdit": "Edit",
+  "meetingCardNoSchedule": "No time proposed",
+  "newMeetingEditTitle": "Edit meeting",
+  "newMeetingRequestTitle": "Request meeting",
+  "newMeetingCannotEdit": "This meeting can no longer be edited.",
+  "newMeetingAttendeeUnavailable": "This attendee is no longer available for meetings.",
+  "newMeetingSendError": "Couldn't send the request.",
+  "newMeetingSaveError": "Couldn't save changes.",
+  "newMeetingTopicLabel": "What would you like to talk about?",
+  "newMeetingMessageHint": "Briefly tell them the reason for the meeting",
+  "newMeetingProposedDay": "Proposed day",
+  "newMeetingStartTime": "Start time",
+  "newMeetingChooseTime": "Choose time",
+  "newMeetingDuration": "Duration",
+  "newMeetingSendRequest": "Send request",
+  "newMeetingSaveChanges": "Save changes",
+  "newMeetingAgendaUnavailable": "We couldn't check the congress agenda: approximate times are shown and the other person may not be free.",
+  "newMeetingCheckingMeetings": "Checking your meetings…",
+  "newMeetingCheckFailed": "We couldn't check your meetings; make sure it doesn't overlap.",
+  "newMeetingNoFreeTime": "You have no free time left that day. Try another one.",
+  "newMeetingPickStartTime": "Choose a start time.",
+  "newMeetingOtherPerson": "The other person",
+  "newMeetingPendingAtTime": "You have an unanswered request at that time.",
+  "meetingSlotAlreadyBooked": "You already have a meeting at that time.",
+  "meetingSlotOtherBusy": "The other person isn't free at that time.",
+  "meetingSlotDone": "Done",
+  "authWrongPassword": "Incorrect password.",
+  "authCouldNotVerifyPassword": "Couldn't verify your password. Please try again.",
+  "authEnterFaster": "Get in faster",
+  "authNotNow": "Not now",
+  "authActivate": "Enable",
+  "authEnableQuickAccess": "Enable quick access",
+  "authPassword": "Password",
+  "authContinue": "Continue",
+  "authWrongCredentials": "Incorrect email or password.",
+  "authCouldNotLogin": "Couldn't sign in. Please try again.",
+  "authPasswordChanged": "Your password changed. Enter it again and re-enable quick access.",
+  "authLoginSubtitle": "Sign in to experience the congress",
+  "authEmailLabel": "Email address",
+  "authEmailHint": "you@email.com",
+  "authEnterEmail": "Enter your email",
+  "authInvalidEmail": "Invalid email",
+  "authEnterPassword": "Enter your password",
+  "profileTooManyAttempts": "Too many attempts. Wait a minute and try again.",
+  "profileSessionExpired": "Your session expired. Sign out, sign back in, and try again.",
+  "profileOptionUnavailable": "This option isn't available yet. Please try again later.",
+  "profileAccountDeleted": "Your account was deleted.",
+  "profileDeleteAccountConfirmTitle": "Delete your account?",
+  "profileDeleteAccountConfirmBody": "Your data will be erased and you won't be able to sign in with this account. This can't be undone.",
+  "profileDelete": "Delete",
+  "profileDeleteMyAccount": "Delete my account",
+  "profileActionCannotBeUndone": "This action can't be undone",
+  "profileWhatIsDeleted": "What gets deleted",
+  "profileDeletedPersonalData": "Your personal and contact details.",
+  "profileDeletedNetworkingProfile": "Your networking profile, your favorites, and your meetings.",
+  "profileDeletedQuickAccess": "Quick access with Face ID or fingerprint on this phone.",
+  "profileNoLongerLogin": "After that you won't be able to sign in with this account.",
+  "profileWhatIsKept": "What is kept",
+  "profileKeptRegistrations": "Your registrations and payments, for accounting and tax obligations. They are kept without your contact details.",
+  "profilePassword": "Password",
+  "profilePasswordHelper": "Type it to confirm it's you.",
+  "profileEnterPassword": "Enter your password",
+  "profileUpdated": "Profile updated",
+  "profileCouldNotSave": "Couldn't save the profile.",
+  "profileEditProfile": "Edit profile",
+  "profileFirstName": "First name",
+  "profileLastName": "Last name",
+  "profilePosition": "Position",
+  "profileCompany": "Company",
+  "profileMobile": "Mobile",
+  "profileCity": "City",
+  "profileBio": "Bio",
+  "profileSectorsEditedInNetworking": "Your sectors and interests are edited in your networking profile.",
+  "profileGuest": "Guest",
+  "profileNoFavoritesYet": "No favorites yet",
+  "profileMyNetworkingProfile": "My networking profile",
+  "profileNetworkingSubtitle": "Sectors and interests so others can find you",
+  "profileNotifications": "Notifications",
+  "profileCongressAlerts": "Congress alerts",
+  "profileCongressAlertsSubtitle": "Agenda changes and announcements from the organizer",
+  "profileRememberSessions": "Remind me of my sessions",
+  "profileRememberSessionsSubtitle": "A reminder before the sessions you saved",
+  "profileRemindMeAhead": "Remind me ahead of time by",
+  "profileSecurity": "Security",
+  "profileLoginWithoutPassword": "Sign in without typing your password",
+  "profileAbout": "About",
+  "profileEventLabel": "Event",
+  "profileOrganizedBy": "Organized by",
+  "profileVersionLabel": "Version",
+  "profilePrivacyPolicy": "Privacy policy",
+  "profilePrivacyPolicySubtitle": "What data we use and how",
+  "profileTerms": "Terms and conditions",
+  "profileTermsSubtitle": "Rules for using the platform",
+  "profileContact": "Contact",
+  "profileQuickAccessDisabled": "Quick access disabled.",
+  "transportNoRoutes": "No transport routes have been published yet.\nCheck back closer to the congress dates.",
+  "transportCongressBuses": "Congress buses",
+  "transportIntroText": "Transfers between the hotels and the congress venue. Tap a route to see its stops and schedules.",
+  "transportCallOrganizers": "Call the organizers",
+  "transportRouteUnavailable": "This route is no longer available.",
+  "transportItinerary": "Itinerary",
+  "transportDepartureTimes": "Departure times",
+  "transportNoSchedules": "No schedules have been published for this route yet.",
+  "transportNextDepartureLabel": "Next departure",
+  "transportToday": "today",
+  "transportArrival": "Arrival",
+  "transportNoDeparturesLeft": "No scheduled departures left. Check the schedules below.",
+  "transportOpenRouteInGoogleMaps": "Open the route in Google Maps",
+  "transportViewRouteOnMap": "View the route on the map",
+  "transportOpeningCalendar": "Opening your calendar…",
+  "transportNoStops": "This route doesn't have published stops yet.",
+  "agendaComingSoon": "The agenda will be published soon",
+  "agendaSessionNotFound": "Session not found",
+  "agendaDescription": "Description",
+  "agendaParticipate": "Take part",
+  "agendaSendQuestionSubtitle": "Send your question to the panel",
+  "agendaAnswerPollSubtitle": "Answer the live poll",
+  "agendaCalendar": "Calendar",
+  "agendaShare": "Share",
+  "agendaSponsoredBy": "Sponsored by",
+  "homeEventCity": "Guatemala City",
+  "homeFeaturedAgenda": "Featured agenda",
+  "homeFeaturedSpeakers": "Featured speakers",
+  "homeOrganizedBy": "Organized by",
+  "liveQuestionSent": "Your question was sent. It will appear once the organizer approves it.",
+  "liveSignInToAsk": "Log in to send your question.",
+  "liveSendFailed": "The question couldn't be sent. Try again.",
+  "liveNoQuestions": "No approved questions yet.\nSend yours to the speaker.",
+  "liveAnswer": "Answer",
+  "liveAwaitingAnswer": "Awaiting answer",
+  "liveGuestNote": "Log in to send your questions to the speaker.",
+  "liveQuestionHint": "Write your question…",
+  "pollNoPolls": "No polls in this session",
+  "pollThanks": "Thanks for taking part!",
+  "pollVoteFailed": "Your vote couldn't be recorded.",
+  "attendeeSignInPrompt": "Log in to see attendees and network.",
+  "attendeeSearchHint": "Search by name, company or sector",
+  "attendeeNoResults": "No results",
+  "attendeeNotFound": "Attendee not found",
+  "attendeeBio": "Biography",
+  "attendeeInterests": "Interests",
+  "attendeeServices": "Services offered",
+  "speakerSearchHint": "Search speakers",
+  "speakerNoResults": "No results",
+  "speakerNotFound": "Speaker not found",
+  "speakerBio": "Biography",
+  "speakerSessions": "Their sessions",
+  "speakerNoSessions": "This speaker has no published sessions yet.",
+  "speakerKeynote": "Keynote speaker",
+  "exhibitorNotFound": "Exhibitor not found",
+  "exhibitorSearchHint": "Search exhibitors",
+  "commonDescription": "Description",
+  "commonNoResults": "No results",
+  "commonLoadError": "An error occurred while loading data.",
+  "favoritesEmpty": "You don't have any favorites yet.\nTap the heart to save what interests you.",
+  "favoritesSessions": "Sessions",
+  "otherActivitiesEmpty": "No additional activities",
+  "hotelsSoldOut": "SOLD OUT",
+  "hotelsOfficial": "Official hotel",
+  "hotelsBook": "Book",
+  "venueScreenPrimary": "Main venue",
+  "venueScreenPlans": "Venue plans",
+  "venueScreenViewMap": "View on map",
+  "widgetRemoveFavorite": "Remove from favorites",
+  "widgetAddFavorite": "Add to favorites",
+  "networkingAttendeeCount": "{count, plural, =1{1 attendee} other{{count} attendees}}",
+  "@networkingAttendeeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatYouPrefix": "You: {text}",
+  "@chatYouPrefix": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "meetingCardReply": "Reply: {reply}",
+  "@meetingCardReply": {
+    "placeholders": {
+      "reply": {
+        "type": "String"
+      }
+    }
+  },
+  "meetingCardCancelConfirmedBody": "We'll notify {name}. If a table was assigned, it will be freed.",
+  "@meetingCardCancelConfirmedBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "meetingCardCancelPendingBody": "{name} will no longer be able to accept it.",
+  "@meetingCardCancelPendingBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "newMeetingEndsAndRequest": "Ends at {time} · they'll get the request to accept or decline it.",
+  "@newMeetingEndsAndRequest": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "newMeetingEndsAndNotify": "Ends at {time} · we'll let them know about the change.",
+  "@newMeetingEndsAndNotify": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "newMeetingReconfirm": "{name} will have to confirm it again and the table will be freed.",
+  "@newMeetingReconfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "meetingSlotPastClosing": "That runs past {time}.",
+  "@meetingSlotPastClosing": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "meetingSlotNeedsNextHalfHour": "With {minutes}′ you also need the next half hour free.",
+  "@meetingSlotNeedsNextHalfHour": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "meetingSlotEndsAt": "Ends at {time}.",
+  "@meetingSlotEndsAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "meetingSlotEndsTentative": "Ends at {time} · you have an unanswered request at that time.",
+  "@meetingSlotEndsTentative": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "authBiometricEnabledNextTime": "Done: next time, sign in with {method}.",
+  "@authBiometricEnabledNextTime": {
+    "placeholders": {
+      "method": {
+        "type": "String"
+      }
+    }
+  },
+  "authQuickAccessEnabledWith": "Quick access enabled with {method}.",
+  "@authQuickAccessEnabledWith": {
+    "placeholders": {
+      "method": {
+        "type": "String"
+      }
+    }
+  },
+  "authBiometricExplainer": "Use {method} instead of typing your email and password each time. They're stored encrypted on this device and never leave it.",
+  "@authBiometricExplainer": {
+    "placeholders": {
+      "method": {
+        "type": "String"
+      }
+    }
+  },
+  "authConfirmPasswordFor": "Confirm the password for {email} to store it encrypted on this device.",
+  "@authConfirmPasswordFor": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "authLoginWith": "Sign in with {method}",
+  "@authLoginWith": {
+    "placeholders": {
+      "method": {
+        "type": "String"
+      }
+    }
+  },
+  "profileEnabledFor": "Enabled for {email}",
+  "@profileEnabledFor": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "profileYouWillDeleteAccount": "You're about to delete the account {email}.",
+  "@profileYouWillDeleteAccount": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "profileSavedCount": "{count} saved",
+  "@profileSavedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "transportStopsCount": "{count} stops",
+  "@transportStopsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "transportApproxMinutes": "{minutes} min approx.",
+  "@transportApproxMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "transportEveryMinutes": "every {minutes} min",
+  "@transportEveryMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "transportNextDeparture": "Next departure {when}",
+  "@transportNextDeparture": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "transportNextDepartureWithCountdown": "Next departure {when} · {countdown}",
+  "@transportNextDepartureWithCountdown": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      },
+      "countdown": {
+        "type": "String"
+      }
+    }
+  },
+  "transportDirectionsTo": "How to get to {place}",
+  "@transportDirectionsTo": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "transportTodayDate": "Today · {date}",
+  "@transportTodayDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "transportBusDepartureTitle": "{route} — bus departure",
+  "@transportBusDepartureTitle": {
+    "placeholders": {
+      "route": {
+        "type": "String"
+      }
+    }
+  },
+  "transportPlusMinutes": "+{minutes} min",
+  "@transportPlusMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "agendaDayNumber": "Day {number}",
+  "@agendaDayNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "agendaReminderNotice": "We'll remind you {minutes} min before it starts.",
+  "@agendaReminderNotice": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "homeGreeting": "Hi, {name}!",
+  "@homeGreeting": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "homeDaysLeft": "{days} days to go",
+  "@homeDaysLeft": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "exhibitorStand": "Booth {booth}",
+  "@exhibitorStand": {
+    "placeholders": {
+      "booth": {
+        "type": "String"
+      }
+    }
+  },
+  "hotelsPriceFrom": "From {price}",
+  "@hotelsPriceFrom": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "hotelsReservations": "Reservations: {contact}",
+  "@hotelsReservations": {
+    "placeholders": {
+      "contact": {
+        "type": "String"
+      }
+    }
+  },
+  "networkingAttendeeNotFound": "That attendee is no longer part of networking.",
+  "networkingLoadCardError": "Couldn't load the profile.",
+  "meetingCardActionError": "Couldn't complete the action.",
+  "chatEmpty": "You have no conversations yet.\nMessage someone from their profile in the directory.",
+  "profileDeleteGenericError": "Couldn't delete your account. Please try again.",
+  "authBiometricFingerprint": "your fingerprint",
+  "authBiometricDeviceLock": "your device lock",
+  "transportDirHotelToVenue": "From hotel to venue",
+  "transportDirVenueToHotel": "From venue to hotel",
+  "transportDirCircular": "Circular",
+  "transportLeavingNow": "leaving now",
+  "transportStopHotel": "Hotel",
+  "transportStopVenue": "Venue",
+  "transportStopFree": "Meeting point",
+  "transportInMinutes": "in {minutes} min",
+  "@transportInMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "transportInHours": "in {hours} h",
+  "@transportInHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "transportInHoursMinutes": "in {hours} h {minutes} min",
+  "@transportInHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "meetingCancellationYou": "you",
+  "meetingCancelledBy": "Cancelled by {who}",
+  "@meetingCancelledBy": {
+    "placeholders": {
+      "who": {
+        "type": "String"
+      }
+    }
+  },
+  "meetingCancelledByToday": "Cancelled by {who} today at {time}",
+  "@meetingCancelledByToday": {
+    "placeholders": {
+      "who": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "meetingCancelledByOnDate": "Cancelled by {who} on {date} at {time}",
+  "@meetingCancelledByOnDate": {
+    "placeholders": {
+      "who": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "notifPermTitle": "Don't miss a thing",
+  "notifPermBody": "Enable notifications to keep up with agenda changes and congress announcements, and so we can remind you before your saved sessions start.",
+  "notifPermEnable": "Enable",
+  "notifPermNotNow": "Not now"
+}

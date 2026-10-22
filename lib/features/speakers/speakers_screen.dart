@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/router/route_paths.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/initials_avatar.dart';
@@ -26,7 +26,7 @@ class _SpeakersScreenState extends ConsumerState<SpeakersScreen> {
   Widget build(BuildContext context) {
     final async = ref.watch(speakersProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.speakers)),
+      appBar: AppBar(title: Text(context.l10n.speakers)),
       body: async.when(
         loading: () => const LoadingView(),
         error: (_, _) => const ErrorView(),
@@ -44,15 +44,15 @@ class _SpeakersScreenState extends ConsumerState<SpeakersScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                 child: TextField(
                   onChanged: (v) => setState(() => _query = v),
-                  decoration: const InputDecoration(
-                    hintText: 'Buscar conferencista',
-                    prefixIcon: Icon(PhosphorIconsRegular.magnifyingGlass),
+                  decoration: InputDecoration(
+                    hintText: context.l10n.speakerSearchHint,
+                    prefixIcon: const Icon(PhosphorIconsRegular.magnifyingGlass),
                   ),
                 ),
               ),
               Expanded(
                 child: filtered.isEmpty
-                    ? const EmptyState(message: 'Sin resultados')
+                    ? EmptyState(message: context.l10n.speakerNoResults)
                     : GridView.builder(
                         padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

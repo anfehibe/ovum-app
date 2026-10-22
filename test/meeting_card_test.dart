@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/network/api_client.dart';
 import 'package:ovum/core/network/api_exception.dart';
 import 'package:ovum/data/models/networking_card.dart';
@@ -64,6 +66,9 @@ Future<_FakeApi> _pump(WidgetTester tester, NetworkingMeeting m) async {
         networkingMeetingsProvider.overrideWith((ref) async => [m]),
       ],
       child: MaterialApp(
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(body: SingleChildScrollView(child: MeetingCard(meeting: m))),
       ),
     ),
@@ -72,7 +77,12 @@ Future<_FakeApi> _pump(WidgetTester tester, NetworkingMeeting m) async {
 }
 
 void main() {
-  setUpAll(() => initializeDateFormatting('es'));
+  late AppLocalizations l10n;
+  setUpAll(() async {
+    await initializeDateFormatting('es');
+    Intl.defaultLocale = 'es';
+    l10n = await AppLocalizations.delegate.load(const Locale('es'));
+  });
 
   testWidgets('enviada pendiente: Editar y Cancelar, sin Aceptar', (tester) async {
     await _pump(tester, _meeting());
@@ -160,15 +170,15 @@ void main() {
 
   test('meetingChangeErrorText: 404, mensaje del backend o genérico', () {
     expect(
-      meetingChangeErrorText(const ApiException('', statusCode: 404)),
+      meetingChangeErrorText(l10n, const ApiException('', statusCode: 404)),
       'Esa reunión ya no existe.',
     );
     expect(
-      meetingChangeErrorText(const ApiException('Esta reunión ya pasó.', statusCode: 422)),
+      meetingChangeErrorText(l10n, const ApiException('Esta reunión ya pasó.', statusCode: 422)),
       'Esta reunión ya pasó.',
     );
     expect(
-      meetingChangeErrorText(const ApiException('', statusCode: 500)),
+      meetingChangeErrorText(l10n, const ApiException('', statusCode: 500)),
       'No se pudo completar la acción.',
     );
   });

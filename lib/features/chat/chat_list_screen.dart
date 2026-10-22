@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
 import '../../core/router/route_paths.dart';
@@ -24,15 +25,15 @@ class ChatListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Mis chats')),
+      appBar: AppBar(title: Text(context.l10n.chatMyChats)),
       body: NetworkingGate(
-        signInMessage: 'Inicia sesión para escribirte con otros asistentes.',
-        builder: (context) => _list(ref),
+        signInMessage: context.l10n.chatSignInPrompt,
+        builder: (context) => _list(context, ref),
       ),
     );
   }
 
-  Widget _list(WidgetRef ref) {
+  Widget _list(BuildContext context, WidgetRef ref) {
     final async = ref.watch(conversationsProvider);
     return async.when(
       loading: () => const LoadingView(),
@@ -43,11 +44,10 @@ class ChatListScreen extends ConsumerWidget {
             // Dentro de un scrollable para que el pull-to-refresh funcione vacío.
             ? ListView(
                 padding: const EdgeInsets.all(24),
-                children: const [
-                  SizedBox(height: 60),
+                children: [
+                  const SizedBox(height: 60),
                   EmptyState(
-                    message:
-                        'No tienes conversaciones.\nEscríbele a alguien desde su ficha en el directorio.',
+                    message: context.l10n.chatEmpty,
                     icon: PhosphorIconsRegular.chatsCircle,
                   ),
                 ],
@@ -104,7 +104,7 @@ class _ConversationTile extends StatelessWidget {
     final card = conversation.counterpart;
     // El servidor ya recorta el preview a 120 caracteres; no se recorta más.
     final preview = conversation.lastIsMine
-        ? 'Tú: ${conversation.lastText}'
+        ? context.l10n.chatYouPrefix(conversation.lastText)
         : conversation.lastText;
     final unread = conversation.hasUnread;
 
@@ -129,7 +129,7 @@ class _ConversationTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      card.name.isEmpty ? 'Asistente' : card.name,
+                      card.name.isEmpty ? context.l10n.networkingAttendee : card.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleSmall,

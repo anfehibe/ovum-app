@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 
 import '../../core/constants/ovum_event.dart';
 import '../../core/theme/app_colors.dart';
@@ -80,26 +81,25 @@ class _MeetingTimeSheetState extends State<_MeetingTimeSheet> {
   (String, bool) _caption(MeetingSlot slot) {
     if (slot.minuteOfDay + widget.durationMinutes > MeetingHours.closingMinute) {
       final closing = const MeetingSlot(MeetingHours.closingMinute).label;
-      return ('Se pasa de las $closing.', true);
+      return (context.l10n.meetingSlotPastClosing(closing), true);
     }
     if (widget.states[slot] == SlotState.taken) {
-      return ('Ya tienes una reunión a esa hora.', true);
+      return (context.l10n.meetingSlotAlreadyBooked, true);
     }
     if (widget.states[slot] == SlotState.otherBusy) {
-      return ('La otra persona no está libre a esa hora.', true);
+      return (context.l10n.meetingSlotOtherBusy, true);
     }
     if (!_fits(slot)) {
       return (
-        'Con ${widget.durationMinutes}′ también necesitas libre la media hora '
-            'siguiente.',
+        context.l10n.meetingSlotNeedsNextHalfHour(widget.durationMinutes),
         true,
       );
     }
     final end = endLabel(slot, widget.durationMinutes);
     if (widget.states[slot] == SlotState.tentative) {
-      return ('Termina a las $end · tienes una solicitud sin responder a esa hora.', true);
+      return (context.l10n.meetingSlotEndsTentative(end), true);
     }
-    return ('Termina a las $end.', false);
+    return (context.l10n.meetingSlotEndsAt(end), false);
   }
 
   @override
@@ -121,15 +121,15 @@ class _MeetingTimeSheetState extends State<_MeetingTimeSheet> {
               children: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancelar'),
+                  child: Text(context.l10n.cancel),
                 ),
                 Text(
-                  'Hora de inicio',
+                  context.l10n.newMeetingStartTime,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 TextButton(
                   onPressed: fits ? () => Navigator.pop(context, slot) : null,
-                  child: const Text('Listo'),
+                  child: Text(context.l10n.meetingSlotDone),
                 ),
               ],
             ),

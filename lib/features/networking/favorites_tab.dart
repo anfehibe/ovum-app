@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
 import '../../core/router/route_paths.dart';
@@ -27,11 +28,10 @@ class FavoritesTab extends ConsumerWidget {
         child: cards.isEmpty
             ? ListView(
                 padding: const EdgeInsets.all(24),
-                children: const [
-                  SizedBox(height: 60),
+                children: [
+                  const SizedBox(height: 60),
                   EmptyState(
-                    message:
-                        'Aún no has guardado a nadie.\nToca el corazón en el directorio.',
+                    message: context.l10n.networkingFavoritesEmpty,
                     icon: PhosphorIconsRegular.heart,
                   ),
                 ],

@@ -1,13 +1,19 @@
 import 'package:intl/intl.dart';
 
-/// Formateo de fechas en español. Requiere `initializeDateFormatting('es')`
-/// en el arranque (ver main.dart).
+/// Formateo de fechas según el idioma activo. Se usan constructores por
+/// "skeleton" (p. ej. `DateFormat.MMMMd`) en vez de patrones literales para que
+/// el orden y los conectores sean los correctos de cada idioma: en español
+/// "11 de noviembre", en inglés "November 11".
+///
+/// El idioma lo toma de `Intl.defaultLocale`, que la app mantiene al día con el
+/// idioma efectivo (ver `app.dart`). Requiere `initializeDateFormatting` de ese
+/// locale en el arranque (ver main.dart: se cargan 'es' y 'en').
 extension DateFmt on DateTime {
-  String get dayName => DateFormat('EEEE', 'es').format(this); // lunes
-  String get dayNameShort => toBeginningOfSentenceCase(DateFormat('EEE', 'es').format(this)) ?? '';
-  String get monthDayShort => DateFormat('d MMM', 'es').format(this); // 11 nov
-  String get monthDay => DateFormat("d 'de' MMMM", 'es').format(this);
-  String get fullDate => DateFormat("EEEE d 'de' MMMM 'de' y", 'es').format(this);
+  String get dayName => DateFormat.EEEE().format(this); // lunes / Monday
+  String get dayNameShort => toBeginningOfSentenceCase(DateFormat.E().format(this)) ?? '';
+  String get monthDayShort => DateFormat.MMMd().format(this); // 11 nov / Nov 11
+  String get monthDay => DateFormat.MMMMd().format(this); // 11 de noviembre / November 11
+  String get fullDate => DateFormat.yMMMMEEEEd().format(this);
   String get hm => DateFormat('HH:mm').format(this);
   int get dayNumber => day;
 

@@ -50,7 +50,7 @@ El comando que se usa para preparar una entrega a las tiendas, con el mapa encen
 
 ```bash
 flutter build appbundle --release --dart-define=OVUM_EMBEDDED_MAP=true && \
-flutter build ios --release --dart-define=OVUM_EMBEDDED_MAP=true
+flutter build ios --release --dart-define=OVUM_EMBEDDED_MAP=true && open ios/Runner.xcworkspace
 ```
 
 Deja los artefactos en:

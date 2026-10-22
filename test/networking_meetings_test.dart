@@ -1,6 +1,9 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/network/api_client.dart';
 import 'package:ovum/core/notifications/notification_routes.dart';
 import 'package:ovum/data/models/networking_card.dart';
@@ -53,7 +56,12 @@ NetworkingMeeting _meeting({
 );
 
 void main() {
-  setUpAll(() => initializeDateFormatting('es'));
+  late AppLocalizations l10n;
+  setUpAll(() async {
+    await initializeDateFormatting('es');
+    Intl.defaultLocale = 'es';
+    l10n = await AppLocalizations.delegate.load(const Locale('es'));
+  });
 
   group('NetworkingService · editar y cancelar', () {
     late _FakeApi api;
@@ -196,17 +204,17 @@ void main() {
         byName: 'Andres Higuera',
         at: DateTime(2026, 11, 10, 8),
       );
-      expect(cancellationLabel(c, myId: '7', now: now), 'Cancelada por Andres Higuera el 10 nov a las 08:00');
+      expect(cancellationLabel(l10n, c, myId: '7', now: now), 'Cancelada por Andres Higuera el 10 nov a las 08:00');
     });
 
     test('hoy y por mí', () {
       final c = MeetingCancellation(byId: '7', byName: 'Carla Demo', at: DateTime(2026, 11, 11, 9, 30));
-      expect(cancellationLabel(c, myId: '7', now: now), 'Cancelada por ti hoy a las 09:30');
+      expect(cancellationLabel(l10n, c, myId: '7', now: now), 'Cancelada por ti hoy a las 09:30');
     });
 
     test('sin nombre ni fecha no deja huecos', () {
       const c = MeetingCancellation(byId: '45');
-      expect(cancellationLabel(c, now: now), 'Cancelada por la otra persona');
+      expect(cancellationLabel(l10n, c, now: now), 'Cancelada por la otra persona');
     });
   });
 

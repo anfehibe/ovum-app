@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/l10n/l10n.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/ui/app_icons.dart';
 import '../../data/providers/notifications_provider.dart';
@@ -63,12 +64,10 @@ class _PermissionSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            Text('No te pierdas nada', style: text.titleLarge),
+            Text(context.l10n.notifPermTitle, style: text.titleLarge),
             const SizedBox(height: 8),
             Text(
-              'Activa las notificaciones para enterarte de los cambios de '
-              'agenda y los anuncios del congreso, y para que te avisemos '
-              'antes de que empiecen las sesiones que guardes.',
+              context.l10n.notifPermBody,
               style: text.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
             ),
             const SizedBox(height: 24),
@@ -77,14 +76,14 @@ class _PermissionSheet extends StatelessWidget {
                 Expanded(
                   child: TextButton(
                     onPressed: () => Navigator.of(context).pop(false),
-                    child: const Text('Ahora no'),
+                    child: Text(context.l10n.notifPermNotNow),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: FilledButton(
                     onPressed: () => Navigator.of(context).pop(true),
-                    child: const Text('Activar'),
+                    child: Text(context.l10n.notifPermEnable),
                   ),
                 ),
               ],

@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import 'core/config/app_config.dart';
+import 'core/l10n/l10n.dart';
 import 'core/notifications/notification_routes.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
@@ -30,6 +32,7 @@ class OvumApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(themeModeProvider);
+    final locale = ref.watch(localeProvider);
     ref.watch(_crashUserProvider);
 
     return NotificationsBootstrap(
@@ -40,13 +43,31 @@ class OvumApp extends ConsumerWidget {
         darkTheme: AppTheme.dark(),
         themeMode: themeMode,
         routerConfig: router,
-        locale: const Locale('es'),
-        supportedLocales: const [Locale('es')],
+        // `null` = seguir el idioma del dispositivo; si no está soportado,
+        // `localeResolutionCallback` cae a español.
+        locale: locale,
+        supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: const [
+          AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
+        localeResolutionCallback: (deviceLocale, supported) {
+          if (deviceLocale != null) {
+            for (final l in supported) {
+              if (l.languageCode == deviceLocale.languageCode) return l;
+            }
+          }
+          return const Locale('es');
+        },
+        // Mantiene el formato de fechas (`intl`) sincronizado con el idioma
+        // efectivo que resolvió `MaterialApp`, sin tener que pasar el locale a
+        // cada `DateFormat` (ver core/utils/date_ext.dart).
+        builder: (context, child) {
+          Intl.defaultLocale = Localizations.localeOf(context).languageCode;
+          return child!;
+        },
       ),
     );
   }

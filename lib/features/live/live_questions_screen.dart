@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/states.dart';
@@ -38,18 +38,18 @@ class _LiveQuestionsScreenState extends ConsumerState<LiveQuestionsScreen> {
       _controller.clear();
       if (mounted) {
         FocusScope.of(context).unfocus();
-        _toast('Tu pregunta fue enviada. Aparecerá cuando el organizador la apruebe.');
+        _toast(context.l10n.liveQuestionSent);
       }
       // Por si el backend la auto-aprueba, refrescamos la lista.
       ref.invalidate(sessionQuestionsProvider(widget.sessionId));
     } on ApiException catch (e) {
       if (mounted) {
         _toast(e.isUnauthorized
-            ? 'Inicia sesión para enviar tu pregunta.'
-            : 'No se pudo enviar la pregunta. Intenta de nuevo.');
+            ? context.l10n.liveSignInToAsk
+            : context.l10n.liveSendFailed);
       }
     } catch (_) {
-      if (mounted) _toast('No se pudo enviar la pregunta. Intenta de nuevo.');
+      if (mounted) _toast(context.l10n.liveSendFailed);
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -66,7 +66,7 @@ class _LiveQuestionsScreenState extends ConsumerState<LiveQuestionsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(AppStrings.liveQuestions),
+        title: Text(context.l10n.liveQuestions),
         bottom: session == null
             ? null
             : PreferredSize(
@@ -95,11 +95,10 @@ class _LiveQuestionsScreenState extends ConsumerState<LiveQuestionsScreen> {
                 child: questions.isEmpty
                     ? ListView(
                         padding: const EdgeInsets.all(24),
-                        children: const [
-                          SizedBox(height: 72),
+                        children: [
+                          const SizedBox(height: 72),
                           EmptyState(
-                            message:
-                                'Aún no hay preguntas aprobadas.\nEnvía la tuya al ponente.',
+                            message: context.l10n.liveNoQuestions,
                             icon: PhosphorIconsRegular.chatCircleText,
                           ),
                         ],
@@ -166,7 +165,7 @@ class _QuestionCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Respuesta',
+                  Text(context.l10n.liveAnswer,
                       style: Theme.of(context)
                           .textTheme
                           .labelSmall
@@ -182,7 +181,7 @@ class _QuestionCard extends StatelessWidget {
               children: [
                 Icon(PhosphorIconsRegular.clock, size: 14, color: scheme.onSurfaceVariant),
                 const SizedBox(width: 6),
-                Text('En espera de respuesta',
+                Text(context.l10n.liveAwaitingAnswer,
                     style: Theme.of(context)
                         .textTheme
                         .labelSmall
@@ -218,7 +217,7 @@ class _GuestNote extends StatelessWidget {
               Icon(PhosphorIconsRegular.info, size: 18, color: scheme.onSurfaceVariant),
               const SizedBox(width: 10),
               Expanded(
-                child: Text('Inicia sesión para enviar tus preguntas al ponente.',
+                child: Text(context.l10n.liveGuestNote,
                     style: Theme.of(context)
                         .textTheme
                         .bodySmall
@@ -254,7 +253,7 @@ class _InputBar extends StatelessWidget {
                 maxLines: 3,
                 enabled: !sending,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(hintText: 'Escribe tu pregunta…'),
+                decoration: InputDecoration(hintText: context.l10n.liveQuestionHint),
                 onSubmitted: (_) => onSend(),
               ),
             ),

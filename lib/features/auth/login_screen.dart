@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 
 import '../../core/auth/biometric_service.dart';
-import '../../core/constants/app_strings.dart';
 import '../../core/constants/ovum_event.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/router/route_paths.dart';
@@ -59,11 +59,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } on ApiException catch (e) {
       if (mounted) {
         setState(() => _error =
-            e.isUnauthorized ? 'Correo o contraseña incorrectos.' : e.message);
+            e.isUnauthorized ? context.l10n.authWrongCredentials : e.message);
       }
     } catch (_) {
       if (mounted) {
-        setState(() => _error = 'No se pudo iniciar sesión. Intenta de nuevo.');
+        setState(() => _error = context.l10n.authCouldNotLogin);
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -108,8 +108,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           setState(() {
             _emailCtrl.text = correoGuardado ?? _emailCtrl.text;
             _passwordCtrl.clear();
-            _error = 'Tu contraseña cambió. Ingrésala de nuevo y vuelve a '
-                'activar el acceso rápido.';
+            _error = context.l10n.authPasswordChanged;
           });
         }
       } else if (mounted) {
@@ -117,7 +116,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
     } catch (_) {
       if (mounted) {
-        setState(() => _error = 'No se pudo iniciar sesión. Intenta de nuevo.');
+        setState(() => _error = context.l10n.authCouldNotLogin);
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -161,7 +160,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         TextButton(
                           onPressed: _busy ? null : _loginAsGuest,
                           style: TextButton.styleFrom(foregroundColor: Colors.white),
-                          child: const Text(AppStrings.enterAsGuest),
+                          child: Text(context.l10n.enterAsGuest),
                         ),
                       ],
                     ),
@@ -215,10 +214,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Bienvenido', style: theme.textTheme.titleLarge),
+            Text(context.l10n.welcome, style: theme.textTheme.titleLarge),
             const SizedBox(height: 4),
             Text(
-              'Ingresa para vivir el congreso',
+              context.l10n.authLoginSubtitle,
               style: theme.textTheme.bodyMedium
                   ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),
@@ -230,14 +229,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               // Un correo no lleva espacios: se descartan al escribir o pegar
               // (también el que agrega iOS al elegir la sugerencia del teclado).
               inputFormatters: [FilteringTextInputFormatter.deny(RegExp(r'\s'))],
-              decoration: const InputDecoration(
-                labelText: 'Correo electrónico',
-                hintText: 'tu@correo.com',
+              decoration: InputDecoration(
+                labelText: context.l10n.authEmailLabel,
+                hintText: context.l10n.authEmailHint,
               ),
               validator: (v) {
                 final value = v?.trim() ?? '';
-                if (value.isEmpty) return 'Ingresa tu correo';
-                if (!value.contains('@')) return 'Correo no válido';
+                if (value.isEmpty) return context.l10n.authEnterEmail;
+                if (!value.contains('@')) return context.l10n.authInvalidEmail;
                 return null;
               },
             ),
@@ -246,13 +245,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               controller: _passwordCtrl,
               obscureText: _obscure,
               decoration: InputDecoration(
-                labelText: 'Contraseña',
+                labelText: context.l10n.authPassword,
                 suffixIcon: IconButton(
                   onPressed: () => setState(() => _obscure = !_obscure),
                   icon: Icon(_obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined),
                 ),
               ),
-              validator: (v) => (v == null || v.isEmpty) ? 'Ingresa tu contraseña' : null,
+              validator: (v) => (v == null || v.isEmpty) ? context.l10n.authEnterPassword : null,
               onFieldSubmitted: (_) {
                 if (!_busy) _login();
               },
@@ -274,7 +273,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text(AppStrings.login),
+                  : Text(context.l10n.login),
             ),
             ..._accesoRapido(theme),
           ],
@@ -298,7 +297,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       OutlinedButton.icon(
         onPressed: _busy ? null : _loginConBiometria,
         icon: Icon(biometricIcon(kind), size: 20),
-        label: Text('Entrar con ${biometricLabel(kind)}'),
+        label: Text(context.l10n.authLoginWith(biometricLabel(context.l10n, kind))),
       ),
       const SizedBox(height: 6),
       Text(

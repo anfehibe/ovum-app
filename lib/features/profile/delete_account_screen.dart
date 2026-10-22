@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
 import '../../core/network/api_exception.dart';
@@ -21,8 +22,6 @@ class DeleteAccountScreen extends ConsumerStatefulWidget {
 }
 
 class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
-  static const _generico = 'No se pudo eliminar la cuenta. Intenta de nuevo.';
-
   final _formKey = GlobalKey<FormState>();
   final _passwordCtrl = TextEditingController();
   bool _obscure = true;
@@ -44,10 +43,12 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
       _error = null;
     });
     final messenger = ScaffoldMessenger.of(context);
+    final deletedMsg = context.l10n.profileAccountDeleted;
+    final genericError = context.l10n.profileDeleteGenericError;
     try {
       await ref.read(authControllerProvider.notifier).deleteAccount(_passwordCtrl.text);
       messenger.showSnackBar(
-        const SnackBar(content: Text('Tu cuenta fue eliminada.')),
+        SnackBar(content: Text(deletedMsg)),
       );
       // El router ya redirige al quedar la sesión en null; esto cubre el caso
       // en que la pantalla siga montada.
@@ -55,7 +56,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = _mensajeDe(e));
     } catch (_) {
-      if (mounted) setState(() => _error = _generico);
+      if (mounted) setState(() => _error = genericError);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -63,18 +64,18 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
 
   String _mensajeDe(ApiException e) {
     if (e.isRateLimited) {
-      return 'Demasiados intentos. Espera un minuto y vuelve a intentarlo.';
+      return context.l10n.profileTooManyAttempts;
     }
     if (e.isUnauthorized) {
-      return 'Tu sesión venció. Cierra sesión, vuelve a entrar e inténtalo de nuevo.';
+      return context.l10n.profileSessionExpired;
     }
     // 404/405: un backend sin `DELETE /me` (producción lo tiene desde `6efc10d`).
     if (e.statusCode == 404 || e.statusCode == 405) {
-      return 'Esta opción todavía no está disponible. Intenta de nuevo más tarde.';
+      return context.l10n.profileOptionUnavailable;
     }
     // El 422 ya llega en español ("La contraseña no es correcta.").
     final msg = e.message.trim();
-    return msg.isEmpty ? _generico : msg;
+    return msg.isEmpty ? context.l10n.profileDeleteGenericError : msg;
   }
 
   Future<bool> _confirmar() async {
@@ -82,15 +83,12 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('¿Eliminar tu cuenta?'),
-        content: const Text(
-          'Se borrarán tus datos y ya no podrás entrar con esta cuenta. '
-          'No se puede deshacer.',
-        ),
+        title: Text(context.l10n.profileDeleteAccountConfirmTitle),
+        content: Text(context.l10n.profileDeleteAccountConfirmBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancelar'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
@@ -98,7 +96,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
               backgroundColor: scheme.error,
               foregroundColor: scheme.onError,
             ),
-            child: const Text('Eliminar'),
+            child: Text(context.l10n.profileDelete),
           ),
         ],
       ),
@@ -113,7 +111,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
     final email = ref.watch(currentUserProvider)?.email ?? '';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Eliminar mi cuenta')),
+      appBar: AppBar(title: Text(context.l10n.profileDeleteMyAccount)),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -135,14 +133,14 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Esta acción no se puede deshacer',
+                          context.l10n.profileActionCannotBeUndone,
                           style: theme.textTheme.titleSmall
                               ?.copyWith(color: scheme.onErrorContainer),
                         ),
                         if (email.isNotEmpty) ...[
                           const SizedBox(height: 4),
                           Text(
-                            'Vas a eliminar la cuenta $email.',
+                            context.l10n.profileYouWillDeleteAccount(email),
                             style: theme.textTheme.bodyMedium
                                 ?.copyWith(color: scheme.onErrorContainer),
                           ),
@@ -154,33 +152,29 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            Text('Qué se borra', style: theme.textTheme.titleMedium),
+            Text(context.l10n.profileWhatIsDeleted, style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
-            _punto(context, 'Tus datos personales y de contacto.'),
-            _punto(context, 'Tu perfil de networking, tus favoritos y tus reuniones.'),
-            _punto(context, 'El acceso rápido con Face ID o huella en este teléfono.'),
+            _punto(context, context.l10n.profileDeletedPersonalData),
+            _punto(context, context.l10n.profileDeletedNetworkingProfile),
+            _punto(context, context.l10n.profileDeletedQuickAccess),
             const SizedBox(height: 4),
             Text(
-              'Después ya no podrás entrar con esta cuenta.',
+              context.l10n.profileNoLongerLogin,
               style: theme.textTheme.bodyMedium
                   ?.copyWith(color: scheme.onSurfaceVariant),
             ),
             const SizedBox(height: 20),
-            Text('Qué se conserva', style: theme.textTheme.titleMedium),
+            Text(context.l10n.profileWhatIsKept, style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
-            _punto(
-              context,
-              'Tus inscripciones y pagos, por obligaciones contables y fiscales. '
-              'Quedan sin tus datos de contacto.',
-            ),
+            _punto(context, context.l10n.profileKeptRegistrations),
             const SizedBox(height: 24),
             TextFormField(
               controller: _passwordCtrl,
               obscureText: _obscure,
               enabled: !_busy,
               decoration: InputDecoration(
-                labelText: 'Contraseña',
-                helperText: 'Escríbela para confirmar que eres tú.',
+                labelText: context.l10n.profilePassword,
+                helperText: context.l10n.profilePasswordHelper,
                 suffixIcon: IconButton(
                   onPressed: () => setState(() => _obscure = !_obscure),
                   icon: Icon(
@@ -189,7 +183,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                 ),
               ),
               validator: (v) =>
-                  (v == null || v.isEmpty) ? 'Ingresa tu contraseña' : null,
+                  (v == null || v.isEmpty) ? context.l10n.profileEnterPassword : null,
               onFieldSubmitted: (_) {
                 if (!_busy) _eliminar();
               },
@@ -219,7 +213,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                       ),
                     )
                   : const Icon(PhosphorIconsRegular.trash, size: 18),
-              label: const Text('Eliminar mi cuenta'),
+              label: Text(context.l10n.profileDeleteMyAccount),
             ),
           ],
         ),

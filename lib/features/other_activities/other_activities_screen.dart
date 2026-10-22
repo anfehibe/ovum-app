@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/router/route_paths.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/date_ext.dart';
@@ -19,14 +19,14 @@ class OtherActivitiesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(sessionsProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.otherActivities)),
+      appBar: AppBar(title: Text(context.l10n.otherActivities)),
       body: async.when(
         loading: () => const LoadingView(),
         error: (_, _) => const ErrorView(),
         data: (_) {
           final activities = ref.watch(otherActivitiesProvider);
           if (activities.isEmpty) {
-            return const EmptyState(message: 'No hay actividades adicionales');
+            return EmptyState(message: context.l10n.otherActivitiesEmpty);
           }
           return ListView.separated(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),

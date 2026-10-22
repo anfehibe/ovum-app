@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/utils/meeting_slots.dart';
 import 'package:ovum/features/widgets/meeting_slot_picker.dart';
 
@@ -13,6 +14,9 @@ Future<MeetingSlot?> _open(
   MeetingSlot? picked;
   await tester.pumpWidget(
     MaterialApp(
+      locale: const Locale('es'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: Builder(
           builder: (context) => TextButton(

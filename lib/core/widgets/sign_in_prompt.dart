@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
 import '../../data/providers/user_provider.dart';
-import '../constants/app_strings.dart';
 import '../theme/app_colors.dart';
 
 /// Invitación a iniciar sesión, para las secciones que exigen Bearer (asistentes,
@@ -40,7 +40,7 @@ class SignInPrompt extends ConsumerWidget {
             const SizedBox(height: 20),
             FilledButton(
               onPressed: () => ref.read(authControllerProvider.notifier).logout(),
-              child: const Text(AppStrings.login),
+              child: Text(context.l10n.login),
             ),
           ],
         ),

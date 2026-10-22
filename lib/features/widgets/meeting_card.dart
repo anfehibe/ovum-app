@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
 import '../../core/config/app_config.dart';
@@ -16,9 +17,9 @@ import '../../data/providers/user_provider.dart';
 
 /// Texto de un error al **editar o cancelar** una reunión. El backend manda los
 /// 403/422 en español ("ya pasó", "ya no se puede editar"…); el 404 llega vacío.
-String meetingChangeErrorText(ApiException e) {
-  if (e.isNotFound) return 'Esa reunión ya no existe.';
-  return e.message.isEmpty ? 'No se pudo completar la acción.' : e.message;
+String meetingChangeErrorText(AppLocalizations l10n, ApiException e) {
+  if (e.isNotFound) return l10n.meetingCardNotFound;
+  return e.message.isEmpty ? l10n.meetingCardActionError : e.message;
 }
 
 /// Tarjeta de una solicitud de reunión.
@@ -44,8 +45,9 @@ class _MeetingCardState extends ConsumerState<MeetingCard> {
 
   NetworkingMeeting get _m => widget.meeting;
 
-  String get _counterpartName =>
-      _m.counterpart.name.isEmpty ? 'la otra persona' : _m.counterpart.name;
+  String get _counterpartName => _m.counterpart.name.isEmpty
+      ? context.l10n.meetingCardOtherPerson
+      : _m.counterpart.name;
 
   /// Llamada al backend con el manejo común de la tarjeta: un solo `_busy`, el
   /// messenger capturado antes del primer await y la misma lectura de errores.
@@ -87,14 +89,15 @@ class _MeetingCardState extends ConsumerState<MeetingCard> {
     if (_busy) return;
     if (!accept &&
         !await _confirm(
-          title: '¿Rechazar esta solicitud?',
-          body: 'Se le avisará por correo a quien la envió.',
-          dismiss: 'Cancelar',
-          confirm: 'Rechazar',
+          title: context.l10n.meetingCardDeclineTitle,
+          body: context.l10n.meetingCardDeclineBody,
+          dismiss: context.l10n.cancel,
+          confirm: context.l10n.decline,
         )) {
       return;
     }
     if (!mounted) return;
+    final tableByOrganizer = context.l10n.meetingCardTableByOrganizer;
     await _run(
       () async {
         final res = await ref
@@ -103,13 +106,13 @@ class _MeetingCardState extends ConsumerState<MeetingCard> {
         ref.read(meetingResponsesProvider.notifier).record(res.outcome);
         ref.invalidate(networkingMeetingsProvider);
         final donde = accept
-            ? (outcomePlaceLabel(res.outcome) ??
-                  'La mesa la asignará el organizador.')
+            ? (outcomePlaceLabel(res.outcome) ?? tableByOrganizer)
             : null;
         return [res.message, ?donde].join(' ');
       },
-      failure: 'No se pudo responder la reunión.',
-      errorText: (e) => e.isNotFound ? 'Esa reunión ya no existe.' : e.message,
+      failure: context.l10n.meetingCardRespondError,
+      errorText: (e) =>
+          e.isNotFound ? context.l10n.meetingCardNotFound : e.message,
     );
   }
 
@@ -118,13 +121,12 @@ class _MeetingCardState extends ConsumerState<MeetingCard> {
     // Solo la confirmada avisa a la otra persona (push y correo); la pendiente
     // simplemente deja de poder aceptarse.
     final ok = await _confirm(
-      title: '¿Cancelar esta reunión?',
+      title: context.l10n.meetingCardCancelTitle,
       body: _m.state == MeetingState.confirmed
-          ? 'Le avisaremos a $_counterpartName. Si tenía mesa asignada, se '
-                'liberará.'
-          : '$_counterpartName ya no podrá aceptarla.',
-      dismiss: 'Volver',
-      confirm: 'Cancelar reunión',
+          ? context.l10n.meetingCardCancelConfirmedBody(_counterpartName)
+          : context.l10n.meetingCardCancelPendingBody(_counterpartName),
+      dismiss: context.l10n.meetingCardBack,
+      confirm: context.l10n.meetingCardCancelMeeting,
     );
     if (!ok || !mounted) return;
     await _run(
@@ -136,8 +138,8 @@ class _MeetingCardState extends ConsumerState<MeetingCard> {
         ref.invalidate(networkingMeetingsProvider);
         return res.message;
       },
-      failure: 'No se pudo cancelar la reunión.',
-      errorText: meetingChangeErrorText,
+      failure: context.l10n.meetingCardCancelError,
+      errorText: (e) => meetingChangeErrorText(context.l10n, e),
     );
   }
 
@@ -180,7 +182,7 @@ class _MeetingCardState extends ConsumerState<MeetingCard> {
     final cancellation = _m.cancellation;
     // El backend dice "Eliminada" (es la misma etiqueta que deja el borrado de
     // cuenta); para quien la ve en su lista, lo que pasó es que se canceló.
-    final label = cancelada ? 'Cancelada' : _m.stateLabel;
+    final label = cancelada ? context.l10n.meetingCardCancelled : _m.stateLabel;
 
     return Opacity(
       opacity: cancelada ? 0.7 : 1,
@@ -209,7 +211,7 @@ class _MeetingCardState extends ConsumerState<MeetingCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        card.name.isEmpty ? 'Asistente' : card.name,
+                        card.name.isEmpty ? context.l10n.networkingAttendee : card.name,
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
                       if (card.subtitle.isNotEmpty)
@@ -254,7 +256,7 @@ class _MeetingCardState extends ConsumerState<MeetingCard> {
             if (AppConfig.userContent && _m.reply.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(
-                'Respuesta: ${_m.reply}',
+                context.l10n.meetingCardReply(_m.reply),
                 style: Theme.of(
                   context,
                 ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
@@ -269,7 +271,7 @@ class _MeetingCardState extends ConsumerState<MeetingCard> {
               _row(
                 context,
                 PhosphorIconsRegular.mapPin,
-                _m.placeLabel ?? 'Mesa por asignar',
+                _m.placeLabel ?? context.l10n.meetingCardTablePending,
               ),
             ],
             // Solo viene si estaba confirmada: ahí cualquiera de los dos pudo
@@ -280,6 +282,7 @@ class _MeetingCardState extends ConsumerState<MeetingCard> {
                 context,
                 PhosphorIconsRegular.calendarX,
                 cancellationLabel(
+                  context.l10n,
                   cancellation,
                   myId: ref.watch(sessionUserIdProvider),
                 ),
@@ -295,7 +298,7 @@ class _MeetingCardState extends ConsumerState<MeetingCard> {
                       icon: _busy
                           ? const _Spinner()
                           : const Icon(PhosphorIconsRegular.check, size: 16),
-                      label: const Text('Aceptar'),
+                      label: Text(context.l10n.accept),
                       style: FilledButton.styleFrom(
                         minimumSize: const Size(0, 44),
                       ),
@@ -306,7 +309,7 @@ class _MeetingCardState extends ConsumerState<MeetingCard> {
                     child: OutlinedButton.icon(
                       onPressed: _busy ? null : () => _respond(false),
                       icon: const Icon(PhosphorIconsRegular.x, size: 16),
-                      label: const Text('Rechazar'),
+                      label: Text(context.l10n.decline),
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size(0, 44),
                       ),
@@ -329,7 +332,7 @@ class _MeetingCardState extends ConsumerState<MeetingCard> {
                           PhosphorIconsRegular.pencilSimple,
                           size: 16,
                         ),
-                        label: const Text('Editar'),
+                        label: Text(context.l10n.meetingCardEdit),
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size(0, 44),
                         ),
@@ -346,7 +349,7 @@ class _MeetingCardState extends ConsumerState<MeetingCard> {
                                 PhosphorIconsRegular.calendarX,
                                 size: 16,
                               ),
-                        label: const Text('Cancelar reunión'),
+                        label: Text(context.l10n.meetingCardCancelMeeting),
                         style: TextButton.styleFrom(
                           foregroundColor: scheme.error,
                           minimumSize: const Size(0, 44),
@@ -363,7 +366,7 @@ class _MeetingCardState extends ConsumerState<MeetingCard> {
   }
 
   String _schedule() {
-    if (!_m.hasSchedule) return 'Sin horario propuesto';
+    if (!_m.hasSchedule) return context.l10n.meetingCardNoSchedule;
     final day = _m.date?.monthDay;
     final hours = [?_m.startTime, ?_m.endTime].join(' – ');
     return [?day, if (hours.isNotEmpty) hours].join(' · ');

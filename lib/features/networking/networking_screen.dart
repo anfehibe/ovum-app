@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
 import '../../core/config/app_config.dart';
-import '../../core/constants/app_strings.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/router/route_paths.dart';
 import '../../core/theme/app_colors.dart';
@@ -38,9 +38,9 @@ class NetworkingScreen extends ConsumerWidget {
       data: (a) {
         if (a.isOpen) return const _Tabs();
         return switch (a.block!) {
-          NetworkingBlock.signInRequired => const _Shell(
+          NetworkingBlock.signInRequired => _Shell(
             child: SignInPrompt(
-              message: 'Inicia sesión para hacer networking con otros asistentes.',
+              message: context.l10n.networkingSignInPrompt,
             ),
           ),
           NetworkingBlock.failed => _Shell(child: _retry(context, ref, a.message)),
@@ -59,7 +59,7 @@ class NetworkingScreen extends ConsumerWidget {
         const SizedBox(height: 12),
         FilledButton.tonal(
           onPressed: () => ref.invalidate(networkingAccessProvider),
-          child: const Text('Reintentar'),
+          child: Text(context.l10n.networkingRetry),
         ),
       ],
     );
@@ -75,11 +75,11 @@ class _Shell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(AppStrings.navNetworking),
+        title: Text(context.l10n.navNetworking),
         actions: [
           if (AppConfig.userContent)
             IconButton(
-              tooltip: 'Mis chats',
+              tooltip: context.l10n.chatMyChats,
               icon: const Icon(PhosphorIconsRegular.chatsCircle),
               onPressed: () => context.push(R.chats),
             ),
@@ -99,25 +99,25 @@ class _Tabs extends StatelessWidget {
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text(AppStrings.navNetworking),
+          title: Text(context.l10n.navNetworking),
           actions: [
             IconButton(
-              tooltip: 'Mi perfil de networking',
+              tooltip: context.l10n.networkingMyProfile,
               icon: const Icon(PhosphorIconsRegular.identificationCard),
               onPressed: () => context.push(R.networkingProfile),
             ),
             if (AppConfig.userContent)
               IconButton(
-                tooltip: 'Mis chats',
+                tooltip: context.l10n.chatMyChats,
                 icon: const Icon(PhosphorIconsRegular.chatsCircle),
                 onPressed: () => context.push(R.chats),
               ),
           ],
-          bottom: const TabBar(
+          bottom: TabBar(
             tabs: [
-              Tab(text: 'Directorio'),
-              Tab(text: 'Favoritos'),
-              Tab(text: 'Reuniones'),
+              Tab(text: context.l10n.networkingDirectory),
+              Tab(text: context.l10n.favorites),
+              Tab(text: context.l10n.meetings),
             ],
           ),
         ),
@@ -162,7 +162,7 @@ class _Degraded extends ConsumerWidget {
               Expanded(
                 child: Text(
                   message.isEmpty
-                      ? 'El networking no está disponible para este evento.'
+                      ? context.l10n.networkingUnavailable
                       : message,
                   style: Theme.of(context).textTheme.bodyMedium
                       ?.copyWith(color: scheme.onSurfaceVariant),
@@ -178,8 +178,8 @@ class _Degraded extends ConsumerWidget {
                 ? const SizedBox.shrink()
                 : const ErrorView(),
             data: (attendees) => attendees.isEmpty
-                ? const EmptyState(
-                    message: 'Todavía no hay asistentes publicados.',
+                ? EmptyState(
+                    message: context.l10n.networkingNoAttendeesPublished,
                     icon: PhosphorIconsRegular.usersThree,
                   )
                 : ListView.separated(

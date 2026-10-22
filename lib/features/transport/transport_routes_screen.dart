@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/constants/ovum_event.dart';
 import '../../core/router/route_paths.dart';
 import '../../core/theme/app_colors.dart';
@@ -22,7 +22,7 @@ class TransportRoutesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(busRoutesProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.transport)),
+      appBar: AppBar(title: Text(context.l10n.transport)),
       body: async.when(
         loading: () => const LoadingView(),
         error: (_, _) => const ErrorView(),
@@ -30,13 +30,11 @@ class TransportRoutesScreen extends ConsumerWidget {
           onRefresh: () async => ref.invalidate(busRoutesProvider),
           child: routes.isEmpty
               ? ListView(
-                  children: const [
-                    SizedBox(height: 80),
+                  children: [
+                    const SizedBox(height: 80),
                     EmptyState(
                       icon: PhosphorIconsRegular.bus,
-                      message:
-                          'Todavía no hay rutas de transporte publicadas.\n'
-                          'Vuelve a consultar cerca de las fechas del congreso.',
+                      message: context.l10n.transportNoRoutes,
                     ),
                   ],
                 )
@@ -82,7 +80,7 @@ class _IntroCard extends StatelessWidget {
               Icon(PhosphorIconsRegular.bus, size: 20, color: scheme.primary),
               const SizedBox(width: 8),
               Text(
-                'Buses del congreso',
+                context.l10n.transportCongressBuses,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
@@ -91,15 +89,14 @@ class _IntroCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Traslados entre los hoteles y la sede del congreso. '
-            'Toca una ruta para ver sus paradas y horarios.',
+            context.l10n.transportIntroText,
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 10),
           TextButton.icon(
             onPressed: () => openPhone(OvumEvent.contactPhone),
             icon: const Icon(PhosphorIconsRegular.phone, size: 16),
-            label: const Text('Llamar a la organización'),
+            label: Text(context.l10n.transportCallOrganizers),
             style: TextButton.styleFrom(
               padding: EdgeInsets.zero,
               minimumSize: const Size(0, 32),
@@ -259,9 +256,9 @@ class _MetaRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.scheme;
     final parts = <String>[
-      '${route.stops.length} paradas',
-      if (route.totalMinutes case final m? when m > 0) '$m min aprox.',
-      if (route.headwayMinutes case final f? when f > 0) 'cada $f min',
+      context.l10n.transportStopsCount(route.stops.length),
+      if (route.totalMinutes case final m? when m > 0) context.l10n.transportApproxMinutes(m),
+      if (route.headwayMinutes case final f? when f > 0) context.l10n.transportEveryMinutes(f),
     ];
     return Text(
       parts.join(' · '),
@@ -285,7 +282,7 @@ class _NextDepartureChip extends StatelessWidget {
     final soon = minutes != null && minutes <= 20;
     final sameDay = at.sameDay(now);
     final when = sameDay ? at.hm : '${at.dayNameShort} ${at.hm}';
-    final countdown = sameDay ? countdownLabel(at, now) : '';
+    final countdown = sameDay ? countdownLabel(context.l10n, at, now) : '';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -306,8 +303,8 @@ class _NextDepartureChip extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             countdown.isEmpty
-                ? 'Próxima salida $when'
-                : 'Próxima salida $when · $countdown',
+                ? context.l10n.transportNextDeparture(when)
+                : context.l10n.transportNextDepartureWithCountdown(when, countdown),
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
               fontWeight: FontWeight.w700,
               color: soon ? scheme.onPrimaryContainer : scheme.onSurfaceVariant,

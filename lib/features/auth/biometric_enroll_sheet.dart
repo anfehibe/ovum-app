@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 
 import '../../core/auth/biometric_service.dart';
 import '../../core/network/api_exception.dart';
@@ -12,11 +13,11 @@ import '../../data/providers/user_provider.dart';
 ///
 /// En Android nunca sabemos si es huella o rostro (el plugin solo reporta
 /// `strong`/`weak`), así que el texto genérico "tu huella" cubre ese caso.
-String biometricLabel(BiometricKind kind) => switch (kind) {
+String biometricLabel(AppLocalizations l10n, BiometricKind kind) => switch (kind) {
   BiometricKind.faceId => 'Face ID',
   BiometricKind.touchId => 'Touch ID',
-  BiometricKind.fingerprint => 'tu huella',
-  BiometricKind.none => 'el bloqueo del dispositivo',
+  BiometricKind.fingerprint => l10n.authBiometricFingerprint,
+  BiometricKind.none => l10n.authBiometricDeviceLock,
 };
 
 IconData biometricIcon(BiometricKind kind) => kind == BiometricKind.faceId
@@ -52,7 +53,7 @@ Future<void> showBiometricEnrollSheet(
 
   if (!context.mounted) return;
   if (result.isOk) {
-    _aviso(context, 'Listo: la próxima vez entra con ${biometricLabel(kind)}.');
+    _aviso(context, context.l10n.authBiometricEnabledNextTime(biometricLabel(context.l10n, kind)));
   } else if (!result.isSilent && result.message != null) {
     _aviso(context, result.message!);
   }
@@ -90,12 +91,12 @@ Future<void> showBiometricEnableSheet(
     if (!context.mounted) return;
     _aviso(
       context,
-      e.isUnauthorized ? 'Contraseña incorrecta.' : e.message,
+      e.isUnauthorized ? context.l10n.authWrongPassword : e.message,
     );
     return;
   } catch (_) {
     if (!context.mounted) return;
-    _aviso(context, 'No se pudo verificar tu contraseña. Intenta de nuevo.');
+    _aviso(context, context.l10n.authCouldNotVerifyPassword);
     return;
   }
 
@@ -105,7 +106,7 @@ Future<void> showBiometricEnableSheet(
 
   if (!context.mounted) return;
   if (result.isOk) {
-    _aviso(context, 'Acceso rápido activado con ${biometricLabel(kind)}.');
+    _aviso(context, context.l10n.authQuickAccessEnabledWith(biometricLabel(context.l10n, kind)));
   } else if (!result.isSilent && result.message != null) {
     _aviso(context, result.message!);
   }
@@ -144,12 +145,10 @@ class _EnrollSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            Text('Entra más rápido', style: text.titleLarge),
+            Text(context.l10n.authEnterFaster, style: text.titleLarge),
             const SizedBox(height: 8),
             Text(
-              'Usa ${biometricLabel(kind)} en lugar de escribir tu correo y tu '
-              'contraseña cada vez. Se guardan cifrados en este dispositivo y '
-              'nunca salen de él.',
+              context.l10n.authBiometricExplainer(biometricLabel(context.l10n, kind)),
               style: text.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
             ),
             const SizedBox(height: 24),
@@ -158,14 +157,14 @@ class _EnrollSheet extends StatelessWidget {
                 Expanded(
                   child: TextButton(
                     onPressed: () => Navigator.of(context).pop(false),
-                    child: const Text('Ahora no'),
+                    child: Text(context.l10n.authNotNow),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: FilledButton(
                     onPressed: () => Navigator.of(context).pop(true),
-                    child: const Text('Activar'),
+                    child: Text(context.l10n.authActivate),
                   ),
                 ),
               ],
@@ -229,11 +228,10 @@ class _PasswordSheetState extends State<_PasswordSheet> {
               ),
             ),
             const SizedBox(height: 16),
-            Text('Activar acceso rápido', style: text.titleLarge),
+            Text(context.l10n.authEnableQuickAccess, style: text.titleLarge),
             const SizedBox(height: 8),
             Text(
-              'Confirma la contraseña de ${widget.email} para guardarla '
-              'cifrada en este dispositivo.',
+              context.l10n.authConfirmPasswordFor(widget.email),
               style: text.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
             ),
             const SizedBox(height: 20),
@@ -243,7 +241,7 @@ class _PasswordSheetState extends State<_PasswordSheet> {
               autofocus: true,
               onSubmitted: (_) => _confirmar(),
               decoration: InputDecoration(
-                labelText: 'Contraseña',
+                labelText: context.l10n.authPassword,
                 suffixIcon: IconButton(
                   onPressed: () => setState(() => _obscure = !_obscure),
                   icon: Icon(
@@ -260,14 +258,14 @@ class _PasswordSheetState extends State<_PasswordSheet> {
                 Expanded(
                   child: TextButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Cancelar'),
+                    child: Text(context.l10n.cancel),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: FilledButton(
                     onPressed: _confirmar,
-                    child: const Text('Continuar'),
+                    child: Text(context.l10n.authContinue),
                   ),
                 ),
               ],

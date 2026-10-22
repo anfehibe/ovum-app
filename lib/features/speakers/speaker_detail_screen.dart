@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
 import '../../core/router/route_paths.dart';
@@ -21,7 +22,7 @@ class SpeakerDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final speaker = ref.watch(speakerByIdProvider(speakerId));
     if (speaker == null) {
-      return Scaffold(appBar: AppBar(), body: const EmptyState(message: 'Conferencista no encontrado'));
+      return Scaffold(appBar: AppBar(), body: EmptyState(message: context.l10n.speakerNotFound));
     }
     final scheme = context.scheme;
     final sessions = ref.watch(sessionsForSpeakerProvider(speakerId));
@@ -48,13 +49,13 @@ class SpeakerDetailScreen extends ConsumerWidget {
                   const SizedBox(height: 20),
                 ],
                 if (speaker.bio.isNotEmpty) ...[
-                  Text('Biografía', style: Theme.of(context).textTheme.titleMedium),
+                  Text(context.l10n.speakerBio, style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 8),
                   Text(speaker.bio, style: Theme.of(context).textTheme.bodyMedium),
                   const SizedBox(height: 24),
                 ],
                 if (sessions.isNotEmpty) ...[
-                  Text('Sus sesiones', style: Theme.of(context).textTheme.titleMedium),
+                  Text(context.l10n.speakerSessions, style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 12),
                   for (final s in sessions)
                     Padding(
@@ -66,7 +67,7 @@ class SpeakerDetailScreen extends ConsumerWidget {
                     ),
                 ] else
                   Text(
-                    'Este conferencista aún no tiene sesiones publicadas.',
+                    context.l10n.speakerNoSessions,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
                   ),
               ],
@@ -130,7 +131,7 @@ class _Header extends StatelessWidget {
               shape: BoxShape.circle,
               border: Border.all(color: Colors.white, width: 3),
             ),
-            child: InitialsAvatar(name: name, imageUrl: photoUrl, size: 104),
+            child: InitialsAvatar(name: name, imageUrl: photoUrl, size: 104, zoomable: true),
           ),
           const SizedBox(height: 14),
           Text(
@@ -165,7 +166,7 @@ class _Header extends StatelessWidget {
                 children: [
                   const Icon(PhosphorIconsFill.star, size: 13, color: Colors.white),
                   const SizedBox(width: 6),
-                  Text('Conferencista magistral',
+                  Text(context.l10n.speakerKeynote,
                       style: Theme.of(context)
                           .textTheme
                           .labelSmall

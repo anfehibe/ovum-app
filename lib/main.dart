@@ -20,7 +20,10 @@ Future<void> main() async {
   // Las pantallas no están pensadas para horizontal. En iOS ya lo fija el
   // Info.plist; esto cubre Android.
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  // La app es multilingüe (es/en): se cargan los símbolos de fecha de ambos
+  // para que `DateFormat` funcione en cualquiera de los dos idiomas.
   await initializeDateFormatting('es');
+  await initializeDateFormatting('en');
 
   // Firebase debe estar listo antes de cualquier uso de Messaging, incluido el
   // registro del handler de segundo plano. El resto de la configuración de

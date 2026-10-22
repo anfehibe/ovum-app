@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
 import '../theme/app_colors.dart';
@@ -26,7 +27,7 @@ class ErrorView extends StatelessWidget {
             Icon(PhosphorIconsRegular.warning, size: 40, color: context.scheme.error),
             const SizedBox(height: 12),
             Text(
-              message ?? 'Ocurrió un error al cargar los datos.',
+              message ?? context.l10n.commonLoadError,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),

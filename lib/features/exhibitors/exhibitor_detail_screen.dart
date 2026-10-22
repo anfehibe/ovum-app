@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -22,7 +23,7 @@ class ExhibitorDetailScreen extends ConsumerWidget {
     final list = ref.watch(exhibitorsProvider).valueOrNull ?? const [];
     final ex = list.firstWhereOrNull((e) => e.id == exhibitorId);
     if (ex == null) {
-      return Scaffold(appBar: AppBar(), body: const EmptyState(message: 'Expositor no encontrado'));
+      return Scaffold(appBar: AppBar(), body: EmptyState(message: context.l10n.exhibitorNotFound));
     }
     final scheme = context.scheme;
 
@@ -58,7 +59,7 @@ class ExhibitorDetailScreen extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                  child: InitialsAvatar(name: ex.name, imageUrl: ex.logoUrl, size: 78),
+                  child: InitialsAvatar(name: ex.name, imageUrl: ex.logoUrl, size: 78, zoomable: true),
                 ),
                 const SizedBox(height: 14),
                 Text(
@@ -93,7 +94,7 @@ class ExhibitorDetailScreen extends ConsumerWidget {
                         children: [
                           Icon(PhosphorIconsRegular.storefront, size: 16, color: scheme.primary),
                           const SizedBox(width: 4),
-                          Text('Stand ${ex.booth}', style: Theme.of(context).textTheme.labelLarge),
+                          Text(context.l10n.exhibitorStand(ex.booth), style: Theme.of(context).textTheme.labelLarge),
                         ],
                       ),
                     ],
@@ -101,7 +102,7 @@ class ExhibitorDetailScreen extends ConsumerWidget {
                 ),
                 if (ex.description.isNotEmpty) ...[
                   const SizedBox(height: 18),
-                  Text('Descripción', style: Theme.of(context).textTheme.titleMedium),
+                  Text(context.l10n.commonDescription, style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 8),
                   Text(ex.description, style: Theme.of(context).textTheme.bodyMedium),
                 ],

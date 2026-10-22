@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/states.dart';
 import '../../data/models/models.dart';
@@ -20,7 +20,7 @@ class PollsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(AppStrings.polls),
+        title: Text(context.l10n.polls),
         bottom: session == null
             ? null
             : PreferredSize(
@@ -38,7 +38,7 @@ class PollsScreen extends ConsumerWidget {
               ),
       ),
       body: polls.isEmpty
-          ? const EmptyState(message: 'No hay encuestas en esta sesión', icon: PhosphorIconsRegular.chartBar)
+          ? EmptyState(message: context.l10n.pollNoPolls, icon: PhosphorIconsRegular.chartBar)
           : ListView.separated(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
               itemCount: polls.length,
@@ -86,7 +86,7 @@ class _PollCard extends ConsumerWidget {
               children: [
                 Icon(PhosphorIconsRegular.check, size: 15, color: scheme.tertiary),
                 const SizedBox(width: 6),
-                Text('¡Gracias por participar!',
+                Text(context.l10n.pollThanks,
                     style: Theme.of(context)
                         .textTheme
                         .labelMedium
@@ -111,7 +111,7 @@ class _PollCard extends ConsumerWidget {
           } catch (_) {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('No se pudo registrar tu voto.')),
+                SnackBar(content: Text(context.l10n.pollVoteFailed)),
               );
             }
           }

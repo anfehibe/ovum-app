@@ -1,3 +1,4 @@
+import '../../core/l10n/l10n.dart';
 import '../../core/utils/date_ext.dart';
 import 'networking_card.dart';
 
@@ -57,19 +58,25 @@ class MeetingCancellation {
   const MeetingCancellation({required this.byId, this.byName = '', this.at});
 }
 
-/// "Cancelada por Ana Pérez el 10 nov a las 08:00".
+/// "Cancelada por Ana Pérez el 10 nov a las 08:00" (o su equivalente en inglés).
 ///
-/// [myId] convierte el nombre en "ti"; [now] existe para los tests.
-String cancellationLabel(MeetingCancellation c, {String? myId, DateTime? now}) {
+/// [myId] convierte el nombre en "ti"; [now] existe para los tests. El idioma
+/// de la fecha lo decide `Intl.defaultLocale` (ver core/utils/date_ext.dart).
+String cancellationLabel(
+  AppLocalizations l10n,
+  MeetingCancellation c, {
+  String? myId,
+  DateTime? now,
+}) {
   final who = myId != null && c.byId == myId
-      ? 'ti'
-      : (c.byName.isEmpty ? 'la otra persona' : c.byName);
+      ? l10n.meetingCancellationYou
+      : (c.byName.isEmpty ? l10n.meetingCardOtherPerson : c.byName);
   final at = c.at;
-  if (at == null) return 'Cancelada por $who';
-  final day = at.sameDay(now ?? DateTime.now())
-      ? 'hoy'
-      : 'el ${at.monthDayShort}';
-  return 'Cancelada por $who $day a las ${at.hm}';
+  if (at == null) return l10n.meetingCancelledBy(who);
+  if (at.sameDay(now ?? DateTime.now())) {
+    return l10n.meetingCancelledByToday(who, at.hm);
+  }
+  return l10n.meetingCancelledByOnDate(who, at.monthDayShort, at.hm);
 }
 
 /// Reunión de networking (`GET /networking/meetings`).

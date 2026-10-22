@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/constants/ovum_event.dart';
 import '../../core/router/route_paths.dart';
 import '../../core/theme/app_colors.dart';
@@ -28,7 +28,7 @@ class SessionDetailScreen extends ConsumerWidget {
     if (session == null) {
       return Scaffold(
         appBar: AppBar(),
-        body: const EmptyState(message: 'Sesión no encontrada'),
+        body: EmptyState(message: context.l10n.agendaSessionNotFound),
       );
     }
     final scheme = context.scheme;
@@ -57,7 +57,7 @@ class SessionDetailScreen extends ConsumerWidget {
                 _reminderHint(context, ref, session),
                 if (session.description.isNotEmpty) ...[
                   const SizedBox(height: 20),
-                  Text('Descripción', style: Theme.of(context).textTheme.titleMedium),
+                  Text(context.l10n.agendaDescription, style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 8),
                   Text(session.description, style: Theme.of(context).textTheme.bodyMedium),
                 ],
@@ -67,7 +67,7 @@ class SessionDetailScreen extends ConsumerWidget {
                 ],
                 if (speakers.isNotEmpty) ...[
                   const SizedBox(height: 24),
-                  Text(AppStrings.speakers, style: Theme.of(context).textTheme.titleMedium),
+                  Text(context.l10n.speakers, style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 12),
                   for (final s in speakers)
                     Padding(
@@ -77,15 +77,15 @@ class SessionDetailScreen extends ConsumerWidget {
                 ],
                 if (session.hasQuestions || hasPolls) ...[
                   const SizedBox(height: 24),
-                  Text('Participa', style: Theme.of(context).textTheme.titleMedium),
+                  Text(context.l10n.agendaParticipate, style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 12),
                   if (session.hasQuestions)
                     _participateTile(
                       context,
                       icon: PhosphorIconsRegular.chatCircleText,
                       color: color,
-                      title: AppStrings.liveQuestions,
-                      subtitle: 'Envía tu pregunta al panel',
+                      title: context.l10n.liveQuestions,
+                      subtitle: context.l10n.agendaSendQuestionSubtitle,
                       onTap: () => context.push(R.liveQuestionsFor(session.id)),
                     ),
                   if (hasPolls)
@@ -93,8 +93,8 @@ class SessionDetailScreen extends ConsumerWidget {
                       context,
                       icon: PhosphorIconsRegular.chartBar,
                       color: scheme.tertiary,
-                      title: AppStrings.polls,
-                      subtitle: 'Responde la encuesta en vivo',
+                      title: context.l10n.polls,
+                      subtitle: context.l10n.agendaAnswerPollSubtitle,
                       onTap: () => context.push(R.pollsFor(session.id)),
                     ),
                 ],
@@ -119,7 +119,7 @@ class SessionDetailScreen extends ConsumerWidget {
               end: session.endDate,
             ),
             icon: const Icon(PhosphorIconsRegular.calendarPlus, size: 18),
-            label: const Text('Calendario'),
+            label: Text(context.l10n.agendaCalendar),
           ),
         ),
         const SizedBox(width: 12),
@@ -127,7 +127,7 @@ class SessionDetailScreen extends ConsumerWidget {
           child: OutlinedButton.icon(
             onPressed: () => shareText('${session.title} · OVUM 2026'),
             icon: const Icon(PhosphorIconsRegular.shareNetwork, size: 18),
-            label: const Text('Compartir'),
+            label: Text(context.l10n.agendaShare),
           ),
         ),
       ],
@@ -157,7 +157,7 @@ class SessionDetailScreen extends ConsumerWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Te avisaremos ${prefs.leadMinutes} min antes de que empiece.',
+              context.l10n.agendaReminderNotice(prefs.leadMinutes),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: scheme.onSurfaceVariant,
               ),
@@ -183,7 +183,7 @@ class SessionDetailScreen extends ConsumerWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Patrocinado por',
+              Text(context.l10n.agendaSponsoredBy,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
               Text(name, style: Theme.of(context).textTheme.titleSmall),
             ],

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/router/route_paths.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/initials_avatar.dart';
@@ -25,7 +25,7 @@ class _ExhibitorsScreenState extends ConsumerState<ExhibitorsScreen> {
   Widget build(BuildContext context) {
     final async = ref.watch(exhibitorsProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.exhibitors)),
+      appBar: AppBar(title: Text(context.l10n.exhibitors)),
       body: async.when(
         loading: () => const LoadingView(),
         error: (_, _) => const ErrorView(),
@@ -50,15 +50,15 @@ class _ExhibitorsScreenState extends ConsumerState<ExhibitorsScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                 child: TextField(
                   onChanged: (v) => setState(() => _query = v),
-                  decoration: const InputDecoration(
-                    hintText: 'Buscar expositor',
-                    prefixIcon: Icon(PhosphorIconsRegular.magnifyingGlass),
+                  decoration: InputDecoration(
+                    hintText: context.l10n.exhibitorSearchHint,
+                    prefixIcon: const Icon(PhosphorIconsRegular.magnifyingGlass),
                   ),
                 ),
               ),
               Expanded(
                 child: filtered.isEmpty
-                    ? const EmptyState(message: 'Sin resultados')
+                    ? EmptyState(message: context.l10n.commonNoResults)
                     : ListView(
                         padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
                         children: [
@@ -118,7 +118,7 @@ class _ExhibitorTile extends StatelessWidget {
                     Text(exhibitor.name, style: Theme.of(context).textTheme.titleSmall),
                     const SizedBox(height: 2),
                     Text(
-                      [exhibitor.category, if (exhibitor.booth.isNotEmpty) 'Stand ${exhibitor.booth}']
+                      [exhibitor.category, if (exhibitor.booth.isNotEmpty) context.l10n.exhibitorStand(exhibitor.booth)]
                           .where((e) => e.isNotEmpty)
                           .join(' · '),
                       maxLines: 1,

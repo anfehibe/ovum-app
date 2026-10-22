@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -24,7 +25,7 @@ class RouteStopTimeline extends StatelessWidget {
     final stops = route.stops;
     if (stops.isEmpty) {
       return Text(
-        'Esta ruta aún no tiene paradas publicadas.',
+        context.l10n.transportNoStops,
         style: Theme.of(
           context,
         ).textTheme.bodyMedium?.copyWith(color: context.scheme.onSurfaceVariant),
@@ -127,7 +128,7 @@ class _StopRow extends StatelessWidget {
                               when m > 0) ...[
                             const SizedBox(width: 8),
                             Text(
-                              '+$m min',
+                              context.l10n.transportPlusMinutes(m),
                               style: Theme.of(context).textTheme.labelMedium
                                   ?.copyWith(color: scheme.onSurfaceVariant),
                             ),
@@ -152,7 +153,7 @@ class _StopRow extends StatelessWidget {
                           ),
                           const SizedBox(width: 5),
                           Text(
-                            _labelFor(stop.kind),
+                            _labelFor(context.l10n, stop.kind),
                             style: Theme.of(context).textTheme.labelSmall
                                 ?.copyWith(color: scheme.onSurfaceVariant),
                           ),
@@ -182,8 +183,8 @@ IconData _iconFor(StopKind kind) => switch (kind) {
   StopKind.free => PhosphorIconsRegular.mapPin,
 };
 
-String _labelFor(StopKind kind) => switch (kind) {
-  StopKind.hotel => 'Hotel',
-  StopKind.venue => 'Sede',
-  StopKind.free => 'Punto de encuentro',
+String _labelFor(AppLocalizations l10n, StopKind kind) => switch (kind) {
+  StopKind.hotel => l10n.transportStopHotel,
+  StopKind.venue => l10n.transportStopVenue,
+  StopKind.free => l10n.transportStopFree,
 };

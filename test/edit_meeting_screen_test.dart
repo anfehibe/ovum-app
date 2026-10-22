@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/data/models/networking_card.dart';
 import 'package:ovum/data/models/networking_meeting.dart';
 import 'package:ovum/data/providers/networking_provider.dart';
@@ -50,6 +51,9 @@ Future<List<AvailabilityKey>> _pump(WidgetTester tester, NetworkingMeeting m) as
         }),
       ],
       child: MaterialApp(
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: NewMeetingScreen(attendeeId: m.counterpart.id, editing: m),
       ),
     ),

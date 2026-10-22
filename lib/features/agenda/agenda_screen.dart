@@ -3,7 +3,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/constants/app_strings.dart';
+import 'package:ovum/core/l10n/l10n.dart';
+
+import '../../core/constants/agenda_groups.dart';
 import '../../core/router/route_paths.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/date_ext.dart';
@@ -36,7 +38,7 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
   Widget build(BuildContext context) {
     final async = ref.watch(sessionsProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.navAgenda)),
+      appBar: AppBar(title: Text(context.l10n.navAgenda)),
       body: async.when(
         loading: () => const LoadingView(),
         error: (_, _) => const ErrorView(),
@@ -49,7 +51,7 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
     final all = ref.watch(agendaSessionsProvider);
     final groups = ref.watch(agendaGroupsProvider);
     if (all.isEmpty) {
-      return const EmptyState(message: 'La agenda se publicará pronto');
+      return EmptyState(message: context.l10n.agendaComingSoon);
     }
 
     // Con un solo grupo no hay filtro que mostrar ni nada que ocultar.
@@ -88,7 +90,7 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
           ),
         Expanded(
           child: daySessions.isEmpty
-              ? const EmptyState(message: AppStrings.agendaNoGroupSelected)
+              ? EmptyState(message: context.l10n.agendaNoGroupSelected)
               : ListView.separated(
                   // Al cambiar de filtro la lista vuelve arriba y las
                   // animaciones de entrada se reproducen de nuevo.
@@ -186,9 +188,14 @@ class _GroupFilterState extends State<_GroupFilter> {
               selected: !widget.hidden.contains(group),
               onSelected: (_) => widget.onToggled(group),
               label: ConstrainedBox(
-                // Los nombres vienen del API y pueden ser largos.
+                // Los nombres vienen del API y pueden ser largos. El grupo
+                // sintético "Agenda general" es el único que se traduce.
                 constraints: const BoxConstraints(maxWidth: 200),
-                child: Text(group, maxLines: 1, overflow: TextOverflow.ellipsis),
+                child: Text(
+                  group == kAgendaGeneralGroup ? context.l10n.agendaGeneral : group,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             );
           },
@@ -243,7 +250,7 @@ class _DaySelector extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Día ${ordinalOf(day)}',
+                      context.l10n.agendaDayNumber(ordinalOf(day)),
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
                             color: isSel ? scheme.onPrimary : scheme.onSurfaceVariant,
                             fontWeight: FontWeight.w700,
