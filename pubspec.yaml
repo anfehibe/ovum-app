@@ -66,6 +66,5 @@ flutter:
   generate: true
 
   assets:
-    - assets/mock/
     - assets/images/
     - assets/logo/

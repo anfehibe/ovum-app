@@ -23,7 +23,7 @@ class Session {
   /// campo que separe el programa científico de la agenda general: usa el
   /// agrupamiento de `data[]` (sedes) para eso — la sede "Programa Científico"
   /// no tiene dirección ni coordenadas, es un contenedor lógico.
-  /// Vacío en el mock y en las otras actividades.
+  /// Vacío en las otras actividades.
   final String agendaGroup;
 
   final List<String> photos;
@@ -56,29 +56,6 @@ class Session {
   DateTime get day => DateTime(startDate.year, startDate.month, startDate.day);
 
   bool get hasGallery => photos.isNotEmpty;
-
-  factory Session.fromJson(Map<String, dynamic> json) {
-    return Session(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      description: json['description'] as String? ?? '',
-      shortDescription: json['short_description'] as String? ?? '',
-      room: json['room'] as String? ?? '',
-      track: json['track'] as String? ?? 'General',
-      startDate: DateTime.parse(json['start_date'] as String),
-      endDate: DateTime.parse(json['end_date'] as String),
-      speakerIds:
-          (json['speaker_ids'] as List?)?.map((e) => e as String).toList() ?? const [],
-      sponsorName: json['sponsor_name'] as String?,
-      sponsorLogo: json['sponsor_logo'] as String?,
-      imageUrl: json['image_url'] as String?,
-      isOtherActivity: json['is_other_activity'] as bool? ?? false,
-      agendaGroup: json['agenda_group'] as String? ?? '',
-      photos: (json['photos'] as List?)?.map((e) => e as String).toList() ?? const [],
-      hasQuestions: json['has_questions'] as bool? ?? false,
-      hasPolls: json['has_polls'] as bool? ?? false,
-    );
-  }
 }
 
 /// Grupos de agenda distintos presentes en [sessions], en orden de primera

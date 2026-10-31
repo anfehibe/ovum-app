@@ -57,38 +57,48 @@ final networkingServiceProvider = Provider<NetworkingService>((ref) {
   ref.watch(sessionUserIdProvider);
   return NetworkingService(
     ref.watch(apiClientProvider),
-    eventId: () => ref.read(eventProvider.future).then((e) => e?.id),
+    eventId: () => _resolveEventId(ref),
   );
 });
 
-/// Evento configurado (resuelto por `codigo`). `null` si el flag está apagado o
-/// si el backend aún no responde (la app cae a datos mock / constantes).
-final eventProvider = FutureProvider<Event?>((ref) async {
-  if (!AppConfig.useApiEvents) return null;
+/// Evento configurado (resuelto por `codigo`). Si el backend no responde, el
+/// provider queda en error — no hay evento ni datos de demo de reserva.
+final eventProvider = FutureProvider<Event>((ref) async {
   final api = ref.watch(apiClientProvider);
-  try {
-    final data = await api.get('/events', query: {'all': 1});
-    final list = (data is Map && data['data'] is List)
-        ? (data['data'] as List)
-        : (data is List ? data : const []);
-    final maps =
-        list.whereType<Map>().map((e) => e.cast<String, dynamic>()).toList();
-    final match =
-        maps.firstWhereOrNull((e) => e['codigo'] == AppConfig.eventCode) ??
-        (maps.isNotEmpty ? maps.first : null);
-    return match == null ? null : Event.fromJson(match);
-  } on ApiException {
-    return null; // resiliente mientras el backend está en construcción
+  final data = await api.get('/events', query: {'all': 1});
+  final list = (data is Map && data['data'] is List)
+      ? (data['data'] as List)
+      : (data is List ? data : const []);
+  final maps =
+      list.whereType<Map>().map((e) => e.cast<String, dynamic>()).toList();
+  final match =
+      maps.firstWhereOrNull((e) => e['codigo'] == AppConfig.eventCode) ??
+      (maps.isNotEmpty ? maps.first : null);
+  if (match == null) {
+    throw const ApiException('No se pudo identificar el congreso.');
   }
+  return Event.fromJson(match);
 });
 
-/// Repositorio de datos: híbrido API + mock. Punto único de inyección.
+/// Id del evento para las llamadas `/events/{id}/...`.
+///
+/// Un `FutureProvider` en error se queda en error: sin el `invalidate`, un
+/// fallo de red al abrir la app dejaría todas las pantallas rotas hasta
+/// reiniciarla, por mucho que el usuario pulse "Reintentar".
+Future<String> _resolveEventId(Ref ref) async {
+  try {
+    return (await ref.read(eventProvider.future)).id;
+  } catch (_) {
+    ref.invalidate(eventProvider);
+    rethrow;
+  }
+}
+
+/// Repositorio de datos del congreso (API TRIVVO). Punto único de inyección.
 final ovumRepositoryProvider = Provider<OvumRepository>((ref) {
-  final api = ref.watch(apiClientProvider);
   return ApiOvumRepository(
-    api,
-    fallback: const MockOvumRepository(),
-    eventId: () => ref.read(eventProvider.future).then((e) => e?.id),
+    ref.watch(apiClientProvider),
+    eventId: () => _resolveEventId(ref),
   );
 });
 

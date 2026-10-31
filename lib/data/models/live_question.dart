@@ -15,12 +15,4 @@ class LiveQuestion {
   });
 
   bool get isAnswered => answer != null && answer!.trim().isNotEmpty;
-
-  factory LiveQuestion.fromJson(Map<String, dynamic> json) => LiveQuestion(
-        id: '${json['id']}',
-        sessionId: (json['session_id'] as String?) ?? '',
-        // Acepta el shape mock (`text`) y el del API (`question`/`pregunta`).
-        question: (json['question'] ?? json['pregunta'] ?? json['text'] ?? '') as String,
-        answer: (json['answer'] ?? json['respuesta']) as String?,
-      );
 }

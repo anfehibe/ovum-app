@@ -48,6 +48,8 @@
 	<string>OVUM 2026 usa tus contactos solo si eliges una ubicación al añadir una sesión al calendario.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>OVUM 2026 usa Face ID para que entres a tu cuenta sin escribir tu contraseña.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>OVUM 2026 puede necesitar tu ubicación para mostrarte información relevante del congreso cercana a ti.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

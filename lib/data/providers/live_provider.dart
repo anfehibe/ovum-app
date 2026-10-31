@@ -17,8 +17,8 @@ class PollAnswersNotifier extends Notifier<Map<String, String>> {
   }
 
   /// Registra el voto: actualiza local (optimista) y lo envía al servidor. Si el
-  /// POST falla, revierte y relanza para que la UI avise. Las opciones mock (no
-  /// numéricas) solo se guardan en memoria.
+  /// POST falla, revierte y relanza para que la UI avise. Una opción con id no
+  /// numérico no se puede enviar al API y solo se guarda en memoria.
   Future<void> answer(String pollId, String optionId) async {
     if (state.containsKey(pollId)) return; // no se puede cambiar la respuesta
     state = {...state, pollId: optionId};

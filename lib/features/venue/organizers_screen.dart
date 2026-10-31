@@ -20,7 +20,7 @@ class OrganizersScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(context.l10n.organizers)),
       body: async.when(
         loading: () => const LoadingView(),
-        error: (_, _) => const ErrorView(),
+        error: (_, _) => ErrorView(onRetry: () => ref.invalidate(organizersProvider)),
         data: (content) {
           final organizers = content.organizers;
           final texto = content.texto?.trim();

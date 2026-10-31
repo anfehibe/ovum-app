@@ -19,44 +19,6 @@ abstract final class AppConfig {
   static const String eventCode =
       String.fromEnvironment('OVUM_EVENT_CODE', defaultValue: 'OVUM 2026');
 
-  // ── Flags de activación por fuente de datos (rollout escalonado) ──────────
-  // El API v1 aún está en construcción. Hoy se conecta lo soportado; el resto
-  // queda en mock hasta que su endpoint exista. Encender cada uno la próxima
-  // semana = poner el flag en `true` + agregar su mapper. NO se elimina UI.
-
-  static const bool useApiAuth =
-      bool.fromEnvironment('OVUM_API_AUTH', defaultValue: true);
-  static const bool useApiEvents =
-      bool.fromEnvironment('OVUM_API_EVENTS', defaultValue: true);
-  static const bool useApiAgenda =
-      bool.fromEnvironment('OVUM_API_AGENDA', defaultValue: true);
-  static const bool useApiAttendees =
-      bool.fromEnvironment('OVUM_API_ATTENDEES', defaultValue: true);
-  static const bool useApiSpeakers =
-      bool.fromEnvironment('OVUM_API_SPEAKERS', defaultValue: true);
-  static const bool useApiSponsors =
-      bool.fromEnvironment('OVUM_API_SPONSORS', defaultValue: true);
-  static const bool useApiOtherActivities =
-      bool.fromEnvironment('OVUM_API_OTHER_ACTIVITIES', defaultValue: true);
-  static const bool useApiContent =
-      bool.fromEnvironment('OVUM_API_CONTENT', defaultValue: true);
-  static const bool useApiPolls =
-      bool.fromEnvironment('OVUM_API_POLLS', defaultValue: true);
-  static const bool useApiSplash =
-      bool.fromEnvironment('OVUM_API_SPLASH', defaultValue: true);
-  static const bool useApiHotels =
-      bool.fromEnvironment('OVUM_API_HOTELS', defaultValue: true);
-  static const bool useApiVenues =
-      bool.fromEnvironment('OVUM_API_VENUES', defaultValue: true);
-  static const bool useApiQuestions =
-      bool.fromEnvironment('OVUM_API_QUESTIONS', defaultValue: true);
-
-  /// Transporte: rutas de bus hotel ↔ sede
-  /// (`GET /events/{id}/transport/routes`, en producción desde el 2026-10-18).
-  /// Con `=false` la sección cae al mock y sigue siendo navegable sin backend.
-  static const bool useApiTransport =
-      bool.fromEnvironment('OVUM_API_TRANSPORT', defaultValue: true);
-
   /// Mapa **embebido** en la pantalla de ruta (`google_maps_flutter`).
   ///
   /// Apagado por defecto, y es deliberado: si el SDK nativo de Google Maps no

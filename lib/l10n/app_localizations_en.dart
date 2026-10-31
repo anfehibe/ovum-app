@@ -822,6 +822,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonLoadError => 'An error occurred while loading data.';
 
   @override
+  String get commonRetry => 'Retry';
+
+  @override
   String get favoritesEmpty =>
       'You don\'t have any favorites yet.\nTap the heart to save what interests you.';
 

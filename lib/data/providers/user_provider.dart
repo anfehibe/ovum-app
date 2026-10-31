@@ -90,7 +90,7 @@ class AuthController extends Notifier<AppUser?> {
     // Refresca el perfil en segundo plano (no bloquea el arranque). Ambas
     // tareas necesitan el Bearer, que se lee del almacén seguro de forma
     // asíncrona, así que esperan a `ready` antes de salir a la red.
-    if (!user.isGuest && AppConfig.useApiAuth) {
+    if (!user.isGuest) {
       final tokens = ref.read(authTokenStoreProvider);
       Future.microtask(() async {
         await tokens.ready;
@@ -113,11 +113,6 @@ class AuthController extends Notifier<AppUser?> {
     String password, {
     bool rememberForBiometrics = true,
   }) async {
-    if (!AppConfig.useApiAuth) {
-      // Kill-switch: comportamiento mock previo (sin red).
-      _persist(AppUser.guest.copyWith(firstName: _nameFromEmail(email), lastName: '', email: email));
-      return;
-    }
     final result = await ref.read(authServiceProvider).login(email, password);
     await ref.read(authTokenStoreProvider).save(result.token);
     // Antes de `_persist`: en cuanto cambia el estado, el `redirect` de
@@ -161,7 +156,7 @@ class AuthController extends Notifier<AppUser?> {
     // Primero el device-token: `POST /logout` no lo borra en el backend, y una
     // vez limpiado el Bearer el DELETE respondería 401.
     await ref.read(pushRegistrationProvider.notifier).unregister();
-    if (AppConfig.useApiAuth && tokens.hasToken) {
+    if (tokens.hasToken) {
       try {
         await ref.read(authServiceProvider).logout();
       } catch (_) {
@@ -216,16 +211,6 @@ class AuthController extends Notifier<AppUser?> {
   void _persist(AppUser user) {
     ref.read(sharedPreferencesProvider).setString(_userKey, json.encode(user.toJson()));
     state = user;
-  }
-
-  String _nameFromEmail(String email) {
-    final local = email.split('@').first.replaceAll(RegExp(r'[._]'), ' ').trim();
-    if (local.isEmpty) return AppUser.guest.name;
-    return local
-        .split(' ')
-        .where((w) => w.isNotEmpty)
-        .map((w) => w[0].toUpperCase() + w.substring(1))
-        .join(' ');
   }
 }
 

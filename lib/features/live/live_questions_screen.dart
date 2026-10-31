@@ -88,7 +88,9 @@ class _LiveQuestionsScreenState extends ConsumerState<LiveQuestionsScreen> {
           Expanded(
             child: async.when(
               loading: () => const LoadingView(),
-              error: (_, _) => const ErrorView(),
+              error: (_, _) => ErrorView(
+                onRetry: () => ref.invalidate(sessionQuestionsProvider(widget.sessionId)),
+              ),
               data: (questions) => RefreshIndicator(
                 onRefresh: () =>
                     ref.refresh(sessionQuestionsProvider(widget.sessionId).future),

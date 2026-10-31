@@ -39,7 +39,7 @@ class _AttendeesScreenState extends ConsumerState<AttendeesScreen> {
       appBar: AppBar(title: Text(context.l10n.attendees)),
       body: async.when(
         loading: () => const LoadingView(),
-        error: (_, _) => const ErrorView(),
+        error: (_, _) => ErrorView(onRetry: () => ref.invalidate(attendeesProvider)),
         data: (attendees) {
           final q = _query.toLowerCase();
           final filtered = attendees.where((a) {

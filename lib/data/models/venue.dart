@@ -34,18 +34,4 @@ class Venue {
     this.isPrimary = false,
     this.plans = const [],
   });
-
-  factory Venue.fromJson(Map<String, dynamic> json) {
-    return Venue(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String? ?? '',
-      address: json['address'] as String? ?? '',
-      imageUrl: json['image_url'] as String?,
-      mapImageUrl: json['map_image_url'] as String?,
-      lat: (json['lat'] as num?)?.toDouble(),
-      lng: (json['lng'] as num?)?.toDouble(),
-      isPrimary: json['is_primary'] as bool? ?? false,
-    );
-  }
 }

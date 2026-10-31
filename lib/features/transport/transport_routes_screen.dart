@@ -25,7 +25,7 @@ class TransportRoutesScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(context.l10n.transport)),
       body: async.when(
         loading: () => const LoadingView(),
-        error: (_, _) => const ErrorView(),
+        error: (_, _) => ErrorView(onRetry: () => ref.invalidate(busRoutesProvider)),
         data: (routes) => RefreshIndicator(
           onRefresh: () async => ref.invalidate(busRoutesProvider),
           child: routes.isEmpty

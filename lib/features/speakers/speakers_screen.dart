@@ -29,7 +29,7 @@ class _SpeakersScreenState extends ConsumerState<SpeakersScreen> {
       appBar: AppBar(title: Text(context.l10n.speakers)),
       body: async.when(
         loading: () => const LoadingView(),
-        error: (_, _) => const ErrorView(),
+        error: (_, _) => ErrorView(onRetry: () => ref.invalidate(speakersProvider)),
         data: (speakers) {
           final filtered = speakers.where((s) {
             final q = _query.toLowerCase();

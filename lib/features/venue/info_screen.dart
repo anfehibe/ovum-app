@@ -19,7 +19,7 @@ class InfoScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(context.l10n.generalInfo)),
       body: async.when(
         loading: () => const LoadingView(),
-        error: (_, _) => const ErrorView(),
+        error: (_, _) => ErrorView(onRetry: () => ref.invalidate(infoItemsProvider)),
         data: (items) {
           final grouped = <String, List<InfoItem>>{};
           for (final it in items) {

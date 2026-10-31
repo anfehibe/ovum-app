@@ -49,8 +49,7 @@ Cómo obtenerlas: [`docs/MAPS-API-KEY.md`](docs/MAPS-API-KEY.md).
 El comando que se usa para preparar una entrega a las tiendas, con el mapa encendido:
 
 ```bash
-flutter build appbundle --release --dart-define=OVUM_EMBEDDED_MAP=true && \
-flutter build ios --release --dart-define=OVUM_EMBEDDED_MAP=true && open ios/Runner.xcworkspace
+flutter clean && flutter build ios --release --dart-define=OVUM_EMBEDDED_MAP=true && open ios/Runner.xcworkspace && flutter build appbundle --release --dart-define=OVUM_EMBEDDED_MAP=true
 ```
 
 Deja los artefactos en:
@@ -167,9 +166,8 @@ donde cada uno lleva su explicación.
 | `OVUM_TENANT` | `anavi` |
 | `OVUM_EVENT_CODE` | `OVUM 2026` |
 
-Hay además un flag `OVUM_API_*` por cada fuente de datos (agenda, ponentes, hoteles, transporte…),
-todos en `true`. Poner uno en `false` hace que esa sección lea de `assets/mock/` en vez del API:
-sirve para trabajar sin backend o para reproducir un fallo con datos fijos.
+La app no trae datos de demo: todo el contenido sale del API. Si no se puede resolver el evento
+(`GET /events?all=1`), las pantallas muestran el error con **Reintentar**.
 
 ---
 

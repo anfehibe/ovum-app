@@ -372,12 +372,14 @@ darle un punto de entrada.
 `features`, y **nadie lo lee**: la ficha de sesión usa `pollsForSessionProvider(...).isNotEmpty`
 (`session_detail_screen.dart:38`). Borrarlo del modelo o alimentarlo de verdad.
 
-### B4. El fallback al mock se dispara en silencio
+### ~~B4. El fallback al mock se dispara en silencio~~ ✅ resuelto 2026-10-29
 
-**[comprobado]** Varios métodos de `ApiOvumRepository` caen a `MockOvumRepository` cuando no se
-resuelve el id del evento, no solo cuando se apaga un flag (p. ej. `api_ovum_repository.dart:111`).
-Si `GET /events?all=1` falla, la app **muestra datos de demo como si fueran reales**, sin avisar.
-Debería distinguirse de un error.
+Pasó de verdad: el host `https://trivvo.events/api` empezó a responder **526** (Cloudflare), falló
+`GET /events?all=1` y la app enseñó los patrocinadores de demo (NutriAgro, BioVet…) como reales.
+Se borró el mock completo (`assets/mock/`, `MockOvumRepository`, los flags `OVUM_API_*` que lo
+activaban y el login falso). Un fallo ahora muestra el error con **Reintentar**, que vuelve a
+resolver el evento. Infraestructura corrigió el 526 el mismo día; la base sigue en
+`https://trivvo.events/api/v1`.
 
 ### B5. Constantes del evento hardcodeadas
 
@@ -472,7 +474,6 @@ Todo esto estaba en la versión anterior de este documento y el backend lo cerr�
 | 🔴 **Prod** | Bio y foto de los 50 ponentes | Las fichas se ven peladas |
 | **App** | A6 · confirmar push/correo de cancelación y editar una confirmada | Aceptar con mesa y cancelar ya se probaron punta a punta |
 | 🟠 **Prod** | Crear encuestas y activar `features.qa` | Dos funciones completas hoy invisibles |
-| **App** | B4 · fallback mudo al mock | Puede mostrar datos de demo como reales |
 | 🔴 **API** | A0 · reportar y bloquear | La app ya envía contenido de usuarios; lo exige App Store 1.2 |
 | **API** | A1 · fijar `google/auth` | Si se cae, el push muere en silencio |
 | **App** | B2, B3 · código muerto | Sin impacto en usuario; deuda |

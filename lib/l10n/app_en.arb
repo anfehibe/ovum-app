@@ -276,6 +276,7 @@
   "commonDescription": "Description",
   "commonNoResults": "No results",
   "commonLoadError": "An error occurred while loading data.",
+  "commonRetry": "Retry",
   "favoritesEmpty": "You don't have any favorites yet.\nTap the heart to save what interests you.",
   "favoritesSessions": "Sessions",
   "otherActivitiesEmpty": "No additional activities",

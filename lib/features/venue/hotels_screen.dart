@@ -20,7 +20,7 @@ class HotelsScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(context.l10n.hotels)),
       body: async.when(
         loading: () => const LoadingView(),
-        error: (_, _) => const ErrorView(),
+        error: (_, _) => ErrorView(onRetry: () => ref.invalidate(hotelsProvider)),
         data: (hotels) => ListView.separated(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
           itemCount: hotels.length,

@@ -13,16 +13,6 @@ class Organizer {
     this.logoUrl,
     this.web,
   });
-
-  factory Organizer.fromJson(Map<String, dynamic> json) {
-    return Organizer(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String? ?? '',
-      logoUrl: json['logo_url'] as String?,
-      web: json['web'] as String?,
-    );
-  }
 }
 
 /// Contenido de la pantalla de organizadores: la lista más un texto

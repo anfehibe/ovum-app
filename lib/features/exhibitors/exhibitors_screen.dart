@@ -28,7 +28,7 @@ class _ExhibitorsScreenState extends ConsumerState<ExhibitorsScreen> {
       appBar: AppBar(title: Text(context.l10n.exhibitors)),
       body: async.when(
         loading: () => const LoadingView(),
-        error: (_, _) => const ErrorView(),
+        error: (_, _) => ErrorView(onRetry: () => ref.invalidate(exhibitorsProvider)),
         data: (exhibitors) {
           final q = _query.toLowerCase();
           final filtered = exhibitors.where((e) {

@@ -43,8 +43,8 @@ class SponsorTier implements Comparable<SponsorTier> {
   /// Niveles con orden y color definidos, de mayor a menor.
   static const known = <SponsorTier>[diamante, platino, oro, plata, bronce];
 
-  /// Acepta tanto la clave del mock (`"diamante"`) como la etiqueta del API
-  /// (`"Diamante"`, `"Media Partner"`). Lo desconocido conserva su texto original.
+  /// Normaliza la etiqueta del API (`"Diamante"`, `"Línea Aérea Oficial"`) sin
+  /// distinguir mayúsculas ni acentos. Lo desconocido conserva su texto original.
   factory SponsorTier.fromLabel(String? raw) {
     final text = (raw ?? '').trim().replaceAll(RegExp(r'\s+'), ' ');
     if (text.isEmpty) return otros;
@@ -124,18 +124,4 @@ class Sponsor {
     this.email,
     this.phone,
   });
-
-  factory Sponsor.fromJson(Map<String, dynamic> json) {
-    return Sponsor(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      tier: SponsorTier.fromLabel(json['tier'] as String?),
-      description: json['description'] as String? ?? '',
-      logoUrl: json['logo_url'] as String?,
-      booth: json['booth'] as String?,
-      web: json['web'] as String?,
-      email: json['email'] as String?,
-      phone: json['phone'] as String?,
-    );
-  }
 }

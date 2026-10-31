@@ -65,20 +65,4 @@ class Hotel {
     this.rooms = const [],
     this.isOfficial = false,
   });
-
-  factory Hotel.fromJson(Map<String, dynamic> json) {
-    return Hotel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String? ?? '',
-      address: json['address'] as String? ?? '',
-      distance: json['distance'] as String? ?? '',
-      priceFrom: json['price_from'] as String?,
-      imageUrl: json['image_url'] as String?,
-      web: json['web'] as String?,
-      phone: json['phone'] as String?,
-      email: json['email'] as String?,
-      isOfficial: json['is_official'] as bool? ?? false,
-    );
-  }
 }

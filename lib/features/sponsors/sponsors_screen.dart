@@ -37,7 +37,7 @@ class SponsorsScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(context.l10n.sponsors)),
       body: async.when(
         loading: () => const LoadingView(),
-        error: (_, _) => const ErrorView(),
+        error: (_, _) => ErrorView(onRetry: () => ref.invalidate(sponsorsProvider)),
         data: (sponsors) {
           final byTier = <SponsorTier, List<Sponsor>>{};
           for (final s in sponsors) {

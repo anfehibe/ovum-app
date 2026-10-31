@@ -41,7 +41,7 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
       appBar: AppBar(title: Text(context.l10n.navAgenda)),
       body: async.when(
         loading: () => const LoadingView(),
-        error: (_, _) => const ErrorView(),
+        error: (_, _) => ErrorView(onRetry: () => ref.invalidate(sessionsProvider)),
         data: (_) => _content(),
       ),
     );

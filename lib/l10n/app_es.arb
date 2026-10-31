@@ -258,6 +258,7 @@
   "commonDescription": "Descripción",
   "commonNoResults": "Sin resultados",
   "commonLoadError": "Ocurrió un error al cargar los datos.",
+  "commonRetry": "Reintentar",
   "favoritesEmpty": "Aún no tienes favoritos.\nToca el corazón para guardar lo que te interese.",
   "favoritesSessions": "Sesiones",
   "otherActivitiesEmpty": "No hay actividades adicionales",

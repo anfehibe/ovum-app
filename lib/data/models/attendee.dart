@@ -29,21 +29,4 @@ class Attendee {
     this.services = const [],
     this.socials = const SocialLinks(),
   });
-
-  factory Attendee.fromJson(Map<String, dynamic> json) {
-    return Attendee(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      position: json['position'] as String? ?? '',
-      company: json['company'] as String? ?? '',
-      photoUrl: json['photo_url'] as String?,
-      bio: json['bio'] as String? ?? '',
-      sector: json['sector'] as String? ?? '',
-      city: json['city'] as String? ?? '',
-      country: json['country'] as String? ?? '',
-      interests: (json['interests'] as List?)?.map((e) => e as String).toList() ?? const [],
-      services: (json['services'] as List?)?.map((e) => e as String).toList() ?? const [],
-      socials: SocialLinks.fromJson(json['socials'] as Map<String, dynamic>?),
-    );
-  }
 }

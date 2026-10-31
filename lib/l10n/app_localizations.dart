@@ -1646,6 +1646,12 @@ abstract class AppLocalizations {
   /// **'An error occurred while loading data.'**
   String get commonLoadError;
 
+  /// No description provided for @commonRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get commonRetry;
+
   /// No description provided for @favoritesEmpty.
   ///
   /// In en, this message translates to:

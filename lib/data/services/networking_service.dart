@@ -10,8 +10,8 @@ import '../repositories/mappers/networking_mapper.dart';
 /// Acceso a `/events/{id}/networking/*` y `/events/{id}/messages` del API TRIVVO.
 ///
 /// Va como **servicio y no como parte de `OvumRepository`** a propósito: ese
-/// repositorio es "contenido del congreso que siempre devuelve algo, con gemelo
-/// mock", y networking es lo contrario — exige Bearer, escribe, pagina, es por
+/// repositorio es "contenido público del congreso, igual para todos", y
+/// networking es lo contrario — exige Bearer, escribe, pagina, es por
 /// espectador y **puede no estar disponible** (403 si el organizador no abrió el
 /// networking o si el usuario no es asistente confirmado). Sigue el patrón de
 /// [AuthService] / [DeviceTokenService].
@@ -20,19 +20,13 @@ import '../repositories/mappers/networking_mapper.dart';
 /// `{message}` en español y la UI lo muestra tal cual, que es la única forma de
 /// distinguir las dos causas del 403 (no hay endpoint que informe el estado).
 class NetworkingService {
-  NetworkingService(this._api, {required Future<String?> Function() eventId})
+  NetworkingService(this._api, {required Future<String> Function() eventId})
     : _eventIdResolver = eventId;
 
   final ApiClient _api;
-  final Future<String?> Function() _eventIdResolver;
+  final Future<String> Function() _eventIdResolver;
 
-  Future<String> _eventBase() async {
-    final id = await _eventIdResolver();
-    if (id == null) {
-      throw const ApiException('No se pudo identificar el congreso.');
-    }
-    return '/events/$id';
-  }
+  Future<String> _eventBase() async => '/events/${await _eventIdResolver()}';
 
   /// La mensajería cuelga de `/events/{id}/messages`, no de `/networking`, pero
   /// pasa por la misma compuerta 403 del backend.

@@ -22,7 +22,7 @@ class OtherActivitiesScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(context.l10n.otherActivities)),
       body: async.when(
         loading: () => const LoadingView(),
-        error: (_, _) => const ErrorView(),
+        error: (_, _) => ErrorView(onRetry: () => ref.invalidate(sessionsProvider)),
         data: (_) {
           final activities = ref.watch(otherActivitiesProvider);
           if (activities.isEmpty) {

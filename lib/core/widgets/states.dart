@@ -13,8 +13,11 @@ class LoadingView extends StatelessWidget {
 }
 
 class ErrorView extends StatelessWidget {
-  const ErrorView({super.key, this.message});
+  const ErrorView({super.key, this.message, this.onRetry});
   final String? message;
+
+  /// Muestra el botón "Reintentar". Normalmente `ref.invalidate(<provider>)`.
+  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +34,13 @@ class ErrorView extends StatelessWidget {
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
+            if (onRetry != null) ...[
+              const SizedBox(height: 16),
+              FilledButton.tonal(
+                onPressed: onRetry,
+                child: Text(context.l10n.commonRetry),
+              ),
+            ],
           ],
         ),
       ),
