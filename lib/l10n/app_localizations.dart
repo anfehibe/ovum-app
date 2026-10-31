@@ -1286,6 +1286,18 @@ abstract class AppLocalizations {
   /// **'Contact'**
   String get profileContact;
 
+  /// No description provided for @profileRateApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate the app'**
+  String get profileRateApp;
+
+  /// No description provided for @profileRateAppSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell us what you think on {store}'**
+  String profileRateAppSubtitle(String store);
+
   /// No description provided for @profileQuickAccessDisabled.
   ///
   /// In en, this message translates to:

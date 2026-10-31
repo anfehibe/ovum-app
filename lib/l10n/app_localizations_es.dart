@@ -637,6 +637,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get profileContact => 'Contacto';
 
   @override
+  String get profileRateApp => 'Califica la app';
+
+  @override
+  String profileRateAppSubtitle(String store) {
+    return 'Cuéntanos qué te parece en $store';
+  }
+
+  @override
   String get profileQuickAccessDisabled => 'Acceso rápido desactivado.';
 
   @override

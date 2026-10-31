@@ -216,6 +216,15 @@
   "profileTerms": "Terms and conditions",
   "profileTermsSubtitle": "Rules for using the platform",
   "profileContact": "Contact",
+  "profileRateApp": "Rate the app",
+  "profileRateAppSubtitle": "Tell us what you think on {store}",
+  "@profileRateAppSubtitle": {
+    "placeholders": {
+      "store": {
+        "type": "String"
+      }
+    }
+  },
   "profileQuickAccessDisabled": "Quick access disabled.",
   "transportNoRoutes": "No transport routes have been published yet.\nCheck back closer to the congress dates.",
   "transportCongressBuses": "Congress buses",

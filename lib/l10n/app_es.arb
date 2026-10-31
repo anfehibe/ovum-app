@@ -198,6 +198,8 @@
   "profileTerms": "Términos y condiciones",
   "profileTermsSubtitle": "Reglas de uso de la plataforma",
   "profileContact": "Contacto",
+  "profileRateApp": "Califica la app",
+  "profileRateAppSubtitle": "Cuéntanos qué te parece en {store}",
   "profileQuickAccessDisabled": "Acceso rápido desactivado.",
   "transportNoRoutes": "Todavía no hay rutas de transporte publicadas.\nVuelve a consultar cerca de las fechas del congreso.",
   "transportCongressBuses": "Buses del congreso",

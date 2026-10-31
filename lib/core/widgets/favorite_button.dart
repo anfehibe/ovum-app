@@ -4,6 +4,7 @@ import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
 import '../../data/providers/favorites_provider.dart';
+import '../rating/app_rating.dart';
 
 /// Botón de favorito (corazón) que sincroniza con [favoritesProvider].
 class FavoriteButton extends ConsumerWidget {
@@ -31,7 +32,11 @@ class FavoriteButton extends ConsumerWidget {
     );
 
     final button = IconButton(
-      onPressed: () => ref.read(favoritesProvider.notifier).toggle(kind, id),
+      onPressed: () {
+        ref.read(favoritesProvider.notifier).toggle(kind, id);
+        // Guardar (no quitar) cuenta como buen momento para pedir calificación.
+        if (!isFav) ref.read(appRatingProvider).onPositiveMoment();
+      },
       tooltip: isFav ? context.l10n.widgetRemoveFavorite : context.l10n.widgetAddFavorite,
       icon: icon,
     );

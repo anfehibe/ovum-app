@@ -8,6 +8,7 @@ import '../../core/auth/biometric_service.dart';
 import '../../core/config/app_config.dart';
 import '../../core/constants/ovum_event.dart';
 import '../../core/l10n/l10n.dart';
+import '../../core/rating/app_rating.dart';
 import '../../core/router/route_paths.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/launchers.dart';
@@ -207,6 +208,16 @@ class ProfileScreen extends ConsumerWidget {
             title: l10n.profileContact,
             subtitle: OvumEvent.contactEmail,
             onTap: () => openEmail(OvumEvent.contactEmail),
+          ),
+          const SizedBox(height: 10),
+          _tile(
+            context,
+            icon: PhosphorIconsRegular.star,
+            title: l10n.profileRateApp,
+            subtitle: l10n.profileRateAppSubtitle(
+              Theme.of(context).platform == TargetPlatform.iOS ? 'App Store' : 'Google Play',
+            ),
+            onTap: () => ref.read(appRatingProvider).openStoreListing(),
           ),
           const SizedBox(height: 28),
           FilledButton.tonalIcon(

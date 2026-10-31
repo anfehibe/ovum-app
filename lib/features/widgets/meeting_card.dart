@@ -6,6 +6,7 @@ import 'package:ovum/core/ui/app_icons.dart';
 
 import '../../core/config/app_config.dart';
 import '../../core/network/api_exception.dart';
+import '../../core/rating/app_rating.dart';
 import '../../core/router/route_paths.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/date_ext.dart';
@@ -105,6 +106,7 @@ class _MeetingCardState extends ConsumerState<MeetingCard> {
             .respondMeeting(_m.id, accept: accept);
         ref.read(meetingResponsesProvider.notifier).record(res.outcome);
         ref.invalidate(networkingMeetingsProvider);
+        if (accept) ref.read(appRatingProvider).onPositiveMoment();
         final donde = accept
             ? (outcomePlaceLabel(res.outcome) ?? tableByOrganizer)
             : null;

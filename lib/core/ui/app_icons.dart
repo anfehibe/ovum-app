@@ -57,6 +57,7 @@ abstract final class PhosphorIconsRegular {
   static const IconData shareNetwork = Icons.share_outlined;
   static const IconData shieldCheck = Icons.privacy_tip_outlined;
   static const IconData signOut = Icons.logout_rounded;
+  static const IconData star = Icons.star_outline_rounded;
   static const IconData storefront = Icons.storefront_outlined;
   static const IconData sun = Icons.light_mode_outlined;
   static const IconData trash = Icons.delete_outline_rounded;

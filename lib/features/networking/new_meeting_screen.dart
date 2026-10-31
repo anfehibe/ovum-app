@@ -6,6 +6,7 @@ import 'package:ovum/core/ui/app_icons.dart';
 import '../../core/config/app_config.dart';
 import '../../core/constants/ovum_event.dart';
 import '../../core/network/api_exception.dart';
+import '../../core/rating/app_rating.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/date_ext.dart';
 import '../../core/utils/meeting_slots.dart';
@@ -196,6 +197,7 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
       // tomada en su hora nueva.
       ref.invalidate(networkingMeetingsProvider);
       if (!mounted) return;
+      if (editing == null) ref.read(appRatingProvider).onPositiveMoment();
       messenger.showSnackBar(SnackBar(content: Text(message)));
       navigator.pop();
     } on ApiException catch (e) {

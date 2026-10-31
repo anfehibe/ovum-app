@@ -96,6 +96,18 @@ abstract final class AppConfig {
     defaultValue: 'https://trivvo.events/terms-conditions',
   );
 
+  // ── Tiendas ────────────────────────────────────────────────────────────────
+
+  /// Id numérico de la app en App Store Connect. Lo usa el botón "Califica la
+  /// app" para abrir la ficha en iOS; en Android basta el package name.
+  static const String appStoreId =
+      String.fromEnvironment('OVUM_APP_STORE_ID', defaultValue: '6808662727');
+
+  /// Ventana nativa de calificación tras acciones positivas (`AppRating`).
+  /// Con `=false` solo queda el botón del perfil.
+  static const bool useRatingPrompt =
+      bool.fromEnvironment('OVUM_RATING_PROMPT', defaultValue: true);
+
   // ── Seguridad ──────────────────────────────────────────────────────────────
 
   /// Acceso rápido con huella / Face ID en la pantalla de login.
