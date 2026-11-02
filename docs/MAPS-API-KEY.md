@@ -167,14 +167,15 @@ cd ovum-app
 flutter run --dart-define=OVUM_EMBEDDED_MAP=true
 ```
 
-Entra en **Transporte → icono de mapa** (arriba a la derecha):
+Entra en **Transporte** y abre una ruta. El mapa sale debajo de la próxima salida; al tocarlo se
+abre a pantalla completa, con gestos:
 
 | Lo que ves | Qué significa |
 |---|---|
-| Mapa con calles y un marcador en COPEREX | ✅ todo bien |
-| Marco, logo de Google y marcador, **sin calles** | La clave llega pero Google la rechaza: falta facturación, falta habilitar *Maps SDK for iOS*, o la restricción de bundle id no coincide |
-| El texto "Mapa embebido apagado" | Falta el `--dart-define`, no la clave |
-| La app se cierra al entrar | La clave está vacía **y** el flag encendido — ver `docs/SPIKE-IOS-MAPS.md` §4 |
+| Mapa con calles, el trazado y las paradas | ✅ todo bien |
+| Marco, logo de Google y marcadores, **sin calles** | La clave llega pero Google la rechaza: falta facturación, falta habilitar *Maps SDK for iOS*, o la restricción de bundle id no coincide |
+| No hay mapa, solo los botones de Google Maps | Falta el `--dart-define`, no la clave (o la ruta no tiene paradas con coordenadas) |
+| El build falla con `OVUM_EMBEDDED_MAP=true pero GMS_API_KEY esta vacio` | Es a propósito: la clave está vacía **y** el flag encendido. Antes la app se cerraba al abrir una ruta — ver `docs/SPIKE-IOS-MAPS.md` §4 |
 
 Si sale el segundo caso, **espera 5 minutos**: Google tarda en propagar una clave recién creada.
 Si sigue igual, el motivo exacto aparece en **APIs y servicios → Métricas**, que muestra las

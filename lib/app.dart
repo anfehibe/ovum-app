@@ -16,6 +16,8 @@ import 'data/providers/favorites_provider.dart';
 import 'data/providers/messages_provider.dart';
 import 'data/providers/networking_provider.dart';
 import 'data/providers/notifications_provider.dart';
+import 'data/providers/transport_follow_provider.dart';
+import 'data/providers/transport_providers.dart';
 import 'data/providers/user_provider.dart';
 
 /// Mantiene el id del asistente en los reportes de Crashlytics. Su valor es
@@ -90,6 +92,7 @@ class _NotificationsBootstrapState
     extends ConsumerState<NotificationsBootstrap> {
   StreamSubscription<String>? _routeSub;
   StreamSubscription<Map<String, dynamic>>? _pushSub;
+  AppLifecycleListener? _lifecycle;
 
   @override
   void initState() {
@@ -100,8 +103,18 @@ class _NotificationsBootstrapState
     final service = ref.read(notificationServiceProvider);
 
     _routeSub = service.onNotificationRoute.listen((route) {
+      // Tocar un aviso de bus abre la ruta: que lo haga con el horario al día.
+      if (route.startsWith('/transport')) ref.invalidate(busRoutesProvider);
       ref.read(pendingNotificationRouteProvider.notifier).set(route);
     });
+
+    // Al volver a la app, los horarios de transporte se piden de nuevo si son
+    // viejos (ver `refreshTransportIfStale`). Sin esto, lo cargado a primera
+    // hora se quedaba hasta matar la app aunque el organizador cambiara una
+    // salida a media mañana.
+    _lifecycle = AppLifecycleListener(
+      onResume: () => refreshTransportIfStale(ref),
+    );
 
     // Un mensaje nuevo deja obsoleta la bandeja, esté abierta o no. Invalidar
     // basta: `conversationsProvider` es autoDispose, así que si nadie la mira
@@ -118,6 +131,9 @@ class _NotificationsBootstrapState
       if (isMeetingNotification(data)) {
         ref.invalidate(networkingMeetingsProvider);
       }
+      if (isTransportNotification(data)) {
+        ref.invalidate(busRoutesProvider);
+      }
     });
   }
 
@@ -125,6 +141,7 @@ class _NotificationsBootstrapState
   void dispose() {
     _routeSub?.cancel();
     _pushSub?.cancel();
+    _lifecycle?.dispose();
     super.dispose();
   }
 
@@ -139,14 +156,27 @@ class _NotificationsBootstrapState
         ref.read(pendingNotificationRouteProvider.notifier).set(initial);
       }
       _syncReminders();
+      // Cada arranque, forzado: resuscribir es idempotente y repara lo que se
+      // haya perdido (reinstalación, token nuevo, APNs que llegó tarde).
+      _syncTransportTopics(force: true);
     });
 
     // Cualquier cambio en favoritos, agenda o preferencias reprograma todo.
     ref.listen(favoritesProvider, (_, _) => _syncReminders());
     ref.listen(sessionsProvider, (_, _) => _syncReminders());
-    ref.listen(notificationPrefsProvider, (_, _) => _syncReminders());
+    ref.listen(notificationPrefsProvider, (_, _) {
+      _syncReminders();
+      // Apagar "Avisos del congreso" también da de baja los avisos de bus.
+      _syncTransportTopics();
+    });
+    ref.listen(followedRoutesProvider, (_, _) => _syncTransportTopics());
 
     return widget.child;
+  }
+
+  /// Lleva las suscripciones de los avisos de bus al estado deseado.
+  void _syncTransportTopics({bool force = false}) {
+    ref.read(transportTopicsProvider.notifier).sync(force: force);
   }
 
   /// Reprograma los recordatorios desde cero (idempotente y barato).

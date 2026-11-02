@@ -34,6 +34,7 @@ import '../../features/venue/hotels_screen.dart';
 import '../../features/venue/info_screen.dart';
 import '../../features/venue/organizers_screen.dart';
 import '../../features/transport/bus_route_detail_screen.dart';
+import '../../features/transport/bus_route_map_screen.dart';
 import '../../features/transport/transport_routes_screen.dart';
 import '../../features/venue/venues_screen.dart';
 import '../../features/splash/splash_screen.dart';
@@ -121,6 +122,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '${R.busRouteDetail}/:id',
         builder: (_, state) =>
             BusRouteDetailScreen(routeId: state.pathParameters['id']!),
+      ),
+      // Mapa de la ruta a pantalla completa e interactivo. En el detalle va una
+      // vista previa sin gestos: dentro de un scroll vertical el mapa no se podía
+      // desplazar en vertical y el pellizco respondía a destiempo.
+      GoRoute(
+        path: '${R.busRouteDetail}/:id/map',
+        builder: (_, state) =>
+            BusRouteMapScreen(routeId: state.pathParameters['id']!),
       ),
       GoRoute(path: R.favorites, builder: (_, _) => const FavoritesScreen()),
       GoRoute(path: R.attendees, builder: (_, _) => const AttendeesScreen()),

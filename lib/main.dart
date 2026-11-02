@@ -12,6 +12,7 @@ import 'core/network/auth_token_store.dart';
 import 'core/notifications/notification_service.dart';
 import 'core/rating/app_rating.dart';
 import 'core/utils/crash_reporting.dart';
+import 'core/utils/event_clock.dart';
 import 'data/providers/content_providers.dart';
 import 'data/providers/preferences.dart';
 import 'firebase_options.dart';
@@ -25,6 +26,10 @@ Future<void> main() async {
   // para que `DateFormat` funcione en cualquiera de los dos idiomas.
   await initializeDateFormatting('es');
   await initializeDateFormatting('en');
+  // Base de zonas horarias para la hora del congreso (event_clock.dart). Antes
+  // solo la cargaba el servicio de notificaciones, así que con el push apagado
+  // la cuenta atrás del transporte y el calendario no tenían zona del evento.
+  ensureTimeZonesLoaded();
 
   // Firebase debe estar listo antes de cualquier uso de Messaging, incluido el
   // registro del handler de segundo plano. El resto de la configuración de

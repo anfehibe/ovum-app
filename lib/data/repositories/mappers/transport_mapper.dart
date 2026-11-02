@@ -40,6 +40,61 @@ List<BusRoute> busRoutesFromJson(List<dynamic> data) => [
     if (e is Map) busRouteFromJson(e.cast<String, dynamic>()),
 ];
 
+/// Inverso de [busRouteFromJson]: vuelve a la forma del API.
+///
+/// Lo usa la caché sin conexión (`transport_cache.dart`) para guardar la última
+/// respuesta buena en el mismo formato que llega del servidor; así se lee con el
+/// mismo mapper y no hay un segundo formato que mantener. Solo incluye lo que el
+/// mapper lee.
+Map<String, dynamic> busRouteToJson(BusRoute r) => {
+  'id': r.id,
+  'nombre': r.name,
+  'codigo': r.code,
+  'color': r.colorHex,
+  'sentido': switch (r.direction) {
+    RouteDirection.hotelToVenue => 'hotel_sede',
+    RouteDirection.venueToHotel => 'sede_hotel',
+    RouteDirection.circular => 'circular',
+  },
+  'descripcion': r.description,
+  'aviso': r.notice,
+  'frecuencia_min': r.headwayMinutes,
+  'trazado': r.polyline,
+  'paradas': [
+    for (final s in r.stops)
+      {
+        'id': s.id,
+        'orden': s.order,
+        'tipo': switch (s.kind) {
+          StopKind.hotel => 'hotel',
+          StopKind.venue => 'sede',
+          StopKind.free => 'libre',
+        },
+        'nombre': s.name,
+        'direccion': s.address,
+        'lat': s.lat,
+        'lng': s.lng,
+        'minutos': s.minutesFromStart,
+        'es_final': s.isTerminal,
+      },
+  ],
+  'horarios': [
+    for (final d in r.departures)
+      {
+        'id': d.id,
+        'fecha': d.date == null
+            ? null
+            : '${d.date!.year.toString().padLeft(4, '0')}-'
+                  '${d.date!.month.toString().padLeft(2, '0')}-'
+                  '${d.date!.day.toString().padLeft(2, '0')}',
+        'hora_salida': d.departTime,
+        'hora_llegada': d.arriveTime,
+        'nota': d.note,
+        'parada_id': d.stopId,
+      },
+  ],
+};
+
 List<RouteStop> _stopsFrom(dynamic raw) {
   if (raw is! List) return const [];
   final out = <RouteStop>[];

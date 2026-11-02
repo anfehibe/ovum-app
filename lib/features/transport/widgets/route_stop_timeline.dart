@@ -26,9 +26,9 @@ class RouteStopTimeline extends StatelessWidget {
     if (stops.isEmpty) {
       return Text(
         context.l10n.transportNoStops,
-        style: Theme.of(
-          context,
-        ).textTheme.bodyMedium?.copyWith(color: context.scheme.onSurfaceVariant),
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: context.scheme.onSurfaceVariant,
+        ),
       );
     }
     return Column(
@@ -61,115 +61,130 @@ class _StopRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.scheme;
+    final l10n = context.l10n;
     final terminal = isFirst || isLast || stop.isTerminal;
+    // Una sola frase para el lector de pantalla, en vez de cinco fragmentos
+    // sueltos (nombre, minutos, dirección, tipo, flecha).
+    final description = [
+      stop.name,
+      if (stop.minutesFromStart case final m? when m > 0)
+        l10n.transportPlusMinutes(m),
+      if (stop.address.isNotEmpty) stop.address,
+      _labelFor(l10n, stop.kind),
+    ].join('. ');
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: () => openDirectionsToStop(stop),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 2),
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Carril del hilo: tramo superior, punto, tramo inferior.
-              SizedBox(
-                width: 24,
-                child: Column(
-                  children: [
-                    Container(
-                      width: 2,
-                      height: 10,
-                      color: isFirst
-                          ? Colors.transparent
-                          : color.withValues(alpha: 0.45),
-                    ),
-                    Container(
-                      width: terminal ? 13 : 10,
-                      height: terminal ? 13 : 10,
-                      decoration: BoxDecoration(
-                        color: terminal ? color : scheme.surface,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: color, width: 2),
-                      ),
-                    ),
-                    Expanded(
-                      child: Container(
+    return Semantics(
+      button: true,
+      label: l10n.transportStopSemantics(description),
+      excludeSemantics: true,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => openDirectionsToStop(stop),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Carril del hilo: tramo superior, punto, tramo inferior.
+                SizedBox(
+                  width: 24,
+                  child: Column(
+                    children: [
+                      Container(
                         width: 2,
-                        color: isLast
+                        height: 10,
+                        color: isFirst
                             ? Colors.transparent
                             : color.withValues(alpha: 0.45),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              stop.name,
-                              style: Theme.of(context).textTheme.bodyLarge
-                                  ?.copyWith(
-                                    fontWeight: terminal
-                                        ? FontWeight.w700
-                                        : FontWeight.w500,
-                                  ),
-                            ),
-                          ),
-                          if (stop.minutesFromStart case final m?
-                              when m > 0) ...[
-                            const SizedBox(width: 8),
-                            Text(
-                              context.l10n.transportPlusMinutes(m),
-                              style: Theme.of(context).textTheme.labelMedium
-                                  ?.copyWith(color: scheme.onSurfaceVariant),
-                            ),
-                          ],
-                        ],
-                      ),
-                      if (stop.address.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          stop.address,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: scheme.onSurfaceVariant),
+                      Container(
+                        width: terminal ? 13 : 10,
+                        height: terminal ? 13 : 10,
+                        decoration: BoxDecoration(
+                          color: terminal ? color : scheme.surface,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: color, width: 2),
                         ),
-                      ],
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            _iconFor(stop.kind),
-                            size: 13,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            _labelFor(context.l10n, stop.kind),
-                            style: Theme.of(context).textTheme.labelSmall
-                                ?.copyWith(color: scheme.onSurfaceVariant),
-                          ),
-                          const Spacer(),
-                          Icon(
-                            PhosphorIconsRegular.caretRight,
-                            size: 14,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ],
+                      ),
+                      Expanded(
+                        child: Container(
+                          width: 2,
+                          color: isLast
+                              ? Colors.transparent
+                              : color.withValues(alpha: 0.45),
+                        ),
                       ),
                     ],
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                stop.name,
+                                style: Theme.of(context).textTheme.bodyLarge
+                                    ?.copyWith(
+                                      fontWeight: terminal
+                                          ? FontWeight.w700
+                                          : FontWeight.w500,
+                                    ),
+                              ),
+                            ),
+                            if (stop.minutesFromStart case final m?
+                                when m > 0) ...[
+                              const SizedBox(width: 8),
+                              Text(
+                                context.l10n.transportPlusMinutes(m),
+                                style: Theme.of(context).textTheme.labelMedium
+                                    ?.copyWith(color: scheme.onSurfaceVariant),
+                              ),
+                            ],
+                          ],
+                        ),
+                        if (stop.address.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            stop.address,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: scheme.onSurfaceVariant),
+                          ),
+                        ],
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              _iconFor(stop.kind),
+                              size: 13,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              _labelFor(context.l10n, stop.kind),
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(color: scheme.onSurfaceVariant),
+                            ),
+                            const Spacer(),
+                            Icon(
+                              PhosphorIconsRegular.caretRight,
+                              size: 14,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

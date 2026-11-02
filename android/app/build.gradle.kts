@@ -1,3 +1,4 @@
+import java.util.Base64
 import java.util.Properties
 import java.io.FileInputStream
 
@@ -20,9 +21,10 @@ if (keystorePropertiesFile.exists()) {
 // igual que la de iOS vive en ios/Flutter/Secrets.xcconfig: nunca en el repo.
 // En CI se pasa por variable de entorno.
 //
-// Si falta, el placeholder queda vacío y el mapa no carga teselas — pero NO
-// rompe el build: un manifiesto con `${MAPS_API_KEY}` sin valor sí lo rompería,
-// y quien clona el repo no tiene por qué tener la clave para compilar.
+// Con el mapa apagado (lo normal al clonar) puede faltar: el placeholder queda
+// vacío y el build sigue, porque un manifiesto con `${MAPS_API_KEY}` sin valor
+// sí lo rompería y quien clona el repo no tiene por qué tener la clave. Con el
+// mapa encendido, ver el control de más abajo.
 val localProperties = Properties()
 val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
@@ -32,6 +34,24 @@ val mapsApiKey: String =
     localProperties.getProperty("MAPS_API_KEY")
         ?: System.getenv("MAPS_API_KEY")
         ?: ""
+
+// Con el mapa embebido encendido (--dart-define=OVUM_EMBEDDED_MAP=true) la clave
+// sí es obligatoria: sin ella el mapa sale gris para todos los usuarios, y eso
+// no puede llegar a la tienda. Flutter pasa los dart-define en la propiedad
+// `dart-defines`, como entradas base64 separadas por coma.
+val embeddedMapOn: Boolean =
+    (project.findProperty("dart-defines") as String?)
+        ?.split(",")
+        ?.any {
+            runCatching { String(Base64.getDecoder().decode(it)) }
+                .getOrNull() == "OVUM_EMBEDDED_MAP=true"
+        } ?: false
+if (embeddedMapOn && mapsApiKey.isBlank()) {
+    throw GradleException(
+        "OVUM_EMBEDDED_MAP=true pero falta MAPS_API_KEY en android/local.properties " +
+            "(ver docs/MAPS-API-KEY.md)."
+    )
+}
 
 android {
     namespace = "com.trivvo.ovum"

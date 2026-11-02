@@ -591,7 +591,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get profileCongressAlertsSubtitle =>
-      'Cambios de agenda y anuncios del organizador';
+      'Cambios de agenda, anuncios y las salidas de las rutas que sigues';
 
   @override
   String get profileRememberSessions => 'Recordar mis sesiones';
@@ -693,9 +693,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get transportViewRouteOnMap => 'Ver el recorrido en el mapa';
-
-  @override
-  String get transportOpeningCalendar => 'Abriendo tu calendario…';
 
   @override
   String get transportNoStops => 'Esta ruta aún no tiene paradas publicadas.';
@@ -980,7 +977,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String transportStopsCount(int count) {
-    return '$count paradas';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count paradas',
+      one: '1 parada',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1148,4 +1151,64 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get notifPermNotNow => 'Ahora no';
+
+  @override
+  String transportFromStop(String place) {
+    return 'Desde $place';
+  }
+
+  @override
+  String transportServiceEvery(int minutes) {
+    return 'Sale cada $minutes min';
+  }
+
+  @override
+  String transportOfflineBanner(String time) {
+    return 'Sin conexión · horarios guardados a las $time';
+  }
+
+  @override
+  String get transportFollowRoute => 'Avisarme de las salidas';
+
+  @override
+  String get transportFollowingRoute => 'Te avisaremos de las salidas';
+
+  @override
+  String get transportFollowedSnack =>
+      'Te avisaremos unos 15 minutos antes de cada salida.';
+
+  @override
+  String get transportUnfollowedSnack => 'Ya no recibirás avisos de esta ruta.';
+
+  @override
+  String get transportPushOffSnack =>
+      'Los avisos del congreso están desactivados.';
+
+  @override
+  String get transportPushOffAction => 'Activar';
+
+  @override
+  String get transportPermissionDenied =>
+      'Las notificaciones están bloqueadas en los ajustes del teléfono.';
+
+  @override
+  String get transportFollowingBadge => 'Sigues esta ruta';
+
+  @override
+  String get transportExpandMap => 'Ampliar mapa';
+
+  @override
+  String transportDepartureSemantics(String time) {
+    return 'Salida a las $time. Toca para agregarla a tu calendario.';
+  }
+
+  @override
+  String transportDeparturePastSemantics(String time) {
+    return 'Salida a las $time, ya pasó.';
+  }
+
+  @override
+  String transportStopSemantics(String stop) {
+    return '$stop. Abre las indicaciones en Google Maps.';
+  }
 }

@@ -1199,7 +1199,7 @@ abstract class AppLocalizations {
   /// No description provided for @profileCongressAlertsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Agenda changes and announcements from the organizer'**
+  /// **'Agenda changes, announcements and departures of the routes you follow'**
   String get profileCongressAlertsSubtitle;
 
   /// No description provided for @profileRememberSessions.
@@ -1387,12 +1387,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View the route on the map'**
   String get transportViewRouteOnMap;
-
-  /// No description provided for @transportOpeningCalendar.
-  ///
-  /// In en, this message translates to:
-  /// **'Opening your calendar…'**
-  String get transportOpeningCalendar;
 
   /// No description provided for @transportNoStops.
   ///
@@ -1853,7 +1847,7 @@ abstract class AppLocalizations {
   /// No description provided for @transportStopsCount.
   ///
   /// In en, this message translates to:
-  /// **'{count} stops'**
+  /// **'{count, plural, =1{1 stop} other{{count} stops}}'**
   String transportStopsCount(int count);
 
   /// No description provided for @transportApproxMinutes.
@@ -2095,6 +2089,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not now'**
   String get notifPermNotNow;
+
+  /// No description provided for @transportFromStop.
+  ///
+  /// In en, this message translates to:
+  /// **'From {place}'**
+  String transportFromStop(String place);
+
+  /// No description provided for @transportServiceEvery.
+  ///
+  /// In en, this message translates to:
+  /// **'Leaves every {minutes} min'**
+  String transportServiceEvery(int minutes);
+
+  /// No description provided for @transportOfflineBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline · schedule saved at {time}'**
+  String transportOfflineBanner(String time);
+
+  /// No description provided for @transportFollowRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify me of departures'**
+  String get transportFollowRoute;
+
+  /// No description provided for @transportFollowingRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll be notified of departures'**
+  String get transportFollowingRoute;
+
+  /// No description provided for @transportFollowedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll notify you about 15 minutes before each departure.'**
+  String get transportFollowedSnack;
+
+  /// No description provided for @transportUnfollowedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll no longer get alerts for this route.'**
+  String get transportUnfollowedSnack;
+
+  /// No description provided for @transportPushOffSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Congress alerts are turned off.'**
+  String get transportPushOffSnack;
+
+  /// No description provided for @transportPushOffAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get transportPushOffAction;
+
+  /// No description provided for @transportPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are blocked in your phone settings.'**
+  String get transportPermissionDenied;
+
+  /// No description provided for @transportFollowingBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'You follow this route'**
+  String get transportFollowingBadge;
+
+  /// No description provided for @transportExpandMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand map'**
+  String get transportExpandMap;
+
+  /// No description provided for @transportDepartureSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Departure at {time}. Tap to add it to your calendar.'**
+  String transportDepartureSemantics(String time);
+
+  /// No description provided for @transportDeparturePastSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Departure at {time}, already gone.'**
+  String transportDeparturePastSemantics(String time);
+
+  /// No description provided for @transportStopSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{stop}. Opens directions in Google Maps.'**
+  String transportStopSemantics(String stop);
 }
 
 class _AppLocalizationsDelegate

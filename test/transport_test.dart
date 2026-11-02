@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ovum/data/models/bus_route.dart';
 import 'package:ovum/data/repositories/mappers/transport_mapper.dart';
+import 'package:ovum/features/transport/transport_shared.dart';
 
 /// Respuesta real de `GET /events/94/transport/routes` (recortada).
 const _json = '''
@@ -149,10 +150,16 @@ void main() {
       expect(route.nextDeparture(now, eventDays)!.at, DateTime(2026, 11, 12, 7, 0));
     });
 
-    test('justo en la hora de salida ya no cuenta como próxima', () {
-      // Si el bus sale a las 07:00, a las 07:00 clavadas ya se fue.
-      final now = DateTime(2026, 11, 11, 7, 0);
-      expect(route.nextDeparture(now, eventDays)!.at, isNot(DateTime(2026, 11, 11, 7, 0)));
+    test('durante su minuto la salida sigue siendo la próxima', () {
+      // A las 07:00:30 el bus de las 07:00 está saliendo: es el que hay que
+      // mostrar, no el de mañana.
+      final now = DateTime(2026, 11, 11, 7, 0, 30);
+      expect(route.nextDeparture(now, eventDays)!.at, DateTime(2026, 11, 11, 7, 0));
+    });
+
+    test('pasado su minuto ya no cuenta como próxima', () {
+      final now = DateTime(2026, 11, 11, 7, 1);
+      expect(route.nextDeparture(now, eventDays)!.at, DateTime(2026, 11, 12, 7, 0));
     });
 
     test('devuelve null cuando el congreso terminó', () {
@@ -163,6 +170,125 @@ void main() {
     test('antes del congreso apunta al primer día', () {
       final now = DateTime(2026, 10, 18, 12, 0);
       expect(route.nextDeparture(now, eventDays)!.at, DateTime(2026, 11, 11, 7, 0));
+    });
+  });
+
+  group('días de servicio', () {
+    BusRoute conFechadas() => BusRoute(
+      id: '9',
+      name: 'Aeropuerto',
+      departures: [
+        const RouteDeparture(id: '1', departTime: '07:00'),
+        RouteDeparture(id: '2', date: DateTime(2026, 11, 10), departTime: '15:00'),
+        RouteDeparture(id: '3', date: DateTime(2026, 11, 14), departTime: '05:30'),
+      ],
+    );
+
+    test('incluye las fechas fuera del congreso, en orden', () {
+      expect(conFechadas().serviceDays(eventDays), [
+        DateTime(2026, 11, 10),
+        DateTime(2026, 11, 11),
+        DateTime(2026, 11, 12),
+        DateTime(2026, 11, 13),
+        DateTime(2026, 11, 14),
+      ]);
+    });
+
+    test('sin salidas diarias, solo las fechas de las fechadas', () {
+      final soloFechadas = BusRoute(
+        id: '9',
+        name: 'R',
+        departures: [
+          RouteDeparture(id: '2', date: DateTime(2026, 11, 14), departTime: '05:30'),
+        ],
+      );
+      expect(soloFechadas.serviceDays(eventDays), [DateTime(2026, 11, 14)]);
+    });
+
+    test('la próxima salida del día 10 se encuentra en su día', () {
+      final now = DateTime(2026, 11, 10, 9, 0);
+      expect(conFechadas().nextDeparture(now, eventDays)!.at, DateTime(2026, 11, 10, 15, 0));
+    });
+
+    test('tras el último día del congreso apunta a la vuelta del 14', () {
+      final now = DateTime(2026, 11, 13, 23, 0);
+      expect(conFechadas().nextDeparture(now, eventDays)!.at, DateTime(2026, 11, 14, 5, 30));
+    });
+  });
+
+  group('departuresOn', () {
+    test('una diaria y una fechada a la misma hora se muestran una sola vez', () {
+      final r = BusRoute(
+        id: '9',
+        name: 'R',
+        departures: [
+          const RouteDeparture(id: '1', departTime: '07:00'),
+          RouteDeparture(
+            id: '2',
+            date: DateTime(2026, 11, 12),
+            departTime: '07:00',
+            note: 'Solo ponentes',
+          ),
+          const RouteDeparture(id: '3', departTime: '06:30'),
+        ],
+      );
+      final dia12 = r.departuresOn(DateTime(2026, 11, 12));
+      expect(dia12.map((d) => d.id), ['3', '2']);
+      // Gana la fechada: es la que lleva la nota.
+      expect(dia12.last.note, 'Solo ponentes');
+      // Los demás días, la diaria.
+      expect(r.departuresOn(DateTime(2026, 11, 11)).map((d) => d.id), ['3', '1']);
+    });
+  });
+
+  group('originIn', () {
+    test('la salida de la gala sale de la sede, no del hotel', () {
+      final gala = route.departures.firstWhere((d) => !d.isDaily);
+      expect(gala.originIn(route)!.name, 'COPEREX');
+    });
+
+    test('sin parada indicada, la primera de la ruta', () {
+      const d = RouteDeparture(id: '9', departTime: '08:00');
+      expect(d.originIn(route)!.id, '1');
+    });
+
+    test('con una parada que ya no existe, la primera de la ruta', () {
+      const d = RouteDeparture(id: '9', departTime: '08:00', stopId: '999');
+      expect(d.originIn(route)!.id, '1');
+    });
+  });
+
+  group('cuenta atrás', () {
+    final at = DateTime(2026, 11, 11, 7, 0);
+
+    test('redondea hacia arriba', () {
+      expect(minutesUntil(at, DateTime(2026, 11, 11, 6, 30)), 30);
+      expect(minutesUntil(at, DateTime(2026, 11, 11, 6, 30, 1)), 30);
+      expect(minutesUntil(at, DateTime(2026, 11, 11, 6, 59, 59)), 1);
+    });
+
+    test('durante el minuto de salida devuelve 0 y después null', () {
+      expect(minutesUntil(at, at), 0);
+      expect(minutesUntil(at, DateTime(2026, 11, 11, 7, 0, 59)), 0);
+      expect(minutesUntil(at, DateTime(2026, 11, 11, 7, 1)), isNull);
+    });
+  });
+
+  group('busRouteToJson', () {
+    test('ida y vuelta por el mapper conserva la ruta', () {
+      final again = busRoutesFromJson([busRouteToJson(route)]).single;
+      expect(again.id, route.id);
+      expect(again.name, route.name);
+      expect(again.code, route.code);
+      expect(again.colorHex, route.colorHex);
+      expect(again.direction, route.direction);
+      expect(again.notice, route.notice);
+      expect(again.headwayMinutes, route.headwayMinutes);
+      expect(again.polyline, route.polyline);
+      expect(again.stops.map((s) => (s.id, s.order, s.kind, s.name, s.lat, s.lng, s.minutesFromStart, s.isTerminal)),
+          route.stops.map((s) => (s.id, s.order, s.kind, s.name, s.lat, s.lng, s.minutesFromStart, s.isTerminal)));
+      expect(again.departures.map((d) => (d.id, d.date, d.departTime, d.arriveTime, d.note, d.stopId)),
+          route.departures.map((d) => (d.id, d.date, d.departTime, d.arriveTime, d.note, d.stopId)));
     });
   });
 }

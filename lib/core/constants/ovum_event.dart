@@ -12,7 +12,11 @@ abstract final class OvumEvent {
   static final DateTime startDate = DateTime(2026, 11, 11);
   static final DateTime endDate = DateTime(2026, 11, 13);
 
-  /// Días que muestra la agenda (incluye pre-eventos/registro 9–10 nov).
+  /// Días que muestra la agenda: los tres del congreso.
+  ///
+  /// Transporte los usa como los días en que operan las salidas diarias. Las
+  /// salidas con fecha fuera de este rango (llegadas del 10, vuelta del 14) se
+  /// suman aparte, en `BusRoute.serviceDays`.
   static final List<DateTime> agendaDays = [
     DateTime(2026, 11, 11),
     DateTime(2026, 11, 12),

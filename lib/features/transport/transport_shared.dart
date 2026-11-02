@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:ovum/core/l10n/l10n.dart';
+import 'package:ovum/core/ui/app_icons.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/date_ext.dart';
+import '../../core/utils/event_clock.dart';
 import '../../core/utils/launchers.dart';
 import '../../data/models/bus_route.dart';
 
@@ -32,6 +35,23 @@ String directionLabel(AppLocalizations l10n, RouteDirection d) => switch (d) {
   RouteDirection.venueToHotel => l10n.transportDirVenueToHotel,
   RouteDirection.circular => l10n.transportDirCircular,
 };
+
+/// Lo que distingue una salida además de su hora: la parada, si no es la
+/// primera de la ruta, y la nota del organizador. "Desde Parque de la
+/// Industria · Cena de gala". Vacío si no hay nada que añadir.
+String departureDetails(
+  AppLocalizations l10n,
+  BusRoute route,
+  RouteDeparture departure,
+) {
+  final origin = departure.originIn(route);
+  return [
+    if (origin != null && origin.id != route.origin?.id)
+      l10n.transportFromStop(origin.name),
+    if (departure.note case final note? when note.trim().isNotEmpty)
+      note.trim(),
+  ].join(' · ');
+}
 
 /// Abre Google Maps con **indicaciones** hasta [stop] desde donde esté el
 /// usuario, con tráfico y hora estimada reales.
@@ -79,17 +99,24 @@ Future<void> openRouteOnMaps(BusRoute route) {
   );
 }
 
-/// Minutos que faltan para [at], o `null` si ya pasó.
+/// Minutos que faltan para [at], **redondeando hacia arriba**, o `null` si la
+/// salida ya pasó.
+///
+/// Hacia arriba porque es lo que entiende quien mira un reloj: a las 06:30:00 al
+/// bus de las 07:00 le faltan 30 minutos, no 29. Durante el minuto de la salida
+/// (ver `BusRoute.departureGrace`) devuelve 0: el bus está saliendo.
 int? minutesUntil(DateTime at, DateTime now) {
-  final diff = at.difference(now);
-  return diff.isNegative ? null : diff.inMinutes;
+  if (!BusRoute.isUpcoming(at, now)) return null;
+  final seconds = at.difference(now).inSeconds;
+  if (seconds <= 0) return 0;
+  return (seconds + 59) ~/ 60;
 }
 
 /// "en 12 min", "en 1 h 20 min", "mañana 07:00".
 String countdownLabel(AppLocalizations l10n, DateTime at, DateTime now) {
   final minutes = minutesUntil(at, now);
   if (minutes == null) return '';
-  if (minutes < 1) return l10n.transportLeavingNow;
+  if (minutes == 0) return l10n.transportLeavingNow;
   if (minutes < 60) return l10n.transportInMinutes(minutes);
   final hours = minutes ~/ 60;
   final rest = minutes % 60;
@@ -99,4 +126,49 @@ String countdownLabel(AppLocalizations l10n, DateTime at, DateTime now) {
         : l10n.transportInHoursMinutes(hours, rest);
   }
   return '';
+}
+
+/// Aviso de que los horarios vienen de la copia guardada en el teléfono porque
+/// el servidor no respondió. Dice de cuándo son: un horario de esta mañana
+/// sirve, pero el asistente tiene que saber que puede haber cambiado.
+class TransportOfflineBanner extends StatelessWidget {
+  const TransportOfflineBanner({super.key, required this.savedAt});
+
+  /// Instante absoluto en que se obtuvieron del servidor.
+  final DateTime savedAt;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.scheme;
+    final saved = toEventWallClock(savedAt);
+    final time = saved.sameDay(eventNow())
+        ? saved.hm
+        : '${saved.dayNameShort} ${saved.hm}';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: context.ovum.warning.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            PhosphorIconsRegular.cloudSlash,
+            size: 18,
+            color: context.ovum.warning,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              context.l10n.transportOfflineBanner(time),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: scheme.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

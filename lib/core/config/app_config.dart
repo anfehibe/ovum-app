@@ -30,11 +30,12 @@ abstract final class AppConfig {
   /// -[FGMGoogleMapFactory createWithFrame:…]
   /// ```
   ///
-  /// Una guarda en `AppDelegate.swift` no basta: solo evita llamar a
-  /// `provideAPIKey` con una clave vacía, que es precisamente lo que provoca el
-  /// cierre. La protección que sí funciona es esta: con el flag apagado el
-  /// widget `GoogleMap` **nunca se construye**, así que el SDK no se inicializa
-  /// y no hay forma de que la app se caiga, esté como esté el proyecto nativo.
+  /// Tres capas de protección: con el flag apagado el widget `GoogleMap`
+  /// **nunca se construye**; `AppDelegate.swift` llama siempre a
+  /// `provideAPIKey` (con un marcador si falta la clave, lo que da un mapa sin
+  /// teselas en vez de un cierre); y con el flag encendido y sin clave **el
+  /// build falla** (fase "Check Google Maps key" en Xcode y control en
+  /// `android/app/build.gradle.kts`).
   ///
   /// Encenderlo exige las dos cosas a la vez:
   ///   1. `ios/Flutter/Secrets.xcconfig` con `GMS_API_KEY` válida (y el

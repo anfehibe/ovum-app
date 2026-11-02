@@ -588,7 +588,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileCongressAlertsSubtitle =>
-      'Agenda changes and announcements from the organizer';
+      'Agenda changes, announcements and departures of the routes you follow';
 
   @override
   String get profileRememberSessions => 'Remind me of my sessions';
@@ -690,9 +690,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get transportViewRouteOnMap => 'View the route on the map';
-
-  @override
-  String get transportOpeningCalendar => 'Opening your calendar…';
 
   @override
   String get transportNoStops =>
@@ -974,7 +971,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String transportStopsCount(int count) {
-    return '$count stops';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count stops',
+      one: '1 stop',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1142,4 +1145,64 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifPermNotNow => 'Not now';
+
+  @override
+  String transportFromStop(String place) {
+    return 'From $place';
+  }
+
+  @override
+  String transportServiceEvery(int minutes) {
+    return 'Leaves every $minutes min';
+  }
+
+  @override
+  String transportOfflineBanner(String time) {
+    return 'Offline · schedule saved at $time';
+  }
+
+  @override
+  String get transportFollowRoute => 'Notify me of departures';
+
+  @override
+  String get transportFollowingRoute => 'You\'ll be notified of departures';
+
+  @override
+  String get transportFollowedSnack =>
+      'We\'ll notify you about 15 minutes before each departure.';
+
+  @override
+  String get transportUnfollowedSnack =>
+      'You\'ll no longer get alerts for this route.';
+
+  @override
+  String get transportPushOffSnack => 'Congress alerts are turned off.';
+
+  @override
+  String get transportPushOffAction => 'Turn on';
+
+  @override
+  String get transportPermissionDenied =>
+      'Notifications are blocked in your phone settings.';
+
+  @override
+  String get transportFollowingBadge => 'You follow this route';
+
+  @override
+  String get transportExpandMap => 'Expand map';
+
+  @override
+  String transportDepartureSemantics(String time) {
+    return 'Departure at $time. Tap to add it to your calendar.';
+  }
+
+  @override
+  String transportDeparturePastSemantics(String time) {
+    return 'Departure at $time, already gone.';
+  }
+
+  @override
+  String transportStopSemantics(String stop) {
+    return '$stop. Opens directions in Google Maps.';
+  }
 }

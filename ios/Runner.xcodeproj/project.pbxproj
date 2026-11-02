@@ -204,6 +204,7 @@
 			buildConfigurationList = 97C147051CF9000F007C117D /* Build configuration list for PBXNativeTarget "Runner" */;
 			buildPhases = (
 				8551E8FD547CE79F1B7A7174 /* [CP] Check Pods Manifest.lock */,
+				C7A5F1EA2E9F4B0000A1B2C3 /* Check Google Maps key */,
 				9740EEB61CF901F6004384FC /* Run Script */,
 				97C146EA1CF9000F007C117D /* Sources */,
 				97C146EB1CF9000F007C117D /* Frameworks */,
@@ -290,6 +291,21 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		C7A5F1EA2E9F4B0000A1B2C3 /* Check Google Maps key */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Check Google Maps key";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Detiene el build si el mapa embebido esta encendido y falta la clave de\n# Google Maps. Sin clave el SDK no recibe provideAPIKey valida y el mapa sale\n# sin teselas; antes de este control la app incluso se cerraba al abrir una\n# ruta (docs/SPIKE-IOS-MAPS.md). Cubre tambien el Archive desde Xcode.\n# DART_DEFINES llega de Generated.xcconfig: entradas base64 separadas por coma.\nMAP=false\nfor d in $(echo \"${DART_DEFINES}\" | tr ',' ' '); do\n  if [ \"$(echo \"$d\" | base64 --decode 2>/dev/null)\" = \"OVUM_EMBEDDED_MAP=true\" ]; then\n    MAP=true\n  fi\ndone\nif [ \"$MAP\" = true ] && [ -z \"${GMS_API_KEY}\" ]; then\n  echo \"error: OVUM_EMBEDDED_MAP=true pero GMS_API_KEY esta vacio. Copia ios/Flutter/Secrets.example.xcconfig a ios/Flutter/Secrets.xcconfig y pon la clave (docs/MAPS-API-KEY.md).\" >&2\n  exit 1\nfi\n";
+		};
 		3B06AD1E1E4923F5004D2608 /* Thin Binary */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;

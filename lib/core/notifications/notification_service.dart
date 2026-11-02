@@ -6,12 +6,12 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
-import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../../firebase_options.dart';
 import '../config/app_config.dart';
 import '../utils/crash_reporting.dart';
+import '../utils/event_clock.dart';
 import 'notification_routes.dart';
 
 /// Handler de los mensajes que llegan con la app en segundo plano o cerrada.
@@ -130,8 +130,11 @@ class NotificationService {
 
   /// `tz.local` arranca en UTC: sin esto los recordatorios se programarían con
   /// varias horas de corrimiento.
+  ///
+  /// La base se carga con [ensureTimeZonesLoaded], no directamente: recargarla
+  /// devuelve `tz.local` a UTC, y main() ya la cargó para la hora del evento.
   Future<void> _initTimeZone() async {
-    tz_data.initializeTimeZones();
+    ensureTimeZonesLoaded();
     try {
       final info = await FlutterTimezone.getLocalTimezone();
       tz.setLocalLocation(tz.getLocation(info.identifier));
@@ -228,4 +231,33 @@ class NotificationService {
   }
 
   Stream<String> get onTokenRefresh => FirebaseMessaging.instance.onTokenRefresh;
+
+  // ── Topics ────────────────────────────────────────────────────────────────
+
+  /// Suscribe este dispositivo a [topic]. Devuelve `true` si FCM lo aceptó.
+  ///
+  /// Los topics no dependen de la sesión ni de `/me/device-token`: funcionan
+  /// también para el invitado. En iOS el plugin lanza `apns-token-not-set` si
+  /// aún no llegó el token de APNs (al arrancar, y siempre en el simulador), así
+  /// que se devuelve `false` y quien llama reintenta más tarde.
+  Future<bool> subscribeTopic(String topic) =>
+      _topicOp(topic, FirebaseMessaging.instance.subscribeToTopic);
+
+  /// Da de baja este dispositivo de [topic]. Devuelve `true` si FCM lo aceptó.
+  Future<bool> unsubscribeTopic(String topic) =>
+      _topicOp(topic, FirebaseMessaging.instance.unsubscribeFromTopic);
+
+  Future<bool> _topicOp(String topic, Future<void> Function(String) op) async {
+    if (!AppConfig.usePush) return false;
+    try {
+      if (Platform.isIOS && await FirebaseMessaging.instance.getAPNSToken() == null) {
+        return false;
+      }
+      await op(topic);
+      return true;
+    } catch (e) {
+      debugPrint('Operación de topic "$topic" fallida: $e');
+      return false;
+    }
+  }
 }

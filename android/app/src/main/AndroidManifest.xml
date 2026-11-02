@@ -39,7 +39,8 @@
             </intent-filter>
         </activity>
         <!-- FCM: canal, ícono y color por defecto de las push del panel. El canal
-             debe coincidir con NotificationChannels.pushId en Dart. -->
+             debe coincidir con NotificationService.pushChannel en Dart
+             (lib/core/notifications/notification_service.dart). -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="ovum_avisos" />

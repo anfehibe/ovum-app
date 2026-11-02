@@ -31,15 +31,13 @@ import UserNotifications
     //   · provideAPIKey con clave INVÁLIDA → no se cae; el mapa monta su marco
     //     (logo, marcador, botón) pero sin teselas.
     //
-    // O sea: esta guarda NO protege de nada por sí sola — saltarse la llamada
-    // es justo lo que provoca el cierre. Lo que protege de verdad es que Dart
-    // no construya ningún GoogleMap si el mapa no está habilitado
-    // (AppConfig.useEmbeddedMap). Esta guarda solo evita pasarle al SDK una
-    // cadena vacía cuando el mapa está apagado y nadie va a montar uno.
-    if let key = Bundle.main.object(forInfoDictionaryKey: "GMSApiKey") as? String,
-       !key.isEmpty {
-      GMSServices.provideAPIKey(key)
-    }
+    // Por eso se llama SIEMPRE, con un marcador si falta la clave: lo peor que
+    // puede pasar es un mapa sin teselas, nunca un cierre. Además, la fase
+    // "Check Google Maps key" del proyecto detiene el build si el mapa está
+    // encendido (OVUM_EMBEDDED_MAP=true) y GMS_API_KEY está vacío, así que ese
+    // caso no debería llegar a ningún teléfono.
+    let key = (Bundle.main.object(forInfoDictionaryKey: "GMSApiKey") as? String) ?? ""
+    GMSServices.provideAPIKey(key.isEmpty ? "sin-clave" : key)
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }

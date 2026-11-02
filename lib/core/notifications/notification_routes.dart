@@ -11,12 +11,10 @@ const _tiposReunion = {'reunion', 'reunión', 'meeting'};
 
 /// Traduce el `data` de una notificación a una ruta de go_router.
 ///
-/// **Hoy devuelve `null` casi siempre**: el único emisor del backend
-/// (`Admin/PushController`, el envío manual del panel) manda `{"origen":"panel"}`
-/// sin ninguna clave de destino, así que tocar esa push solo abre la app. La
-/// función ya entiende `tipo` + `id` (o una `ruta` explícita) para cuando el
-/// backend conecte los disparadores automáticos; entonces no hay que tocar nada
-/// más que este archivo.
+/// Emisores conocidos: el envío manual del panel (`Admin/PushController`, manda
+/// `{"origen":"panel"}` sin destino, así que solo abre la app), los disparadores
+/// de networking (`tipo` reunion/chat + `id`) y el aviso de transporte
+/// (`AvisosTransporte`: `ruta` ya construida + `tipo:'transporte'` + `id`).
 ///
 /// Es una función pura a propósito: se puede testear sin plugins nativos.
 String? resolveNotificationRoute(Map<String, dynamic> data) {
@@ -45,7 +43,7 @@ String? resolveNotificationRoute(Map<String, dynamic> data) {
     'encuesta' || 'poll' => R.pollsFor(id),
     'pregunta' || 'question' => R.liveQuestionsFor(id),
     // Aviso de salida de bus: el `id` es el de la RUTA, no el de la salida.
-    'transporte' || 'transport' || 'ruta' || 'bus' => R.busRoute(id),
+    _ when _tiposTransporte.contains(tipo) => R.busRoute(id),
     // No hay ruta por reunión: la pestaña Reuniones vive dentro de /networking
     // y su TabController no está expuesto. Aterriza en Networking; abrir la
     // pestaña correcta pediría un parámetro en la ruta.
@@ -73,4 +71,16 @@ String? chatCounterpartId(Map<String, dynamic> data) {
   if (tipo == null || !_tiposChat.contains(tipo)) return null;
   final id = (data['id'] ?? data['entity_id'])?.toString();
   return (id == null || id.isEmpty) ? null : id;
+}
+
+/// Alias del aviso de salida de bus (`AvisosTransporte` usa `transporte`).
+const _tiposTransporte = {'transporte', 'transport', 'ruta', 'bus'};
+
+/// `true` si la notificación es de transporte: por su `tipo` o porque su `ruta`
+/// apunta a una pantalla de transporte. Sirve para refrescar los horarios.
+bool isTransportNotification(Map<String, dynamic> data) {
+  final tipo = (data['tipo'] ?? data['type'])?.toString().toLowerCase();
+  if (tipo != null && _tiposTransporte.contains(tipo)) return true;
+  final ruta = (data['ruta'] ?? data['route'])?.toString();
+  return ruta != null && ruta.startsWith('/transport');
 }

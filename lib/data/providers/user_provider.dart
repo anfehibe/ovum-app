@@ -130,9 +130,10 @@ class AuthController extends Notifier<AppUser?> {
 
   /// Entra en modo invitado (sin token; por ahora solo la agenda).
   ///
-  /// El invitado **no recibe push**: `/me/device-token` exige Bearer, así que no
-  /// hay forma de registrar su dispositivo (haría falta un topic de FCM o un
-  /// endpoint sin auth, ambos cambios de backend).
+  /// El invitado no registra su dispositivo en `/me/device-token` (exige
+  /// Bearer), así que no recibe las push dirigidas a usuarios. Sí recibe los
+  /// avisos de las rutas de bus que siga: van por topics de FCM, que no
+  /// dependen de la sesión (ver `transport_follow_provider.dart`).
   Future<void> loginAsGuest() async {
     await ref.read(authTokenStoreProvider).clear();
     _persist(AppUser.guest);

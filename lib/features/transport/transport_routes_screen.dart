@@ -11,43 +11,81 @@ import '../../core/utils/date_ext.dart';
 import '../../core/utils/launchers.dart';
 import '../../core/widgets/states.dart';
 import '../../data/models/bus_route.dart';
+import '../../data/providers/transport_follow_provider.dart';
 import '../../data/providers/transport_providers.dart';
 import 'transport_shared.dart';
 
 /// Listado de rutas de bus del congreso.
-class TransportRoutesScreen extends ConsumerWidget {
+class TransportRoutesScreen extends ConsumerStatefulWidget {
   const TransportRoutesScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TransportRoutesScreen> createState() =>
+      _TransportRoutesScreenState();
+}
+
+class _TransportRoutesScreenState extends ConsumerState<TransportRoutesScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Al entrar se vuelven a pedir los horarios si tienen más de unos minutos:
+    // el provider conserva su primer resultado durante toda la sesión.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) refreshTransportIfStale(ref);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final async = ref.watch(busRoutesProvider);
+    // `valueOrNull` conserva los datos anteriores mientras se recarga o si la
+    // recarga falla: un refresco fallido ya no sustituye los horarios que el
+    // usuario tenía en pantalla por un error.
+    final data = async.valueOrNull;
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.transport)),
-      body: async.when(
-        loading: () => const LoadingView(),
-        error: (_, _) => ErrorView(onRetry: () => ref.invalidate(busRoutesProvider)),
-        data: (routes) => RefreshIndicator(
-          onRefresh: () async => ref.invalidate(busRoutesProvider),
-          child: routes.isEmpty
-              ? ListView(
-                  children: [
-                    const SizedBox(height: 80),
-                    EmptyState(
-                      icon: PhosphorIconsRegular.bus,
-                      message: context.l10n.transportNoRoutes,
-                    ),
-                  ],
-                )
-              : ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
-                  itemCount: routes.length + 1,
-                  separatorBuilder: (_, _) => const SizedBox(height: 14),
-                  itemBuilder: (context, i) => i == 0
-                      ? const _IntroCard()
-                      : _RouteCard(route: routes[i - 1], index: i - 1),
-                ),
+      body: switch (data) {
+        null when async.isLoading => const LoadingView(),
+        null => ErrorView(onRetry: () => ref.invalidate(busRoutesProvider)),
+        final data => RefreshIndicator(
+          onRefresh: () => refreshTransport(ref),
+          child: _RoutesList(data: data),
         ),
-      ),
+      },
+    );
+  }
+}
+
+class _RoutesList extends StatelessWidget {
+  const _RoutesList({required this.data});
+  final TransportData data;
+
+  @override
+  Widget build(BuildContext context) {
+    final routes = data.routes;
+    return ListView(
+      // Siempre desplazable: con pocas rutas, tirar para refrescar no haría nada.
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+      children: [
+        if (data.offline) ...[
+          TransportOfflineBanner(savedAt: data.savedAt),
+          const SizedBox(height: 14),
+        ],
+        if (routes.isEmpty) ...[
+          const SizedBox(height: 60),
+          EmptyState(
+            icon: PhosphorIconsRegular.bus,
+            message: context.l10n.transportNoRoutes,
+          ),
+        ] else ...[
+          const _IntroCard(),
+          for (var i = 0; i < routes.length; i++) ...[
+            const SizedBox(height: 14),
+            _RouteCard(route: routes[i], index: i),
+          ],
+        ],
+      ],
     );
   }
 }
@@ -79,10 +117,12 @@ class _IntroCard extends StatelessWidget {
             children: [
               Icon(PhosphorIconsRegular.bus, size: 20, color: scheme.primary),
               const SizedBox(width: 8),
-              Text(
-                context.l10n.transportCongressBuses,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
+              Expanded(
+                child: Text(
+                  context.l10n.transportCongressBuses,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
             ],
@@ -92,16 +132,14 @@ class _IntroCard extends StatelessWidget {
             context.l10n.transportIntroText,
             style: Theme.of(context).textTheme.bodySmall,
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 4),
+          // Tamaño mínimo por defecto (48 dp de objetivo táctil): es el botón
+          // al que se recurre con prisa, cuando el bus no aparece.
           TextButton.icon(
             onPressed: () => openPhone(OvumEvent.contactPhone),
             icon: const Icon(PhosphorIconsRegular.phone, size: 16),
             label: Text(context.l10n.transportCallOrganizers),
-            style: TextButton.styleFrom(
-              padding: EdgeInsets.zero,
-              minimumSize: const Size(0, 32),
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
+            style: TextButton.styleFrom(padding: EdgeInsets.zero),
           ),
         ],
       ),
@@ -120,6 +158,7 @@ class _RouteCard extends ConsumerWidget {
     final color = routeColor(context, route, index);
     final next = ref.watch(nextDepartureProvider(route.id));
     final now = ref.watch(nowProvider);
+    final followed = ref.watch(isRouteFollowedProvider(route.id));
 
     return Material(
       color: scheme.surfaceContainerLow,
@@ -163,6 +202,16 @@ class _RouteCard extends ConsumerWidget {
                                     ?.copyWith(fontWeight: FontWeight.w700),
                               ),
                             ),
+                            if (followed) ...[
+                              Icon(
+                                PhosphorIconsRegular.bellRinging,
+                                size: 18,
+                                color: scheme.primary,
+                                semanticLabel:
+                                    context.l10n.transportFollowingBadge,
+                              ),
+                              const SizedBox(width: 4),
+                            ],
                             Icon(
                               PhosphorIconsRegular.caretRight,
                               size: 18,
@@ -176,7 +225,12 @@ class _RouteCard extends ConsumerWidget {
                         _MetaRow(route: route),
                         if (next != null) ...[
                           const SizedBox(height: 12),
-                          _NextDepartureChip(at: next.at, now: now),
+                          _NextDepartureChip(
+                            route: route,
+                            departure: next.departure,
+                            at: next.at,
+                            now: now,
+                          ),
                         ],
                       ],
                     ),
@@ -191,7 +245,8 @@ class _RouteCard extends ConsumerWidget {
   }
 }
 
-/// Origen → destino en dos líneas, con el hilo vertical que las une.
+/// Origen → destino en dos líneas, con el hilo vertical que las une. Una ruta
+/// de una sola parada muestra solo esa: repetir el nombre parecería un error.
 class _Endpoints extends StatelessWidget {
   const _Endpoints({required this.route, required this.color});
   final BusRoute route;
@@ -205,16 +260,19 @@ class _Endpoints extends StatelessWidget {
     final scheme = context.scheme;
     final style = Theme.of(context).textTheme.bodyMedium;
 
+    Widget row(RouteStop stop, {required bool filled}) => Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _dot(color, filled: filled),
+        const SizedBox(width: 10),
+        Expanded(child: Text(stop.name, style: style)),
+      ],
+    );
+
+    if (origin.id == destination.id) return row(origin, filled: true);
     return Column(
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _dot(color, filled: false),
-            const SizedBox(width: 10),
-            Expanded(child: Text(origin.name, style: style)),
-          ],
-        ),
+        row(origin, filled: false),
         Padding(
           padding: const EdgeInsets.only(left: 4.5),
           child: Row(
@@ -223,14 +281,7 @@ class _Endpoints extends StatelessWidget {
             ],
           ),
         ),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _dot(color, filled: true),
-            const SizedBox(width: 10),
-            Expanded(child: Text(destination.name, style: style)),
-          ],
-        ),
+        row(destination, filled: true),
       ],
     );
   }
@@ -257,8 +308,10 @@ class _MetaRow extends StatelessWidget {
     final scheme = context.scheme;
     final parts = <String>[
       context.l10n.transportStopsCount(route.stops.length),
-      if (route.totalMinutes case final m? when m > 0) context.l10n.transportApproxMinutes(m),
-      if (route.headwayMinutes case final f? when f > 0) context.l10n.transportEveryMinutes(f),
+      if (route.totalMinutes case final m? when m > 0)
+        context.l10n.transportApproxMinutes(m),
+      if (route.headwayMinutes case final f? when f > 0)
+        context.l10n.transportEveryMinutes(f),
     ];
     return Text(
       parts.join(' · '),
@@ -270,8 +323,18 @@ class _MetaRow extends StatelessWidget {
 }
 
 /// "Próxima salida 7:30 · en 12 min". Se resalta cuando falta poco.
+///
+/// Debajo, si hace falta, desde dónde sale y la nota del organizador: la vuelta
+/// de la cena de gala sale de la sede aunque la ruta sea "del hotel a la sede".
 class _NextDepartureChip extends StatelessWidget {
-  const _NextDepartureChip({required this.at, required this.now});
+  const _NextDepartureChip({
+    required this.route,
+    required this.departure,
+    required this.at,
+    required this.now,
+  });
+  final BusRoute route;
+  final RouteDeparture departure;
   final DateTime at;
   final DateTime now;
 
@@ -281,37 +344,71 @@ class _NextDepartureChip extends StatelessWidget {
     final minutes = minutesUntil(at, now);
     final soon = minutes != null && minutes <= 20;
     final sameDay = at.sameDay(now);
-    final when = sameDay ? at.hm : '${at.dayNameShort} ${at.hm}';
+    // Con la fecha: "Mié 07:00" a secas, visto el martes 4, parece mañana.
+    final when = sameDay
+        ? at.hm
+        : '${at.dayNameShort} ${at.monthDayShort} ${at.hm}';
     final countdown = sameDay ? countdownLabel(context.l10n, at, now) : '';
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: soon
-            ? scheme.primaryContainer
-            : scheme.surfaceContainerHighest.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            PhosphorIconsRegular.clock,
-            size: 14,
-            color: soon ? scheme.onPrimaryContainer : scheme.onSurfaceVariant,
+    final details = departureDetails(context.l10n, route, departure);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: soon
+                ? scheme.primaryContainer
+                : scheme.surfaceContainerHighest.withValues(alpha: 0.6),
+            borderRadius: BorderRadius.circular(999),
           ),
-          const SizedBox(width: 6),
-          Text(
-            countdown.isEmpty
-                ? context.l10n.transportNextDeparture(when)
-                : context.l10n.transportNextDepartureWithCountdown(when, countdown),
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: soon ? scheme.onPrimaryContainer : scheme.onSurfaceVariant,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                PhosphorIconsRegular.clock,
+                size: 14,
+                color: soon
+                    ? scheme.onPrimaryContainer
+                    : scheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 6),
+              // Flexible: con letra grande el texto se parte en dos líneas en
+              // vez de desbordar la tarjeta.
+              Flexible(
+                child: Text(
+                  countdown.isEmpty
+                      ? context.l10n.transportNextDeparture(when)
+                      : context.l10n.transportNextDepartureWithCountdown(
+                          when,
+                          countdown,
+                        ),
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: soon
+                        ? scheme.onPrimaryContainer
+                        : scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (details.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Padding(
+            padding: const EdgeInsets.only(left: 10),
+            child: Text(
+              details,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
-      ),
+      ],
     );
   }
 }

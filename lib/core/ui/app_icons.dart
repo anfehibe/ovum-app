@@ -28,6 +28,7 @@ abstract final class PhosphorIconsRegular {
   static const IconData check = Icons.check_rounded;
   static const IconData clock = Icons.schedule_rounded;
   static const IconData clockCountdown = Icons.timer_outlined;
+  static const IconData cloudSlash = Icons.cloud_off_outlined;
   static const IconData compass = Icons.explore_outlined;
   static const IconData confetti = Icons.celebration_rounded;
   static const IconData deviceMobile = Icons.smartphone_rounded;

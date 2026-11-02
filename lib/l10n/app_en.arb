@@ -201,7 +201,7 @@
   "profileNetworkingSubtitle": "Sectors and interests so others can find you",
   "profileNotifications": "Notifications",
   "profileCongressAlerts": "Congress alerts",
-  "profileCongressAlertsSubtitle": "Agenda changes and announcements from the organizer",
+  "profileCongressAlertsSubtitle": "Agenda changes, announcements and departures of the routes you follow",
   "profileRememberSessions": "Remind me of my sessions",
   "profileRememberSessionsSubtitle": "A reminder before the sessions you saved",
   "profileRemindMeAhead": "Remind me ahead of time by",
@@ -240,7 +240,6 @@
   "transportNoDeparturesLeft": "No scheduled departures left. Check the schedules below.",
   "transportOpenRouteInGoogleMaps": "Open the route in Google Maps",
   "transportViewRouteOnMap": "View the route on the map",
-  "transportOpeningCalendar": "Opening your calendar…",
   "transportNoStops": "This route doesn't have published stops yet.",
   "agendaComingSoon": "The agenda will be published soon",
   "agendaSessionNotFound": "Session not found",
@@ -457,7 +456,7 @@
       }
     }
   },
-  "transportStopsCount": "{count} stops",
+  "transportStopsCount": "{count, plural, =1{1 stop} other{{count} stops}}",
   "@transportStopsCount": {
     "placeholders": {
       "count": {
@@ -666,5 +665,62 @@
   "notifPermTitle": "Don't miss a thing",
   "notifPermBody": "Enable notifications to keep up with agenda changes and congress announcements, and so we can remind you before your saved sessions start.",
   "notifPermEnable": "Enable",
-  "notifPermNotNow": "Not now"
+  "notifPermNotNow": "Not now",
+  "transportFromStop": "From {place}",
+  "@transportFromStop": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "transportServiceEvery": "Leaves every {minutes} min",
+  "@transportServiceEvery": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "transportOfflineBanner": "Offline · schedule saved at {time}",
+  "@transportOfflineBanner": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "transportFollowRoute": "Notify me of departures",
+  "transportFollowingRoute": "You'll be notified of departures",
+  "transportFollowedSnack": "We'll notify you about 15 minutes before each departure.",
+  "transportUnfollowedSnack": "You'll no longer get alerts for this route.",
+  "transportPushOffSnack": "Congress alerts are turned off.",
+  "transportPushOffAction": "Turn on",
+  "transportPermissionDenied": "Notifications are blocked in your phone settings.",
+  "transportFollowingBadge": "You follow this route",
+  "transportExpandMap": "Expand map",
+  "transportDepartureSemantics": "Departure at {time}. Tap to add it to your calendar.",
+  "@transportDepartureSemantics": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "transportDeparturePastSemantics": "Departure at {time}, already gone.",
+  "@transportDeparturePastSemantics": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "transportStopSemantics": "{stop}. Opens directions in Google Maps.",
+  "@transportStopSemantics": {
+    "placeholders": {
+      "stop": {
+        "type": "String"
+      }
+    }
+  }
 }
