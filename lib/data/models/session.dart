@@ -10,7 +10,14 @@ class Session {
   final String track;
 
   final DateTime startDate;
+
+  /// Fin de la sesión. Si el organizador no indicó hora de fin ([hasEndTime]
+  /// `false`), vale lo mismo que [startDate] y la UI muestra solo el inicio.
   final DateTime endDate;
+
+  /// `false` cuando el API no trae hora de fin (los tours de "Otras
+  /// actividades" llegan con `fin: null`).
+  final bool hasEndTime;
   final List<String> speakerIds;
 
   final String? sponsorName;
@@ -39,6 +46,7 @@ class Session {
     required this.track,
     required this.startDate,
     required this.endDate,
+    this.hasEndTime = true,
     this.speakerIds = const [],
     this.sponsorName,
     this.sponsorLogo,

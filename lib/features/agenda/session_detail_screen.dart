@@ -45,7 +45,7 @@ class SessionDetailScreen extends ConsumerWidget {
             color: color,
             track: session.track,
             title: session.title,
-            time: '${session.startDate.fullDate} · ${timeRange(session.startDate, session.endDate)}',
+            time: '${session.startDate.fullDate} · ${session.hasEndTime ? timeRange(session.startDate, session.endDate) : session.startDate.hm}',
             room: session.room,
             favorite: FavoriteButton(kind: FavKind.session, id: session.id, onSurface: true),
           ),

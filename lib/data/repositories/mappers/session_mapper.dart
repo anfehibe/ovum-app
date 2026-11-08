@@ -33,18 +33,25 @@ List<Session> sessionsFromOtherActivitiesJson(List<dynamic> items) {
     if (a is! Map) continue;
     final j = a.cast<String, dynamic>();
     final start = DateTime.tryParse(j['inicio'] as String? ?? '');
+    // Sin inicio no hay dónde ponerla. El fin es opcional: los tours llegan
+    // con `fin: null` y antes se descartaban enteros.
+    if (start == null) continue;
     final end = DateTime.tryParse(j['fin'] as String? ?? '');
-    if (start == null || end == null) continue;
     final tipo = (j['tipo'] as String?)?.trim();
     sessions.add(Session(
-      id: '${j['id']}',
+      // Con prefijo: los ids de este endpoint (1, 2, 3…) son de otra tabla y
+      // coinciden con los de la agenda. Sin él, tocar el "Cóctel de
+      // bienvenida" (id 1) abría la sesión de agenda 1, porque la pantalla de
+      // detalle busca por id entre todas las sesiones.
+      id: 'actividad-${j['id']}',
       title: j['titulo'] as String? ?? '',
       description: j['descripcion'] as String? ?? '',
       shortDescription: '',
       room: '',
       track: (tipo != null && tipo.isNotEmpty) ? tipo : 'General',
       startDate: start,
-      endDate: end,
+      endDate: end ?? start,
+      hasEndTime: end != null,
       imageUrl: absoluteUrlOrNull(j['imagen'] as String?),
       isOtherActivity: true,
     ));

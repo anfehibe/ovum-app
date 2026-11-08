@@ -49,7 +49,9 @@ class SessionTile extends StatelessWidget {
                             Icon(PhosphorIconsRegular.clock, size: 14, color: color),
                             const SizedBox(width: 6),
                             Text(
-                              timeRange(session.startDate, session.endDate),
+                              session.hasEndTime
+                                  ? timeRange(session.startDate, session.endDate)
+                                  : session.startDate.hm,
                               style: Theme.of(context).textTheme.labelMedium?.copyWith(
                                     color: color,
                                     fontWeight: FontWeight.w700,

@@ -97,7 +97,7 @@ class _ActivityCard extends StatelessWidget {
                         Icon(PhosphorIconsRegular.calendarBlank, size: 13, color: scheme.onSurfaceVariant),
                         const SizedBox(width: 4),
                         Text(
-                          '${activity.startDate.dayNameShort} ${activity.startDate.dayNumber} · ${timeRange(activity.startDate, activity.endDate)}',
+                          '${activity.startDate.dayNameShort} ${activity.startDate.dayNumber} · ${activity.hasEndTime ? timeRange(activity.startDate, activity.endDate) : activity.startDate.hm}',
                           style: Theme.of(context)
                               .textTheme
                               .bodySmall

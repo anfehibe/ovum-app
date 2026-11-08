@@ -459,11 +459,39 @@ void main() {
           'imagen': 'https://x/coctel.jpg',
         },
       ]).first;
-      expect(s.id, '20');
+      // Prefijado: el id 20 de otras actividades no es la sesión de agenda 20.
+      expect(s.id, 'actividad-20');
       expect(s.title, 'Cóctel'); // titulo → title
       expect(s.isOtherActivity, isTrue);
       expect(s.track, 'social');
       expect(s.imageUrl, 'https://x/coctel.jpg');
+    });
+
+    test('acepta una actividad sin hora de fin (los tours llegan con fin: null)', () {
+      final s = sessionsFromOtherActivitiesJson([
+        {
+          'id': 5,
+          'titulo': 'Volcán de Pacaya',
+          'tipo': 'Tour',
+          'inicio': '2026-11-10T09:00:00+00:00',
+          'fin': null,
+        },
+      ]).single;
+      expect(s.hasEndTime, isFalse);
+      expect(s.endDate, s.startDate);
+      expect(s.track, 'Tour');
+    });
+
+    test('con hora de fin la marca como tal', () {
+      final s = sessionsFromOtherActivitiesJson([
+        {
+          'id': 1,
+          'titulo': 'Cóctel',
+          'inicio': '2026-11-11T19:00:00+00:00',
+          'fin': '2026-11-11T22:00:00+00:00',
+        },
+      ]).single;
+      expect(s.hasEndTime, isTrue);
     });
 
     test('descarta actividades sin horario', () {
