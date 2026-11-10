@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import 'core/analytics/analytics.dart';
 import 'core/config/app_config.dart';
 import 'core/l10n/l10n.dart';
 import 'core/notifications/notification_routes.dart';
@@ -27,6 +28,14 @@ final _crashUserProvider = Provider<void>((ref) {
   setCrashUser(ref.watch(sessionUserIdProvider));
 });
 
+/// Lo mismo para Analytics, más si la sesión es de invitado.
+final _analyticsUserProvider = Provider<void>((ref) {
+  setAnalyticsUser(
+    ref.watch(sessionUserIdProvider),
+    isGuest: ref.watch(isGuestProvider),
+  );
+});
+
 class OvumApp extends ConsumerWidget {
   const OvumApp({super.key});
 
@@ -36,6 +45,7 @@ class OvumApp extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
     final locale = ref.watch(localeProvider);
     ref.watch(_crashUserProvider);
+    ref.watch(_analyticsUserProvider);
 
     return NotificationsBootstrap(
       child: MaterialApp.router(
@@ -67,7 +77,9 @@ class OvumApp extends ConsumerWidget {
         // efectivo que resolvió `MaterialApp`, sin tener que pasar el locale a
         // cada `DateFormat` (ver core/utils/date_ext.dart).
         builder: (context, child) {
-          Intl.defaultLocale = Localizations.localeOf(context).languageCode;
+          final lang = Localizations.localeOf(context).languageCode;
+          Intl.defaultLocale = lang;
+          setAnalyticsLanguage(lang);
           return child!;
         },
       ),

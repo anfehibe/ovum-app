@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
+import '../../core/analytics/analytics.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/states.dart';
 import '../../data/models/models.dart';
@@ -108,6 +109,7 @@ class _PollCard extends ConsumerWidget {
         onTap: () async {
           try {
             await ref.read(pollAnswersProvider.notifier).answer(poll.id, option.id);
+            logEvent('poll_vote', {'item_id': poll.id});
           } catch (_) {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(

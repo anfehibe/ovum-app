@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <!-- Notificaciones: Android 13+ pide POST_NOTIFICATIONS en runtime. Los plugins
          ya lo aportan por manifest merge; se declara explícito para que sea visible. -->
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -7,6 +8,11 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <!-- local_auth: diálogo de huella / rostro. Permiso normal, no de runtime. -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+    <!-- Firebase Analytics aporta el permiso del id de publicidad por manifest
+         merge. La app no muestra anuncios ni lo usa: se quita para no tener que
+         declararlo en Play Console. -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove"/>
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" tools:node="remove"/>
 
     <!-- allowBackup=false: el token y las credenciales del acceso rápido se cifran
          con una clave del KeyStore, que no sale del dispositivo. Un backup
@@ -71,6 +77,15 @@
              vía manifestPlaceholders; aquí solo viaja la referencia.
              Vacío = el mapa se dibuja sin teselas. A diferencia de iOS, el SDK de
              Android no tumba la app por falta de clave (ver docs/SPIKE-IOS-MAPS.md). -->
+        <!-- Analytics: sin id de publicidad, y las pantallas las registra la app
+             (core/analytics/analytics.dart); la automática solo vería
+             "MainActivity". -->
+        <meta-data
+            android:name="google_analytics_adid_collection_enabled"
+            android:value="false" />
+        <meta-data
+            android:name="google_analytics_automatic_screen_reporting_enabled"
+            android:value="false" />
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="${MAPS_API_KEY}" />

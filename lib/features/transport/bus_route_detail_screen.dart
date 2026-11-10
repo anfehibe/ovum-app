@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
+import '../../core/analytics/analytics.dart';
 import '../../core/config/app_config.dart';
 import '../../core/router/route_paths.dart';
 import '../../core/theme/app_colors.dart';
@@ -431,6 +432,7 @@ class _FollowButtonState extends ConsumerState<_FollowButton> {
 
     if (ref.read(isRouteFollowedProvider(widget.routeId))) {
       followed.toggle(widget.routeId);
+      logEvent('transport_unfollow', {'item_id': widget.routeId});
       messenger.showSnackBar(
         SnackBar(content: Text(l10n.transportUnfollowedSnack)),
       );
@@ -452,6 +454,7 @@ class _FollowButtonState extends ConsumerState<_FollowButton> {
         return;
       }
       followed.toggle(widget.routeId);
+      logEvent('transport_follow', {'item_id': widget.routeId});
       if (!ref.read(notificationPrefsProvider).pushEnabled) {
         messenger.showSnackBar(
           SnackBar(

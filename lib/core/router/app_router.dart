@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/providers/user_provider.dart';
+import '../analytics/analytics.dart';
 import '../config/app_config.dart';
 import '../../features/agenda/agenda_screen.dart';
 import '../../features/agenda/session_detail_screen.dart';
@@ -58,7 +59,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   final refresh = _AuthRefresh(ref);
   ref.onDispose(refresh.dispose);
 
-  return GoRouter(
+  final router = GoRouter(
     initialLocation: R.splash,
     refreshListenable: refresh,
     redirect: (context, state) {
@@ -175,4 +176,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
+  trackScreens(router); // screen_view de Analytics
+  return router;
 });

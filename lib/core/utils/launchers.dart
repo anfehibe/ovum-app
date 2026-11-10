@@ -2,10 +2,12 @@ import 'package:add_2_calendar/add_2_calendar.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../analytics/analytics.dart';
 import 'date_ext.dart';
 import 'event_clock.dart';
 
 Future<void> shareText(String text) async {
+  logEvent('share');
   await SharePlus.instance.share(ShareParams(text: text));
 }
 
@@ -17,6 +19,7 @@ Future<void> openUrl(String url) async {
   final normalized = raw.contains('://') ? raw : 'https://$raw';
   final uri = Uri.parse(normalized);
   if (await canLaunchUrl(uri)) {
+    logOutboundLink(uri);
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 }
@@ -51,6 +54,7 @@ Future<bool> addToCalendar({
   required DateTime end,
 }) async {
   if (title.trim().isEmpty) return false;
+  logEvent('add_to_calendar');
   final startWall = wallClock(start);
   var endWall = wallClock(end);
   if (!endWall.isAfter(startWall)) {

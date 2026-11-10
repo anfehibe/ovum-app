@@ -4,6 +4,10 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<!-- Analytics: las pantallas las registra la app (core/analytics/analytics.dart);
+	     la automática solo vería "FlutterViewController". -->
+	<key>FirebaseAutomaticScreenReportingEnabled</key>
+	<false/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<!-- Idiomas que soporta la app (es/en). iOS usa esta lista para reportar el

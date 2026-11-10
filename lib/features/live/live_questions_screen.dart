@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
+import '../../core/analytics/analytics.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/states.dart';
@@ -35,6 +36,7 @@ class _LiveQuestionsScreenState extends ConsumerState<LiveQuestionsScreen> {
     setState(() => _sending = true);
     try {
       await ref.read(ovumRepositoryProvider).askQuestion(widget.sessionId, text);
+      logEvent('question_submit', {'item_id': widget.sessionId});
       _controller.clear();
       if (mounted) {
         FocusScope.of(context).unfocus();

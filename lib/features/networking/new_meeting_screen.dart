@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ovum/core/l10n/l10n.dart';
 import 'package:ovum/core/ui/app_icons.dart';
 
+import '../../core/analytics/analytics.dart';
 import '../../core/config/app_config.dart';
 import '../../core/constants/ovum_event.dart';
 import '../../core/network/api_exception.dart';
@@ -197,6 +198,7 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
       // tomada en su hora nueva.
       ref.invalidate(networkingMeetingsProvider);
       if (!mounted) return;
+      logEvent(editing == null ? 'meeting_request' : 'meeting_edit');
       if (editing == null) ref.read(appRatingProvider).onPositiveMoment();
       messenger.showSnackBar(SnackBar(content: Text(message)));
       navigator.pop();

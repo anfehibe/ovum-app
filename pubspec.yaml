@@ -12,6 +12,9 @@ dependencies:
   cached_network_image: ^3.4.1
   cupertino_icons: ^1.0.8
   dio: ^5.7.0
+  # 12.6.1 sube firebase_core a 4.15.2 (firebase-ios-sdk 12.19.3) y choca en SPM
+  # con messaging/crashlytics, que fijan 12.19.0. Subir los cuatro a la vez.
+  firebase_analytics: ">=12.5.0 <12.6.1"
   firebase_core: ^4.14.0
   firebase_crashlytics: ^5.4.0
   firebase_messaging: ^16.5.0

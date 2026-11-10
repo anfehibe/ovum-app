@@ -124,6 +124,16 @@ abstract final class AppConfig {
   static const bool useCrashlytics =
       bool.fromEnvironment('OVUM_CRASHLYTICS', defaultValue: true);
 
+  /// Google Analytics para Firebase: pantallas vistas y acciones clave
+  /// (`core/analytics/analytics.dart`). Solo **envía** fuera de debug.
+  static const bool useAnalytics =
+      bool.fromEnvironment('OVUM_ANALYTICS', defaultValue: true);
+
+  /// Envía también desde una build de debug, para mirar los eventos en el
+  /// DebugView de Firebase. **Nunca en una build que se publique.**
+  static const bool analyticsDebug =
+      bool.fromEnvironment('OVUM_ANALYTICS_DEBUG', defaultValue: false);
+
   /// Prueba de punta a punta de Crashlytics: la app se cierra a propósito al
   /// abrir (una vez sí, una no). **Nunca en una build que se publique.**
   static const bool crashTest =

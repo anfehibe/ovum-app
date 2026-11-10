@@ -7,6 +7,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
+import 'core/analytics/analytics.dart';
 import 'core/config/app_config.dart';
 import 'core/network/auth_token_store.dart';
 import 'core/notifications/notification_service.dart';
@@ -34,12 +35,16 @@ Future<void> main() async {
   // Firebase debe estar listo antes de cualquier uso de Messaging, incluido el
   // registro del handler de segundo plano. El resto de la configuración de
   // notificaciones vive en `notificationsInitProvider` (necesita Riverpod).
-  // Crashlytics también lo necesita, así que ya no depende solo del push.
-  if (AppConfig.usePush || AppConfig.useCrashlytics) {
+  // Crashlytics y Analytics también lo necesitan, así que ya no depende solo
+  // del push.
+  if (AppConfig.usePush ||
+      AppConfig.useCrashlytics ||
+      AppConfig.useAnalytics) {
     await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   }
   // Lo antes posible: un error en el resto del arranque también debe llegar.
   if (AppConfig.useCrashlytics) await setUpCrashReporting();
+  if (AppConfig.useAnalytics) await setUpAnalytics();
   if (AppConfig.usePush) {
     FirebaseMessaging.onBackgroundMessage(ovumBackgroundHandler);
   }

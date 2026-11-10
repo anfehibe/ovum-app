@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ovum/core/l10n/l10n.dart';
 
+import '../../core/analytics/analytics.dart';
 import '../../core/auth/biometric_service.dart';
 import '../../core/constants/ovum_event.dart';
 import '../../core/network/api_exception.dart';
@@ -55,6 +56,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await ref
           .read(authControllerProvider.notifier)
           .login(_emailCtrl.text.trim(), _passwordCtrl.text);
+      logLogin('password');
       if (mounted) context.go(R.home);
     } on ApiException catch (e) {
       if (mounted) {
@@ -73,6 +75,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _loginAsGuest() async {
     setState(() => _busy = true);
     await ref.read(authControllerProvider.notifier).loginAsGuest();
+    logLogin('guest');
     if (mounted) context.go(R.home);
   }
 
@@ -99,6 +102,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await ref
           .read(authControllerProvider.notifier)
           .login(creds.email, creds.password, rememberForBiometrics: false);
+      logLogin('biometric');
       if (mounted) context.go(R.home);
     } on ApiException catch (e) {
       if (e.isUnauthorized) {
