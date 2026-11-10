@@ -2,7 +2,7 @@ name: ovum
 description: "OVUM 2026 - XXIX Congreso Latinoamericano de Avicultura"
 publish_to: 'none'
 
-version: 1.1.1+15
+version: 1.1.2+16
 
 environment:
   sdk: ^3.12.2
